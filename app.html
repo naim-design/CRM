@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blasting Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base-extracted.css">
+<link rel="stylesheet" href="css/app-extra.css">
+</head>
+<body>
+
+<div id="loading-screen" class="loading-screen"><span class="spinner"></span> Memuatkan...</div>
+
+<div id="app-shell" style="display:none;">
+  <header class="top">
+    <div class="wrap">
+      <div class="brand"><span class="brand-dot"></span><div class="brand-name">MAMARIAM — BLASTING CONTROL ROOM</div></div>
+      <nav class="app-nav">
+        <button data-view="input" class="active">Input Data</button>
+        <button data-view="dashboard">Dashboard</button>
+        <button data-view="contacts">Kontak</button>
+      </nav>
+      <div class="user-badge">
+        <span class="role-badge" id="user-role">Staff</span>
+        <span id="user-name" style="font-size:13px;"></span>
+        <div class="avatar" id="user-avatar">U</div>
+        <button class="btn btn-ghost" id="logout-btn" style="width:auto; padding:7px 14px; font-size:12px;">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ================= INPUT DATA ================= -->
+    <div id="view-input" class="view active" style="padding-top:36px;">
+      <div class="section-head"><h2>Input Entri Blast Harian</h2></div>
+      <div class="form-card">
+        <form id="entry-form">
+          <div class="form-grid">
+            <div class="field"><label>Tarikh</label><input type="date" id="entry-tarikh" required></div>
+            <div class="field"><label>Sumber / Source</label><input type="text" id="entry-source" placeholder="cth: Ads FB, Organic"></div>
+            <div class="field"><label>Nama Template</label><input type="text" id="entry-template" placeholder="cth: Promo Susu V2"></div>
+          </div>
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field"><label>Sent</label><input type="number" id="entry-sent" min="0" value="0" required></div>
+            <div class="field"><label>Delivered</label><input type="number" id="entry-delivered" min="0" value="0"></div>
+            <div class="field"><label>Read</label><input type="number" id="entry-read" min="0" value="0"></div>
+          </div>
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field"><label>Reply</label><input type="number" id="entry-reply" min="0" value="0"></div>
+            <div class="field"><label>Failed</label><input type="number" id="entry-failed" min="0" value="0"></div>
+            <div class="field"><label>Jadi Buyer</label><input type="number" id="entry-buyer" min="0" value="0"></div>
+          </div>
+          <div class="form-grid two" style="margin-top:16px;">
+            <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
+          </div>
+          <div class="form-actions"><button type="submit" class="btn btn-primary">Simpan Entri</button></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= DASHBOARD ================= -->
+    <div id="view-dashboard" class="view">
+      <div class="hero" style="padding-top:36px;">
+        <div class="eyebrow">Live Dashboard</div>
+        <h1>Prestasi Blasting</h1>
+        <div class="table-controls" style="margin-top:18px;">
+          <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="filter-from"></div>
+          <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="filter-to"></div>
+          <div class="field" style="margin:0;"><label>Staff</label>
+            <select id="filter-staff" class="filter-box"><option value="">Semua Staff</option></select>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card accent-mint"><div class="label">Total Sent</div><div class="value" id="stat-sent">0</div><div class="foot" id="stat-sessions">0 entri</div></div>
+          <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="stat-buyer">0</div><div class="foot" id="stat-conv">0.00% conversion</div></div>
+          <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
+        </div>
+      </div>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">01</span>Funnel</h2></div>
+        <div class="funnel-card"><div id="funnel"></div></div>
+      </section>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">02</span>Sumber / Source</h2></div>
+        <div class="source-grid" id="source-grid"></div>
+      </section>
+
+      <section id="template-section">
+        <div class="section-head">
+          <h2><span class="idx">03</span>Laporan Template</h2>
+          <span class="hint-chip" id="tmpl-count">0 template</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th></tr></thead>
+          <tbody id="tmpl-body"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- ================= CONTACTS ================= -->
+    <div id="view-contacts" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Kontak</h2></div>
+      <div class="form-card" style="margin-bottom:20px;">
+        <form id="contact-form" class="form-grid">
+          <div class="field"><label>Nama</label><input type="text" id="contact-name" required></div>
+          <div class="field"><label>No. Telefon</label><input type="text" id="contact-phone" required></div>
+          <div class="field"><label>Sumber</label><input type="text" id="contact-source" placeholder="cth: Ads FB"></div>
+          <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="submit" class="btn btn-primary">+ Tambah Kontak</button></div>
+        </form>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="search-contact" placeholder="Cari nama atau nombor...">
+        <select class="filter-box" id="filter-contact-status">
+          <option value="">Semua Status</option>
+          <option value="pending">Belum Blast</option>
+          <option value="blasted">Dah Blast</option>
+        </select>
+        <span class="hint-chip" id="contact-count">0 kontak</span>
+      </div>
+      <table class="tbl" style="margin-top:14px;">
+        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
+        <tbody id="contact-body"></tbody>
+      </table>
+      <div class="pagination">
+        <span id="page-info"></span>
+        <div style="display:flex; gap:8px;">
+          <button id="prev-page">← Prev</button>
+          <button id="next-page">Next →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
