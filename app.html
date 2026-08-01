@@ -22,6 +22,7 @@
         <button data-view="input" class="active">Input Data</button>
         <button data-view="dashboard">Dashboard</button>
         <button data-view="contacts">Kontak</button>
+        <button data-view="todo">To-Do</button>
       </nav>
       <div class="user-badge">
         <span class="role-badge" id="user-role">Staff</span>
@@ -56,6 +57,7 @@
           </div>
           <div class="form-grid two" style="margin-top:16px;">
             <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
+            <div class="field"><label>Perbelanjaan Iklan / Spend (RM)</label><input type="number" id="entry-spend" min="0" step="0.01" value="0"></div>
           </div>
           <div class="form-actions"><button type="submit" class="btn btn-primary">Simpan Entri</button></div>
         </form>
@@ -79,6 +81,8 @@
           <div class="stat-card accent-mint"><div class="label">Total Sent</div><div class="value" id="stat-sent">0</div><div class="foot" id="stat-sessions">0 entri</div></div>
           <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="stat-buyer">0</div><div class="foot" id="stat-conv">0.00% conversion</div></div>
           <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
+          <div class="stat-card"><div class="label">Perbelanjaan Iklan</div><div class="value" id="stat-spend">RM 0</div></div>
+          <div class="stat-card accent-mint"><div class="label">ROI</div><div class="value" id="stat-roi">0%</div><div class="foot" id="stat-roas">ROAS 0.00x</div></div>
         </div>
       </div>
 
@@ -98,7 +102,7 @@
           <span class="hint-chip" id="tmpl-count">0 template</span>
         </div>
         <table class="tbl">
-          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th></tr></thead>
+          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>ROI</th></tr></thead>
           <tbody id="tmpl-body"></tbody>
         </table>
       </section>
@@ -135,6 +139,23 @@
           <button id="next-page">Next →</button>
         </div>
       </div>
+    </div>
+
+    <!-- ================= TO-DO HARIAN ================= -->
+    <div id="view-todo" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>To-Do Harian</h2></div>
+      <div class="form-card" style="margin-bottom:20px;">
+        <form id="todo-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="field" style="flex:2; min-width:200px; margin:0;"><label>Tugasan</label><input type="text" id="todo-text" placeholder="cth: Follow up 20 kontak baru" required></div>
+          <div class="field" style="margin:0;"><label>Tarikh</label><input type="date" id="todo-date" required></div>
+          <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah</button>
+        </form>
+      </div>
+      <div class="table-controls">
+        <div class="field" style="margin:0;"><label>Papar tarikh</label><input type="date" id="todo-filter-date"></div>
+        <span class="hint-chip" id="todo-count">0 tugasan</span>
+      </div>
+      <div id="todo-list" style="margin-top:16px; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 
   </div>

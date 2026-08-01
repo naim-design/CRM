@@ -72,3 +72,16 @@ body { padding-bottom: 60px; }
 
 .role-badge { font-family:'IBM Plex Mono'; font-size:10px; padding:2px 8px; border-radius:20px; background:var(--surface-raised); color:var(--muted); border:1px solid var(--line); }
 .role-badge.admin { color:var(--amber); border-color:rgba(240,172,82,0.3); }
+
+/* ---- To-Do ---- */
+.todo-item { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
+  border-radius:10px; padding:13px 16px; }
+.todo-item.done { opacity:0.5; }
+.todo-item.done .todo-text { text-decoration:line-through; }
+.todo-check { width:19px; height:19px; border-radius:6px; border:1.5px solid var(--line); background:var(--surface-raised);
+  cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--mint); font-size:13px; }
+.todo-check.checked { background:var(--mint-dim); border-color:var(--mint); }
+.todo-text { flex:1; font-size:14px; }
+.todo-meta { font-size:11px; color:var(--muted-2); font-family:'IBM Plex Mono'; }
+.todo-del { background:none; border:none; color:var(--muted-2); cursor:pointer; font-size:16px; padding:4px 8px; }
+.todo-del:hover { color:var(--coral); }

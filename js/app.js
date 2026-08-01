@@ -6,8 +6,10 @@ let currentUser = null;
 let currentProfile = null;
 let unsubEntries = null;
 let unsubContacts = null;
+let unsubTodos = null;
 let allEntries = [];
 let allContacts = [];
+let allTodos = [];
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -36,6 +38,8 @@ auth.onAuthStateChanged(async (user) => {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
   }
   document.getElementById('entry-tarikh').value = todayStr();
+  document.getElementById('todo-date').value = todayStr();
+  document.getElementById('todo-filter-date').value = todayStr();
   populateStaffFilter();
   startListeners();
 });
@@ -64,6 +68,11 @@ function startListeners() {
     allContacts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderContacts();
   }, err => toast('Ralat baca kontak: ' + err.message, true));
+
+  unsubTodos = db.collection('todos').orderBy('createdAt', 'desc').onSnapshot(snap => {
+    allTodos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTodos();
+  }, err => toast('Ralat baca to-do: ' + err.message, true));
 }
 
 // ============================================================
@@ -86,6 +95,7 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     failed: Number(document.getElementById('entry-failed').value || 0),
     buyer: Number(document.getElementById('entry-buyer').value || 0),
     sales: Number(document.getElementById('entry-sales').value || 0),
+    spend: Number(document.getElementById('entry-spend').value || 0),
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
   try {
@@ -120,12 +130,18 @@ function renderDashboard() {
   const totals = rows.reduce((a, r) => {
     a.sent += r.sent; a.delivered += r.delivered; a.read += r.read;
     a.reply += r.reply; a.failed += r.failed; a.buyer += r.buyer; a.sales += r.sales;
+    a.spend += (r.spend || 0);
     return a;
-  }, { sent: 0, delivered: 0, read: 0, reply: 0, failed: 0, buyer: 0, sales: 0 });
+  }, { sent: 0, delivered: 0, read: 0, reply: 0, failed: 0, buyer: 0, sales: 0, spend: 0 });
 
   document.getElementById('stat-sent').textContent = fmt(totals.sent);
   document.getElementById('stat-buyer').textContent = fmt(totals.buyer);
   document.getElementById('stat-sales').textContent = 'RM ' + fmt(totals.sales);
+  document.getElementById('stat-spend').textContent = 'RM ' + fmt(totals.spend);
+  const roi = totals.spend ? ((totals.sales - totals.spend) / totals.spend * 100) : 0;
+  const roas = totals.spend ? (totals.sales / totals.spend) : 0;
+  document.getElementById('stat-roi').textContent = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
+  document.getElementById('stat-roas').textContent = 'ROAS ' + roas.toFixed(2) + 'x';
   const convRate = totals.sent ? (totals.buyer / totals.sent * 100).toFixed(2) : '0.00';
   document.getElementById('stat-conv').textContent = convRate + '%';
   document.getElementById('stat-sessions').textContent = fmt(rows.length) + ' entri';
@@ -176,9 +192,10 @@ function renderTemplateReport() {
   const byTmpl = {};
   rows.forEach(r => {
     const k = r.template || 'Tanpa nama';
-    byTmpl[k] = byTmpl[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
+    byTmpl[k] = byTmpl[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0, spend: 0 };
     const t = byTmpl[k];
     t.sessions++; t.sent += r.sent; t.read += r.read; t.reply += r.reply; t.buyer += r.buyer; t.sales += r.sales;
+    t.spend += (r.spend || 0);
   });
   const body = document.getElementById('tmpl-body');
   body.innerHTML = '';
@@ -187,15 +204,17 @@ function renderTemplateReport() {
     const readRate = t.sent ? (t.read / t.sent * 100).toFixed(1) : '0.0';
     const replyRate = t.sent ? (t.reply / t.sent * 100).toFixed(1) : '0.0';
     const convRate = t.sent ? (t.buyer / t.sent * 100).toFixed(2) : '0.00';
+    const roi = t.spend ? ((t.sales - t.spend) / t.spend * 100) : null;
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="rank">${i + 1}</td><td class="tname">${name}</td>
       <td class="num">${t.sessions}</td><td class="num">${fmt(t.sent)}</td><td class="num">${readRate}%</td>
       <td class="num">${replyRate}%</td><td class="num">${convRate}%</td>
-      <td class="num">${t.sales ? 'RM ' + fmt(t.sales) : '–'}</td>`;
+      <td class="num">${t.sales ? 'RM ' + fmt(t.sales) : '–'}</td>
+      <td class="num">${roi === null ? '–' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</td>`;
     body.appendChild(tr);
   });
   document.getElementById('tmpl-count').textContent = entries.length + ' template';
-  if (!entries.length) body.innerHTML = '<tr><td colspan="8" class="empty-state">Tiada data lagi</td></tr>';
+  if (!entries.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada data lagi</td></tr>';
 }
 
 ['filter-from', 'filter-to', 'filter-staff'].forEach(id => {
@@ -280,3 +299,58 @@ document.getElementById('search-contact').addEventListener('input', e => { cFilt
 document.getElementById('filter-contact-status').addEventListener('change', e => { cStatus = e.target.value; cPage = 0; renderContacts(); });
 document.getElementById('prev-page').addEventListener('click', () => { if (cPage > 0) { cPage--; renderContacts(); } });
 document.getElementById('next-page').addEventListener('click', () => { cPage++; renderContacts(); });
+
+// ============================================================
+// TO-DO HARIAN — CRUD
+// ============================================================
+document.getElementById('todo-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const text = document.getElementById('todo-text').value.trim();
+  const date = document.getElementById('todo-date').value;
+  if (!text || !date) return;
+  try {
+    await db.collection('todos').add({
+      text, date, done: false,
+      staffId: currentUser.uid, staffName: currentProfile.name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    document.getElementById('todo-text').value = '';
+    toast('Tugasan ditambah ✓');
+  } catch (err) {
+    toast('Gagal tambah tugasan: ' + err.message, true);
+  }
+});
+
+document.getElementById('todo-filter-date').addEventListener('change', renderTodos);
+
+function renderTodos() {
+  const date = document.getElementById('todo-filter-date').value;
+  const rows = allTodos.filter(t => !date || t.date === date);
+  document.getElementById('todo-count').textContent = fmt(rows.length) + ' tugasan';
+  const list = document.getElementById('todo-list');
+  list.innerHTML = '';
+  rows.forEach(t => {
+    const item = document.createElement('div');
+    item.className = 'todo-item' + (t.done ? ' done' : '');
+    item.innerHTML = `
+      <div class="todo-check ${t.done ? 'checked' : ''}" data-id="${t.id}" data-done="${t.done}">${t.done ? '✓' : ''}</div>
+      <div style="flex:1;">
+        <div class="todo-text">${t.text}</div>
+        <div class="todo-meta">${t.staffName || ''}</div>
+      </div>
+      <button class="todo-del" data-id="${t.id}">✕</button>`;
+    list.appendChild(item);
+  });
+  document.querySelectorAll('.todo-check').forEach(el => {
+    el.onclick = async () => {
+      const newDone = el.dataset.done !== 'true';
+      await db.collection('todos').doc(el.dataset.id).update({ done: newDone });
+    };
+  });
+  document.querySelectorAll('.todo-del').forEach(el => {
+    el.onclick = async () => {
+      if (confirm('Padam tugasan ni?')) await db.collection('todos').doc(el.dataset.id).delete();
+    };
+  });
+  if (!rows.length) list.innerHTML = '<div class="empty-state">Tiada tugasan untuk tarikh ni.</div>';
+}
