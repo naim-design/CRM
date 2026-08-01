@@ -9,8 +9,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
 <link rel="stylesheet" href="css/app-extra.css">
+<script>
+  (function() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  })();
+</script>
 </head>
 <body>
+
+<button class="theme-toggle" id="theme-toggle" title="Tukar tema" style="position:fixed; top:20px; right:20px; z-index:100;">🌙</button>
 
 <div class="auth-wrap">
   <div class="auth-card">

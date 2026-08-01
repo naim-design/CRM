@@ -105,3 +105,25 @@ body { padding-bottom: 60px; }
 #paste-data { width:100%; background:var(--surface-raised); border:1px solid var(--line); border-radius:9px;
   padding:12px 13px; color:var(--text); font-family:'IBM Plex Mono'; font-size:12.5px; outline:none; resize:vertical; }
 #paste-data:focus { border-color:var(--mint); }
+
+/* ---- Light theme ---- */
+[data-theme="light"] {
+  --bg: #F6F8F7; --surface: #FFFFFF; --surface-raised: #F0F3F2;
+  --line: #E1E7E4; --line-soft: #ECEFED; --text: #16201C; --muted: #5B6B64; --muted-2: #8B9992;
+  --mint: #0EA372; --mint-dim: rgba(14,163,114,0.10);
+  --amber: #C97F1E; --amber-dim: rgba(201,127,30,0.10);
+  --coral: #D6503E; --coral-dim: rgba(214,80,62,0.10);
+  --blue: #2E7BC4; --blue-dim: rgba(46,123,196,0.10);
+}
+[data-theme="light"] body {
+  background: radial-gradient(1200px 600px at 85% -10%, rgba(14,163,114,0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 20%, rgba(46,123,196,0.04), transparent 55%), var(--bg);
+}
+[data-theme="light"] .btn-primary { color: #FFFFFF; }
+
+.theme-toggle {
+  background: var(--surface-raised); border: 1px solid var(--line); color: var(--text);
+  width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: var(--mint); }
