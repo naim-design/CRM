@@ -176,19 +176,36 @@
         </table>
       </section>
 
-      <!-- Import CSV -->
+      <!-- Import CSV / Bulk Paste -->
       <section>
-        <div class="section-head"><h2><span class="idx">02</span>Import Kontak (CSV)</h2></div>
+        <div class="section-head"><h2><span class="idx">02</span>Import Kontak</h2></div>
         <div class="form-card" style="margin-bottom:10px;">
-          <div class="form-grid" style="grid-template-columns:2fr 1fr 1fr;">
+          <div class="import-tabs">
+            <button type="button" class="import-tab active" data-mode="paste">Bulk Paste</button>
+            <button type="button" class="import-tab" data-mode="file">Upload Fail CSV</button>
+          </div>
+
+          <div id="import-mode-paste" class="import-mode active">
+            <div class="field">
+              <label>Paste terus dari Excel / Google Sheets (kolum: nama, nombor)</label>
+              <textarea id="paste-data" rows="8" placeholder="Ali	60123456789
+Siti	60198765432
+Ahmad	60112223344"></textarea>
+            </div>
+          </div>
+
+          <div id="import-mode-file" class="import-mode">
             <div class="field"><label>Fail CSV (kolum: nama,nombor)</label><input type="file" id="csv-file" accept=".csv"></div>
-            <div class="field"><label>Sumber untuk fail ni</label>
+          </div>
+
+          <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-top:14px;">
+            <div class="field"><label>Sumber untuk batch ni</label>
               <select id="csv-source">
                 <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
                 <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
               </select>
             </div>
-            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import</button></div>
+            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import Kontak</button></div>
           </div>
           <div id="csv-progress-wrap" style="display:none; margin-top:14px;">
             <div style="background:var(--surface-raised); border-radius:8px; height:8px; overflow:hidden;">
@@ -196,7 +213,7 @@
             </div>
             <div id="csv-progress-text" style="font-size:12px; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono';"></div>
           </div>
-          <p style="font-size:11.5px; color:var(--muted-2); margin-top:12px;">Format CSV: baris pertama header (nama,nombor), setiap baris seterusnya satu kontak. Contoh: <code>Ali,60123456789</code></p>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:12px;">Bulk paste terima format tab (terus dari Excel/Sheets) atau koma. Baris header (cth "nama,nombor") automatik dikesan & diabaikan.</p>
         </div>
       </section>
 

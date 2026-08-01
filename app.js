@@ -443,35 +443,58 @@ async function doLookup() {
   }
 }
 
-// ---- CSV Import (batched writes, chunks of 400) ----
+// ---- Import mode tabs (Bulk Paste / Upload CSV) ----
+document.querySelectorAll('.import-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.import-mode').forEach(m => m.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('import-mode-' + tab.dataset.mode).classList.add('active');
+  });
+});
+
+function parseBulkRows(raw) {
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  // Detect delimiter: tab (Excel/Sheets paste) atau koma (CSV)
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+  let startIdx = 0;
+  const firstCols = lines[0].split(delim);
+  if (firstCols[1] && !/\d{6,}/.test(firstCols[1])) startIdx = 1; // skip header row
+  const rows = [];
+  for (let i = startIdx; i < lines.length; i++) {
+    const cols = lines[i].split(delim);
+    const name = (cols[0] || '').trim();
+    const phone = (cols[1] || '').trim().replace(/[^0-9+]/g, '');
+    if (name && phone) rows.push({ name, phone });
+  }
+  return rows;
+}
+
+// ---- Import (batched writes, chunks of 400) — terima Bulk Paste atau fail CSV ----
 document.getElementById('csv-import-btn').addEventListener('click', async () => {
-  const file = document.getElementById('csv-file').files[0];
+  const activeMode = document.querySelector('.import-tab.active').dataset.mode;
   const source = document.getElementById('csv-source').value;
-  if (!file) { toast('Pilih fail CSV dulu', true); return; }
   const btn = document.getElementById('csv-import-btn');
   const wrap = document.getElementById('csv-progress-wrap');
   const bar = document.getElementById('csv-progress-bar');
   const text = document.getElementById('csv-progress-text');
   btn.disabled = true;
   wrap.style.display = 'block';
-  text.textContent = 'Membaca fail...';
+  text.textContent = 'Membaca data...';
   try {
-    const raw = await file.text();
-    const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    if (!lines.length) throw new Error('Fail kosong');
-    // Skip header row kalau baris pertama nampak macam header (tiada nombor telefon panjang)
-    let startIdx = 0;
-    const firstCols = lines[0].split(',');
-    if (firstCols[1] && !/\d{6,}/.test(firstCols[1])) startIdx = 1;
-
-    const rows = [];
-    for (let i = startIdx; i < lines.length; i++) {
-      const cols = lines[i].split(',');
-      const name = (cols[0] || '').trim();
-      const phone = (cols[1] || '').trim().replace(/[^0-9+]/g, '');
-      if (name && phone) rows.push({ name, phone });
+    let rows = [];
+    if (activeMode === 'paste') {
+      const raw = document.getElementById('paste-data').value;
+      if (!raw.trim()) throw new Error('Paste dulu data kontak dalam kotak tu');
+      rows = parseBulkRows(raw);
+    } else {
+      const file = document.getElementById('csv-file').files[0];
+      if (!file) throw new Error('Pilih fail CSV dulu');
+      const raw = await file.text();
+      rows = parseBulkRows(raw);
     }
-    if (!rows.length) throw new Error('Tiada baris kontak yang sah dijumpai dalam CSV');
+    if (!rows.length) throw new Error('Tiada baris kontak yang sah dijumpai (perlukan nama & nombor)');
 
     const CHUNK = 400;
     let done = 0;
@@ -492,6 +515,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
       text.textContent = `${fmt(done)} / ${fmt(rows.length)} kontak diimport (${pct}%)`;
     }
     toast(fmt(rows.length) + ' kontak berjaya diimport ✓');
+    document.getElementById('paste-data').value = '';
     document.getElementById('csv-file').value = '';
     loadContactStats();
     loadContactsPage('first');
