@@ -5,11 +5,9 @@
 let currentUser = null;
 let currentProfile = null;
 let unsubEntries = null;
-let unsubContacts = null;
 let unsubTodos = null;
 let unsubPosters = null;
 let allEntries = [];
-let allContacts = [];
 let allTodos = [];
 let allPosters = [];
 
@@ -22,6 +20,24 @@ function toast(msg, isError) {
   t.className = 'toast show' + (isError ? ' error' : '');
   setTimeout(() => t.classList.remove('show'), 2800);
 }
+
+// ---- Theme toggle (dark/light) ----
+function applyThemeIcon() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  }
+  applyThemeIcon();
+});
+applyThemeIcon();
 
 // ---- Auth guard ----
 auth.onAuthStateChanged(async (user) => {
@@ -55,6 +71,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if (btn.dataset.view === 'contacts') { loadContactStats(); loadContactsPage('first'); }
   });
 });
 
@@ -67,11 +84,6 @@ function startListeners() {
     renderDailyReport();
     renderPosterPerformance();
   }, err => toast('Ralat baca data: ' + err.message, true));
-
-  unsubContacts = db.collection('contacts').orderBy('createdAt', 'desc').onSnapshot(snap => {
-    allContacts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderContacts();
-  }, err => toast('Ralat baca kontak: ' + err.message, true));
 
   unsubTodos = db.collection('todos').orderBy('createdAt', 'desc').onSnapshot(snap => {
     allTodos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -244,13 +256,20 @@ async function populateStaffFilter() {
 }
 
 // ============================================================
-// CONTACTS — CRUD
+// CONTACTS — scale untuk puluhan ribu rekod (server-side query,
+// bukan load semua ke memori)
 // ============================================================
+const CONTACT_SOURCES = ['WhatsApp', 'TikTok', 'Facebook Ads', 'Instagram', 'Organic / Rujukan', 'Lain-lain'];
+const PAGE_SIZE = 50;
+let contactCursors = [null]; // cursor stack ikut page
+let contactPageIdx = 0;
+let lastContactDocs = [];
+
 document.getElementById('contact-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('contact-name').value.trim();
   const phone = document.getElementById('contact-phone').value.trim();
-  const source = document.getElementById('contact-source').value.trim() || 'Umum';
+  const source = document.getElementById('contact-source').value;
   if (!name || !phone) return;
   try {
     await db.collection('contacts').add({
@@ -258,40 +277,101 @@ document.getElementById('contact-form').addEventListener('submit', async (e) => 
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     e.target.reset();
-    toast('Kontak ditambah ✓');
+    toast('Rekod ditambah ✓');
+    loadContactStats();
+    loadContactsPage('first');
   } catch (err) {
-    toast('Gagal tambah kontak: ' + err.message, true);
+    toast('Gagal tambah rekod: ' + err.message, true);
   }
 });
 
-let cFilter = '', cStatus = '', cPage = 0;
-const PAGE_SIZE = 50;
+// ---- Stats (aggregation count queries — murah walaupun puluhan ribu rekod) ----
+async function loadContactStats() {
+  try {
+    const col = db.collection('contacts');
+    const [totalSnap, blastedSnap] = await Promise.all([
+      col.count().get(),
+      col.where('status', '==', 'blasted').count().get(),
+    ]);
+    const total = totalSnap.data().count;
+    const blasted = blastedSnap.data().count;
+    document.getElementById('cstat-total').textContent = fmt(total);
+    document.getElementById('cstat-blasted').textContent = fmt(blasted);
+    document.getElementById('cstat-pending').textContent = fmt(total - blasted);
 
-function renderContacts() {
-  const q = cFilter.toLowerCase();
-  const filtered = allContacts.filter(c =>
-    (!q || c.name.toLowerCase().includes(q) || c.phone.includes(q)) &&
-    (!cStatus || c.status === cStatus)
-  );
-  const total = filtered.length;
-  const maxPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1);
-  if (cPage > maxPage) cPage = maxPage;
-  const start = cPage * PAGE_SIZE;
-  const pageRows = filtered.slice(start, start + PAGE_SIZE);
-  document.getElementById('contact-count').textContent = fmt(total) + ' kontak';
-  document.getElementById('page-info').textContent = total ? `Papar ${start + 1}–${Math.min(start + PAGE_SIZE, total)} dari ${fmt(total)}` : 'Tiada hasil';
-  document.getElementById('prev-page').disabled = cPage === 0;
-  document.getElementById('next-page').disabled = cPage >= maxPage;
+    const body = document.getElementById('source-stat-body');
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">Mengira...</td></tr>';
+    const rows = await Promise.all(CONTACT_SOURCES.map(async (src) => {
+      const [t, b] = await Promise.all([
+        col.where('source', '==', src).count().get(),
+        col.where('source', '==', src).where('status', '==', 'blasted').count().get(),
+      ]);
+      return { src, total: t.data().count, blasted: b.data().count };
+    }));
+    body.innerHTML = '';
+    rows.filter(r => r.total > 0).forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="tname">${r.src}</td><td class="num">${fmt(r.total)}</td>
+        <td class="num" style="color:#35E0AC;">${fmt(r.blasted)}</td>
+        <td class="num" style="color:#F0AC52;">${fmt(r.total - r.blasted)}</td>`;
+      body.appendChild(tr);
+    });
+    if (!rows.some(r => r.total > 0)) body.innerHTML = '<tr><td colspan="4" class="empty-state">Tiada data lagi</td></tr>';
+  } catch (err) {
+    toast('Gagal kira statistik: ' + err.message, true);
+  }
+}
+
+// ---- Browse list (server-side cursor pagination) ----
+function buildContactQuery() {
+  let q = db.collection('contacts').orderBy('createdAt', 'desc');
+  const status = document.getElementById('filter-contact-status').value;
+  const source = document.getElementById('filter-contact-source').value;
+  if (status) q = q.where('status', '==', status);
+  if (source) q = q.where('source', '==', source);
+  return q;
+}
+
+async function loadContactsPage(dir) {
+  const body = document.getElementById('contact-body');
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Memuatkan...</td></tr>';
+  try {
+    if (dir === 'first') { contactCursors = [null]; contactPageIdx = 0; }
+    else if (dir === 'next') contactPageIdx++;
+    else if (dir === 'prev') contactPageIdx = Math.max(0, contactPageIdx - 1);
+
+    let q = buildContactQuery().limit(PAGE_SIZE);
+    const cursor = contactCursors[contactPageIdx];
+    if (cursor) q = q.startAfter(cursor);
+
+    const snap = await q.get();
+    lastContactDocs = snap.docs;
+    if (snap.docs.length) contactCursors[contactPageIdx + 1] = snap.docs[snap.docs.length - 1];
+
+    renderContactRows(snap.docs);
+    document.getElementById('contact-count').textContent = fmt(snap.docs.length) + ' dipapar';
+    document.getElementById('page-info').textContent = `Halaman ${contactPageIdx + 1}`;
+    document.getElementById('prev-page').disabled = contactPageIdx === 0;
+    document.getElementById('next-page').disabled = snap.docs.length < PAGE_SIZE;
+    updateBulkButtonState();
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state">Ralat: ' + err.message + '</td></tr>';
+  }
+}
+
+function renderContactRows(docs) {
   const body = document.getElementById('contact-body');
   body.innerHTML = '';
-  pageRows.forEach(c => {
+  docs.forEach(d => {
+    const c = d.data();
     const tr = document.createElement('tr');
     tr.className = c.status === 'blasted' ? 'row-blasted' : 'row-pending';
-    tr.innerHTML = `<td class="tname">${c.name}</td>
+    tr.innerHTML = `<td><input type="checkbox" class="row-check" data-id="${d.id}"></td>
+      <td class="tname">${c.name}</td>
       <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
-      <td style="font-size:12px; color:var(--muted);">${c.source}</td>
+      <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
       <td style="text-align:right;">
-        <span class="status-pill ${c.status}" style="cursor:pointer;" data-id="${c.id}" data-status="${c.status}">
+        <span class="status-pill ${c.status}" style="cursor:pointer;" data-id="${d.id}" data-status="${c.status}">
           ${c.status === 'blasted' ? 'Dah Blast' : 'Belum Blast'}
         </span>
       </td>`;
@@ -301,15 +381,169 @@ function renderContacts() {
     pill.onclick = async () => {
       const newStatus = pill.dataset.status === 'blasted' ? 'pending' : 'blasted';
       await db.collection('contacts').doc(pill.dataset.id).update({ status: newStatus });
+      reloadCurrentContactPage();
+      loadContactStats();
     };
   });
-  if (!total) body.innerHTML = '<tr><td colspan="4" class="empty-state">Tiada kontak lagi — tambah di atas.</td></tr>';
+  document.querySelectorAll('.row-check').forEach(cb => cb.addEventListener('change', updateBulkButtonState));
+  if (!docs.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada rekod dijumpai.</td></tr>';
+}
+// reload semasa page tanpa gerakkan cursor (lepas toggle status)
+async function reloadCurrentContactPage() {
+  const q = buildContactQuery().limit(PAGE_SIZE);
+  const cursor = contactCursors[contactPageIdx];
+  const finalQ = cursor ? q.startAfter(cursor) : q;
+  const snap = await finalQ.get();
+  renderContactRows(snap.docs);
 }
 
-document.getElementById('search-contact').addEventListener('input', e => { cFilter = e.target.value; cPage = 0; renderContacts(); });
-document.getElementById('filter-contact-status').addEventListener('change', e => { cStatus = e.target.value; cPage = 0; renderContacts(); });
-document.getElementById('prev-page').addEventListener('click', () => { if (cPage > 0) { cPage--; renderContacts(); } });
-document.getElementById('next-page').addEventListener('click', () => { cPage++; renderContacts(); });
+document.getElementById('filter-contact-status').addEventListener('change', () => loadContactsPage('first'));
+document.getElementById('filter-contact-source').addEventListener('change', () => loadContactsPage('first'));
+document.getElementById('contact-refresh-btn').addEventListener('click', () => { loadContactStats(); loadContactsPage('first'); });
+document.getElementById('prev-page').addEventListener('click', () => loadContactsPage('prev'));
+document.getElementById('next-page').addEventListener('click', () => loadContactsPage('next'));
+
+document.getElementById('select-all-contacts').addEventListener('change', (e) => {
+  document.querySelectorAll('.row-check').forEach(cb => cb.checked = e.target.checked);
+  updateBulkButtonState();
+});
+function updateBulkButtonState() {
+  const anyChecked = document.querySelectorAll('.row-check:checked').length > 0;
+  document.getElementById('bulk-blast-btn').disabled = !anyChecked;
+}
+document.getElementById('bulk-blast-btn').addEventListener('click', async () => {
+  const ids = Array.from(document.querySelectorAll('.row-check:checked')).map(cb => cb.dataset.id);
+  if (!ids.length) return;
+  const btn = document.getElementById('bulk-blast-btn');
+  btn.disabled = true; btn.textContent = 'Mengemaskini...';
+  try {
+    const batch = db.batch();
+    ids.forEach(id => batch.update(db.collection('contacts').doc(id), { status: 'blasted' }));
+    await batch.commit();
+    toast(ids.length + ' rekod ditandakan Dah Blast ✓');
+    loadContactStats();
+    loadContactsPage('first');
+  } catch (err) {
+    toast('Gagal kemaskini: ' + err.message, true);
+  } finally {
+    btn.textContent = 'Tandakan dipilih: Dah Blast';
+  }
+});
+
+// ---- Quick lookup by phone ----
+document.getElementById('lookup-btn').addEventListener('click', doLookup);
+document.getElementById('lookup-phone').addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+async function doLookup() {
+  const phone = document.getElementById('lookup-phone').value.trim();
+  const resultEl = document.getElementById('lookup-result');
+  if (!phone) return;
+  resultEl.innerHTML = '<div class="empty-state">Mencari...</div>';
+  try {
+    const snap = await db.collection('contacts').where('phone', '==', phone).limit(5).get();
+    if (snap.empty) {
+      resultEl.innerHTML = '<div class="empty-state">Nombor ni tiada dalam database.</div>';
+      return;
+    }
+    resultEl.innerHTML = '';
+    snap.forEach(d => {
+      const c = d.data();
+      const div = document.createElement('div');
+      div.className = 'todo-item';
+      div.innerHTML = `<div style="flex:1;">
+        <div class="todo-text">${c.name} — ${c.phone}</div>
+        <div class="todo-meta">Sumber: ${c.source || '–'}</div>
+      </div>
+      <span class="status-pill ${c.status}">${c.status === 'blasted' ? 'Dah Blast' : 'Belum Blast'}</span>`;
+      resultEl.appendChild(div);
+    });
+  } catch (err) {
+    resultEl.innerHTML = '<div class="empty-state">Ralat: ' + err.message + '</div>';
+  }
+}
+
+// ---- Import mode tabs (Bulk Paste / Upload CSV) ----
+document.querySelectorAll('.import-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.import-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.import-mode').forEach(m => m.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('import-mode-' + tab.dataset.mode).classList.add('active');
+  });
+});
+
+function parseBulkRows(raw) {
+  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  // Detect delimiter: tab (Excel/Sheets paste) atau koma (CSV)
+  const delim = lines[0].includes('\t') ? '\t' : ',';
+  let startIdx = 0;
+  const firstCols = lines[0].split(delim);
+  if (firstCols[1] && !/\d{6,}/.test(firstCols[1])) startIdx = 1; // skip header row
+  const rows = [];
+  for (let i = startIdx; i < lines.length; i++) {
+    const cols = lines[i].split(delim);
+    const name = (cols[0] || '').trim();
+    const phone = (cols[1] || '').trim().replace(/[^0-9+]/g, '');
+    if (name && phone) rows.push({ name, phone });
+  }
+  return rows;
+}
+
+// ---- Import (batched writes, chunks of 400) — terima Bulk Paste atau fail CSV ----
+document.getElementById('csv-import-btn').addEventListener('click', async () => {
+  const activeMode = document.querySelector('.import-tab.active').dataset.mode;
+  const source = document.getElementById('csv-source').value;
+  const btn = document.getElementById('csv-import-btn');
+  const wrap = document.getElementById('csv-progress-wrap');
+  const bar = document.getElementById('csv-progress-bar');
+  const text = document.getElementById('csv-progress-text');
+  btn.disabled = true;
+  wrap.style.display = 'block';
+  text.textContent = 'Membaca data...';
+  try {
+    let rows = [];
+    if (activeMode === 'paste') {
+      const raw = document.getElementById('paste-data').value;
+      if (!raw.trim()) throw new Error('Paste dulu data database dalam kotak tu');
+      rows = parseBulkRows(raw);
+    } else {
+      const file = document.getElementById('csv-file').files[0];
+      if (!file) throw new Error('Pilih fail CSV dulu');
+      const raw = await file.text();
+      rows = parseBulkRows(raw);
+    }
+    if (!rows.length) throw new Error('Tiada baris rekod yang sah dijumpai (perlukan nama & nombor)');
+
+    const CHUNK = 400;
+    let done = 0;
+    for (let i = 0; i < rows.length; i += CHUNK) {
+      const chunk = rows.slice(i, i + CHUNK);
+      const batch = db.batch();
+      chunk.forEach(r => {
+        const ref = db.collection('contacts').doc();
+        batch.set(ref, {
+          name: r.name, phone: r.phone, source, status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+      await batch.commit();
+      done += chunk.length;
+      const pct = Math.round(done / rows.length * 100);
+      bar.style.width = pct + '%';
+      text.textContent = `${fmt(done)} / ${fmt(rows.length)} rekod diimport (${pct}%)`;
+    }
+    toast(fmt(rows.length) + ' rekod berjaya diimport ✓');
+    document.getElementById('paste-data').value = '';
+    document.getElementById('csv-file').value = '';
+    loadContactStats();
+    loadContactsPage('first');
+  } catch (err) {
+    toast('Gagal import: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 2000);
+  }
+});
 
 // ============================================================
 // TO-DO HARIAN — CRUD
