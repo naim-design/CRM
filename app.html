@@ -23,7 +23,7 @@
         <button data-view="dashboard">Dashboard</button>
         <button data-view="poster">Poster</button>
         <button data-view="laporan">Laporan</button>
-        <button data-view="contacts">Kontak</button>
+        <button data-view="contacts">Database</button>
         <button data-view="todo">To-Do</button>
       </nav>
       <div class="user-badge">
@@ -159,11 +159,11 @@
 
     <!-- ================= CONTACTS ================= -->
     <div id="view-contacts" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>Kontak</h2></div>
+      <div class="section-head" style="padding-top:36px;"><h2>Database</h2></div>
 
       <!-- Stats -->
       <div class="stat-row" style="margin-bottom:24px;">
-        <div class="stat-card accent-mint"><div class="label">Total Kontak</div><div class="value" id="cstat-total">–</div></div>
+        <div class="stat-card accent-mint"><div class="label">Total Database</div><div class="value" id="cstat-total">–</div></div>
         <div class="stat-card"><div class="label">Dah Blast</div><div class="value" id="cstat-blasted">–</div></div>
         <div class="stat-card"><div class="label">Belum Blast</div><div class="value" id="cstat-pending">–</div></div>
       </div>
@@ -178,7 +178,7 @@
 
       <!-- Import CSV / Bulk Paste -->
       <section>
-        <div class="section-head"><h2><span class="idx">02</span>Import Kontak</h2></div>
+        <div class="section-head"><h2><span class="idx">02</span>Import Database</h2></div>
         <div class="form-card" style="margin-bottom:10px;">
           <div class="import-tabs">
             <button type="button" class="import-tab active" data-mode="paste">Bulk Paste</button>
@@ -205,7 +205,7 @@ Ahmad	60112223344"></textarea>
                 <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
               </select>
             </div>
-            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import Kontak</button></div>
+            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import Database</button></div>
           </div>
           <div id="csv-progress-wrap" style="display:none; margin-top:14px;">
             <div style="background:var(--surface-raised); border-radius:8px; height:8px; overflow:hidden;">
@@ -219,7 +219,7 @@ Ahmad	60112223344"></textarea>
 
       <!-- Add single -->
       <section>
-        <div class="section-head"><h2><span class="idx">03</span>Tambah Satu Kontak</h2></div>
+        <div class="section-head"><h2><span class="idx">03</span>Tambah Satu Rekod</h2></div>
         <div class="form-card" style="margin-bottom:20px;">
           <form id="contact-form" class="form-grid">
             <div class="field"><label>Nama</label><input type="text" id="contact-name" required></div>
@@ -247,7 +247,7 @@ Ahmad	60112223344"></textarea>
 
       <!-- Browse / filter list -->
       <section>
-        <div class="section-head"><h2><span class="idx">05</span>Senarai Kontak</h2></div>
+        <div class="section-head"><h2><span class="idx">05</span>Senarai Database</h2></div>
         <div class="table-controls">
           <select class="filter-box" id="filter-contact-status">
             <option value="">Semua Status</option>
@@ -284,7 +284,7 @@ Ahmad	60112223344"></textarea>
       <div class="section-head" style="padding-top:36px;"><h2>To-Do Harian</h2></div>
       <div class="form-card" style="margin-bottom:20px;">
         <form id="todo-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-          <div class="field" style="flex:2; min-width:200px; margin:0;"><label>Tugasan</label><input type="text" id="todo-text" placeholder="cth: Follow up 20 kontak baru" required></div>
+          <div class="field" style="flex:2; min-width:200px; margin:0;"><label>Tugasan</label><input type="text" id="todo-text" placeholder="cth: Follow up 20 rekod baru" required></div>
           <div class="field" style="margin:0;"><label>Tarikh</label><input type="date" id="todo-date" required></div>
           <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah</button>
         </form>

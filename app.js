@@ -259,11 +259,11 @@ document.getElementById('contact-form').addEventListener('submit', async (e) => 
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     e.target.reset();
-    toast('Kontak ditambah ✓');
+    toast('Rekod ditambah ✓');
     loadContactStats();
     loadContactsPage('first');
   } catch (err) {
-    toast('Gagal tambah kontak: ' + err.message, true);
+    toast('Gagal tambah rekod: ' + err.message, true);
   }
 });
 
@@ -368,7 +368,7 @@ function renderContactRows(docs) {
     };
   });
   document.querySelectorAll('.row-check').forEach(cb => cb.addEventListener('change', updateBulkButtonState));
-  if (!docs.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada kontak dijumpai.</td></tr>';
+  if (!docs.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada rekod dijumpai.</td></tr>';
 }
 // reload semasa page tanpa gerakkan cursor (lepas toggle status)
 async function reloadCurrentContactPage() {
@@ -402,7 +402,7 @@ document.getElementById('bulk-blast-btn').addEventListener('click', async () => 
     const batch = db.batch();
     ids.forEach(id => batch.update(db.collection('contacts').doc(id), { status: 'blasted' }));
     await batch.commit();
-    toast(ids.length + ' kontak ditandakan Dah Blast ✓');
+    toast(ids.length + ' rekod ditandakan Dah Blast ✓');
     loadContactStats();
     loadContactsPage('first');
   } catch (err) {
@@ -486,7 +486,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
     let rows = [];
     if (activeMode === 'paste') {
       const raw = document.getElementById('paste-data').value;
-      if (!raw.trim()) throw new Error('Paste dulu data kontak dalam kotak tu');
+      if (!raw.trim()) throw new Error('Paste dulu data database dalam kotak tu');
       rows = parseBulkRows(raw);
     } else {
       const file = document.getElementById('csv-file').files[0];
@@ -494,7 +494,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
       const raw = await file.text();
       rows = parseBulkRows(raw);
     }
-    if (!rows.length) throw new Error('Tiada baris kontak yang sah dijumpai (perlukan nama & nombor)');
+    if (!rows.length) throw new Error('Tiada baris rekod yang sah dijumpai (perlukan nama & nombor)');
 
     const CHUNK = 400;
     let done = 0;
@@ -512,9 +512,9 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
       done += chunk.length;
       const pct = Math.round(done / rows.length * 100);
       bar.style.width = pct + '%';
-      text.textContent = `${fmt(done)} / ${fmt(rows.length)} kontak diimport (${pct}%)`;
+      text.textContent = `${fmt(done)} / ${fmt(rows.length)} rekod diimport (${pct}%)`;
     }
-    toast(fmt(rows.length) + ' kontak berjaya diimport ✓');
+    toast(fmt(rows.length) + ' rekod berjaya diimport ✓');
     document.getElementById('paste-data').value = '';
     document.getElementById('csv-file').value = '';
     loadContactStats();
