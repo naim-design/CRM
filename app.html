@@ -21,6 +21,8 @@
       <nav class="app-nav">
         <button data-view="input" class="active">Input Data</button>
         <button data-view="dashboard">Dashboard</button>
+        <button data-view="poster">Poster</button>
+        <button data-view="laporan">Laporan</button>
         <button data-view="contacts">Kontak</button>
         <button data-view="todo">To-Do</button>
       </nav>
@@ -44,6 +46,11 @@
             <div class="field"><label>Tarikh</label><input type="date" id="entry-tarikh" required></div>
             <div class="field"><label>Sumber / Source</label><input type="text" id="entry-source" placeholder="cth: Ads FB, Organic"></div>
             <div class="field"><label>Nama Template</label><input type="text" id="entry-template" placeholder="cth: Promo Susu V2"></div>
+          </div>
+          <div class="form-grid two" style="margin-top:16px;">
+            <div class="field"><label>Poster digunakan</label>
+              <select id="entry-poster"><option value="">- Tiada / Tak Berkaitan -</option></select>
+            </div>
           </div>
           <div class="form-grid" style="margin-top:16px;">
             <div class="field"><label>Sent</label><input type="number" id="entry-sent" min="0" value="0" required></div>
@@ -104,6 +111,48 @@
         <table class="tbl">
           <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>ROI</th></tr></thead>
           <tbody id="tmpl-body"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- ================= POSTER ================= -->
+    <div id="view-poster" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Poster Blasting</h2></div>
+      <div class="form-card" style="margin-bottom:24px;">
+        <form id="poster-form" class="form-grid two">
+          <div class="field"><label>Nama Poster</label><input type="text" id="poster-name" placeholder="cth: Promo Susu Hazelnut V2" required></div>
+          <div class="field"><label>Pilih Gambar</label><input type="file" id="poster-file" accept="image/*" required></div>
+          <div class="form-actions"><button type="submit" class="btn btn-primary" id="poster-submit-btn">Upload Poster</button></div>
+        </form>
+      </div>
+      <div class="table-controls"><span class="hint-chip" id="poster-count">0 poster</span></div>
+      <div id="poster-grid" class="poster-grid"></div>
+    </div>
+
+    <!-- ================= LAPORAN ================= -->
+    <div id="view-laporan" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Laporan</h2></div>
+      <div class="table-controls">
+        <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="lap-filter-from"></div>
+        <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="lap-filter-to"></div>
+      </div>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">01</span>Laporan Harian</h2></div>
+        <table class="tbl">
+          <thead><tr><th>Tarikh</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>ROAS</th><th>ROI</th></tr></thead>
+          <tbody id="daily-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">02</span>Prestasi Poster</h2>
+          <span class="hint-chip" id="poster-perf-count">0 poster</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>ROI</th></tr></thead>
+          <tbody id="poster-perf-body"></tbody>
         </table>
       </section>
     </div>

@@ -7,9 +7,11 @@ let currentProfile = null;
 let unsubEntries = null;
 let unsubContacts = null;
 let unsubTodos = null;
+let unsubPosters = null;
 let allEntries = [];
 let allContacts = [];
 let allTodos = [];
+let allPosters = [];
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -62,6 +64,8 @@ function startListeners() {
     allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderDashboard();
     renderTemplateReport();
+    renderDailyReport();
+    renderPosterPerformance();
   }, err => toast('Ralat baca data: ' + err.message, true));
 
   unsubContacts = db.collection('contacts').orderBy('createdAt', 'desc').onSnapshot(snap => {
@@ -73,6 +77,12 @@ function startListeners() {
     allTodos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderTodos();
   }, err => toast('Ralat baca to-do: ' + err.message, true));
+
+  unsubPosters = db.collection('posters').orderBy('createdAt', 'desc').onSnapshot(snap => {
+    allPosters = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPosters();
+    populatePosterSelect();
+  }, err => toast('Ralat baca poster: ' + err.message, true));
 }
 
 // ============================================================
@@ -88,6 +98,7 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     tarikh: document.getElementById('entry-tarikh').value,
     source: document.getElementById('entry-source').value.trim() || 'Umum',
     template: document.getElementById('entry-template').value.trim() || 'Tanpa nama',
+    poster: document.getElementById('entry-poster').value || '',
     sent: Number(document.getElementById('entry-sent').value || 0),
     delivered: Number(document.getElementById('entry-delivered').value || 0),
     read: Number(document.getElementById('entry-read').value || 0),
@@ -354,3 +365,170 @@ function renderTodos() {
   });
   if (!rows.length) list.innerHTML = '<div class="empty-state">Tiada tugasan untuk tarikh ni.</div>';
 }
+
+// ============================================================
+// POSTER — Mampatkan gambar (canvas) & simpan terus dalam Firestore
+// (Elak guna Firebase Storage sebab perlukan Blaze plan/kad kredit)
+// ============================================================
+function compressImageToBase64(file, maxDim = 700, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal baca fail'));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Fail bukan gambar yang sah'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+          else { width = Math.round(width * maxDim / height); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('poster-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('poster-submit-btn');
+  const name = document.getElementById('poster-name').value.trim();
+  const file = document.getElementById('poster-file').files[0];
+  if (!name || !file) return;
+  btn.disabled = true; btn.textContent = 'Memproses gambar...';
+  try {
+    const dataUrl = await compressImageToBase64(file);
+    if (dataUrl.length > 900000) throw new Error('Gambar masih terlalu besar lepas dimampatkan. Cuba guna gambar lain.');
+    btn.textContent = 'Menyimpan...';
+    await db.collection('posters').add({
+      name, imageData: dataUrl,
+      createdBy: currentProfile.name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    e.target.reset();
+    toast('Poster berjaya disimpan ✓');
+  } catch (err) {
+    toast('Gagal simpan poster: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Upload Poster';
+  }
+});
+
+function renderPosters() {
+  document.getElementById('poster-count').textContent = fmt(allPosters.length) + ' poster';
+  const grid = document.getElementById('poster-grid');
+  grid.innerHTML = '';
+  allPosters.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'poster-card';
+    card.innerHTML = `<img src="${p.imageData}" alt="${p.name}">
+      <div class="poster-info"><span class="poster-name">${p.name}</span>
+      <button class="poster-del" data-id="${p.id}">✕</button></div>`;
+    grid.appendChild(card);
+  });
+  document.querySelectorAll('.poster-del').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Padam poster ni?')) return;
+      try {
+        await db.collection('posters').doc(btn.dataset.id).delete();
+      } catch (err) {
+        toast('Gagal padam: ' + err.message, true);
+      }
+    };
+  });
+  if (!allPosters.length) grid.innerHTML = '<div class="empty-state">Tiada poster lagi — upload di atas.</div>';
+}
+
+function populatePosterSelect() {
+  const sel = document.getElementById('entry-poster');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">- Tiada / Tak Berkaitan -</option>';
+  allPosters.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.name; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+  sel.value = current;
+}
+
+// ============================================================
+// LAPORAN — Harian & Prestasi Poster
+// ============================================================
+function lapFilteredEntries() {
+  const from = document.getElementById('lap-filter-from').value;
+  const to = document.getElementById('lap-filter-to').value;
+  return allEntries.filter(en => {
+    if (from && en.tarikh < from) return false;
+    if (to && en.tarikh > to) return false;
+    return true;
+  });
+}
+
+function renderDailyReport() {
+  const rows = lapFilteredEntries();
+  const byDate = {};
+  rows.forEach(r => {
+    const k = r.tarikh || '-';
+    byDate[k] = byDate[k] || { sent: 0, read: 0, reply: 0, buyer: 0, sales: 0, spend: 0 };
+    const d = byDate[k];
+    d.sent += r.sent; d.read += r.read; d.reply += r.reply; d.buyer += r.buyer; d.sales += r.sales; d.spend += (r.spend || 0);
+  });
+  const body = document.getElementById('daily-body');
+  body.innerHTML = '';
+  const dates = Object.keys(byDate).sort().reverse();
+  dates.forEach(date => {
+    const d = byDate[date];
+    const readRate = d.sent ? (d.read / d.sent * 100).toFixed(1) : '0.0';
+    const replyRate = d.sent ? (d.reply / d.sent * 100).toFixed(1) : '0.0';
+    const convRate = d.sent ? (d.buyer / d.sent * 100).toFixed(2) : '0.00';
+    const roas = d.spend ? (d.sales / d.spend) : null;
+    const roi = d.spend ? ((d.sales - d.spend) / d.spend * 100) : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="tname">${date}</td><td class="num">${fmt(d.sent)}</td>
+      <td class="num">${readRate}%</td><td class="num">${replyRate}%</td>
+      <td class="num">${fmt(d.buyer)}</td><td class="num">${convRate}%</td>
+      <td class="num">${d.sales ? 'RM ' + fmt(d.sales) : '–'}</td>
+      <td class="num">${roas === null ? '–' : roas.toFixed(2) + 'x'}</td>
+      <td class="num">${roi === null ? '–' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</td>`;
+    body.appendChild(tr);
+  });
+  if (!dates.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada data lagi</td></tr>';
+}
+
+function renderPosterPerformance() {
+  const rows = lapFilteredEntries().filter(r => r.poster);
+  const byPoster = {};
+  rows.forEach(r => {
+    const k = r.poster;
+    byPoster[k] = byPoster[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0, spend: 0 };
+    const p = byPoster[k];
+    p.sessions++; p.sent += r.sent; p.read += r.read; p.reply += r.reply; p.buyer += r.buyer; p.sales += r.sales; p.spend += (r.spend || 0);
+  });
+  const body = document.getElementById('poster-perf-body');
+  body.innerHTML = '';
+  const entries = Object.entries(byPoster).sort((a, b) => (b[1].buyer / (b[1].sent || 1)) - (a[1].buyer / (a[1].sent || 1)));
+  entries.forEach(([name, p], i) => {
+    const readRate = p.sent ? (p.read / p.sent * 100).toFixed(1) : '0.0';
+    const replyRate = p.sent ? (p.reply / p.sent * 100).toFixed(1) : '0.0';
+    const convRate = p.sent ? (p.buyer / p.sent * 100).toFixed(2) : '0.00';
+    const roi = p.spend ? ((p.sales - p.spend) / p.spend * 100) : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="rank">${i + 1}</td><td class="tname">${name}</td>
+      <td class="num">${p.sessions}</td><td class="num">${fmt(p.sent)}</td><td class="num">${readRate}%</td>
+      <td class="num">${replyRate}%</td><td class="num">${convRate}%</td>
+      <td class="num">${p.sales ? 'RM ' + fmt(p.sales) : '–'}</td>
+      <td class="num">${roi === null ? '–' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById('poster-perf-count').textContent = entries.length + ' poster';
+  if (!entries.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada data poster lagi</td></tr>';
+}
+
+['lap-filter-from', 'lap-filter-to'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { renderDailyReport(); renderPosterPerformance(); });
+});
