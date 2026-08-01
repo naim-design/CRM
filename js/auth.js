@@ -14,6 +14,24 @@ function showScreen(name) {
   document.querySelectorAll('.auth-error').forEach(e => e.classList.remove('show'));
 }
 
+// ---- Theme toggle (dark/light) ----
+function applyThemeIcon() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  }
+  applyThemeIcon();
+});
+applyThemeIcon();
+
 document.getElementById('go-register').onclick = (e) => { e.preventDefault(); showScreen('register'); };
 document.getElementById('go-login').onclick = (e) => { e.preventDefault(); showScreen('login'); };
 document.getElementById('go-login-2').onclick = (e) => { e.preventDefault(); showScreen('login'); };
