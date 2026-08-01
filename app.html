@@ -160,34 +160,106 @@
     <!-- ================= CONTACTS ================= -->
     <div id="view-contacts" class="view">
       <div class="section-head" style="padding-top:36px;"><h2>Kontak</h2></div>
-      <div class="form-card" style="margin-bottom:20px;">
-        <form id="contact-form" class="form-grid">
-          <div class="field"><label>Nama</label><input type="text" id="contact-name" required></div>
-          <div class="field"><label>No. Telefon</label><input type="text" id="contact-phone" required></div>
-          <div class="field"><label>Sumber</label><input type="text" id="contact-source" placeholder="cth: Ads FB"></div>
-          <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="submit" class="btn btn-primary">+ Tambah Kontak</button></div>
-        </form>
+
+      <!-- Stats -->
+      <div class="stat-row" style="margin-bottom:24px;">
+        <div class="stat-card accent-mint"><div class="label">Total Kontak</div><div class="value" id="cstat-total">–</div></div>
+        <div class="stat-card"><div class="label">Dah Blast</div><div class="value" id="cstat-blasted">–</div></div>
+        <div class="stat-card"><div class="label">Belum Blast</div><div class="value" id="cstat-pending">–</div></div>
       </div>
-      <div class="table-controls">
-        <input type="text" class="search-box" id="search-contact" placeholder="Cari nama atau nombor...">
-        <select class="filter-box" id="filter-contact-status">
-          <option value="">Semua Status</option>
-          <option value="pending">Belum Blast</option>
-          <option value="blasted">Dah Blast</option>
-        </select>
-        <span class="hint-chip" id="contact-count">0 kontak</span>
-      </div>
-      <table class="tbl" style="margin-top:14px;">
-        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
-        <tbody id="contact-body"></tbody>
-      </table>
-      <div class="pagination">
-        <span id="page-info"></span>
-        <div style="display:flex; gap:8px;">
-          <button id="prev-page">← Prev</button>
-          <button id="next-page">Next →</button>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">01</span>Ikut Sumber</h2></div>
+        <table class="tbl">
+          <thead><tr><th>Sumber</th><th>Total</th><th>Dah Blast</th><th>Belum Blast</th></tr></thead>
+          <tbody id="source-stat-body"></tbody>
+        </table>
+      </section>
+
+      <!-- Import CSV -->
+      <section>
+        <div class="section-head"><h2><span class="idx">02</span>Import Kontak (CSV)</h2></div>
+        <div class="form-card" style="margin-bottom:10px;">
+          <div class="form-grid" style="grid-template-columns:2fr 1fr 1fr;">
+            <div class="field"><label>Fail CSV (kolum: nama,nombor)</label><input type="file" id="csv-file" accept=".csv"></div>
+            <div class="field"><label>Sumber untuk fail ni</label>
+              <select id="csv-source">
+                <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
+                <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
+              </select>
+            </div>
+            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import</button></div>
+          </div>
+          <div id="csv-progress-wrap" style="display:none; margin-top:14px;">
+            <div style="background:var(--surface-raised); border-radius:8px; height:8px; overflow:hidden;">
+              <div id="csv-progress-bar" style="background:var(--mint); height:100%; width:0%; transition:width 0.2s;"></div>
+            </div>
+            <div id="csv-progress-text" style="font-size:12px; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono';"></div>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:12px;">Format CSV: baris pertama header (nama,nombor), setiap baris seterusnya satu kontak. Contoh: <code>Ali,60123456789</code></p>
         </div>
-      </div>
+      </section>
+
+      <!-- Add single -->
+      <section>
+        <div class="section-head"><h2><span class="idx">03</span>Tambah Satu Kontak</h2></div>
+        <div class="form-card" style="margin-bottom:20px;">
+          <form id="contact-form" class="form-grid">
+            <div class="field"><label>Nama</label><input type="text" id="contact-name" required></div>
+            <div class="field"><label>No. Telefon</label><input type="text" id="contact-phone" required></div>
+            <div class="field"><label>Sumber</label>
+              <select id="contact-source">
+                <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
+                <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
+              </select>
+            </div>
+            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="submit" class="btn btn-primary">+ Tambah</button></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Quick lookup -->
+      <section>
+        <div class="section-head"><h2><span class="idx">04</span>Semak Nombor</h2></div>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+          <input type="text" class="search-box" id="lookup-phone" placeholder="Taip nombor penuh untuk semak status..." style="flex:1;">
+          <button class="btn btn-primary" id="lookup-btn" style="width:auto; padding:11px 22px;">Semak</button>
+        </div>
+        <div id="lookup-result"></div>
+      </section>
+
+      <!-- Browse / filter list -->
+      <section>
+        <div class="section-head"><h2><span class="idx">05</span>Senarai Kontak</h2></div>
+        <div class="table-controls">
+          <select class="filter-box" id="filter-contact-status">
+            <option value="">Semua Status</option>
+            <option value="pending">Belum Blast</option>
+            <option value="blasted">Dah Blast</option>
+          </select>
+          <select class="filter-box" id="filter-contact-source">
+            <option value="">Semua Sumber</option>
+            <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
+            <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
+          </select>
+          <button class="btn btn-ghost" id="contact-refresh-btn" style="width:auto; padding:9px 16px;">↻ Refresh</button>
+          <span class="hint-chip" id="contact-count">0 dipapar</span>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+          <button class="btn btn-ghost" id="bulk-blast-btn" style="width:auto; padding:8px 16px; font-size:12px;" disabled>Tandakan dipilih: Dah Blast</button>
+        </div>
+        <table class="tbl" style="margin-top:10px;">
+          <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
+          <tbody id="contact-body"></tbody>
+        </table>
+        <div class="pagination">
+          <span id="page-info"></span>
+          <div style="display:flex; gap:8px;">
+            <button id="prev-page">← Prev</button>
+            <button id="next-page">Next →</button>
+          </div>
+        </div>
+      </section>
     </div>
 
     <!-- ================= TO-DO HARIAN ================= -->
