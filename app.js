@@ -14,6 +14,12 @@ let allPosters = [];
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
+// ---- Kos blasting (auto-kira dari jumlah Sent) ----
+const RATE_EUR_PER_SENT = 0.0116;   // kos setiap mesej dihantar, dalam EUR
+const EUR_TO_MYR = 4.68;            // kadar tukaran EUR -> RM
+function costEUR(sent) { return (sent || 0) * RATE_EUR_PER_SENT; }
+function costRM(sent) { return costEUR(sent) * EUR_TO_MYR; }
+
 function toast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -118,7 +124,6 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     failed: Number(document.getElementById('entry-failed').value || 0),
     buyer: Number(document.getElementById('entry-buyer').value || 0),
     sales: Number(document.getElementById('entry-sales').value || 0),
-    spend: Number(document.getElementById('entry-spend').value || 0),
     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
   try {
@@ -153,18 +158,18 @@ function renderDashboard() {
   const totals = rows.reduce((a, r) => {
     a.sent += r.sent; a.delivered += r.delivered; a.read += r.read;
     a.reply += r.reply; a.failed += r.failed; a.buyer += r.buyer; a.sales += r.sales;
-    a.spend += (r.spend || 0);
     return a;
-  }, { sent: 0, delivered: 0, read: 0, reply: 0, failed: 0, buyer: 0, sales: 0, spend: 0 });
+  }, { sent: 0, delivered: 0, read: 0, reply: 0, failed: 0, buyer: 0, sales: 0 });
 
   document.getElementById('stat-sent').textContent = fmt(totals.sent);
   document.getElementById('stat-buyer').textContent = fmt(totals.buyer);
   document.getElementById('stat-sales').textContent = 'RM ' + fmt(totals.sales);
-  document.getElementById('stat-spend').textContent = 'RM ' + fmt(totals.spend);
-  const roi = totals.spend ? ((totals.sales - totals.spend) / totals.spend * 100) : 0;
-  const roas = totals.spend ? (totals.sales / totals.spend) : 0;
-  document.getElementById('stat-roi').textContent = (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-  document.getElementById('stat-roas').textContent = 'ROAS ' + roas.toFixed(2) + 'x';
+  const totalCostEUR = costEUR(totals.sent);
+  const totalCostRM = costRM(totals.sent);
+  document.getElementById('stat-cost-rm').textContent = 'RM ' + fmt(totalCostRM.toFixed(2));
+  document.getElementById('stat-cost-eur').textContent = '€' + totalCostEUR.toFixed(2);
+  const roi = totalCostRM ? (totals.sales / totalCostRM) : 0;
+  document.getElementById('stat-roi').textContent = roi.toFixed(2) + 'x';
   const convRate = totals.sent ? (totals.buyer / totals.sent * 100).toFixed(2) : '0.00';
   document.getElementById('stat-conv').textContent = convRate + '%';
   document.getElementById('stat-sessions').textContent = fmt(rows.length) + ' entri';
@@ -215,10 +220,9 @@ function renderTemplateReport() {
   const byTmpl = {};
   rows.forEach(r => {
     const k = r.template || 'Tanpa nama';
-    byTmpl[k] = byTmpl[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0, spend: 0 };
+    byTmpl[k] = byTmpl[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
     const t = byTmpl[k];
     t.sessions++; t.sent += r.sent; t.read += r.read; t.reply += r.reply; t.buyer += r.buyer; t.sales += r.sales;
-    t.spend += (r.spend || 0);
   });
   const body = document.getElementById('tmpl-body');
   body.innerHTML = '';
@@ -227,17 +231,19 @@ function renderTemplateReport() {
     const readRate = t.sent ? (t.read / t.sent * 100).toFixed(1) : '0.0';
     const replyRate = t.sent ? (t.reply / t.sent * 100).toFixed(1) : '0.0';
     const convRate = t.sent ? (t.buyer / t.sent * 100).toFixed(2) : '0.00';
-    const roi = t.spend ? ((t.sales - t.spend) / t.spend * 100) : null;
+    const tCostRM = costRM(t.sent);
+    const roi = tCostRM ? (t.sales / tCostRM) : null;
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="rank">${i + 1}</td><td class="tname">${name}</td>
       <td class="num">${t.sessions}</td><td class="num">${fmt(t.sent)}</td><td class="num">${readRate}%</td>
       <td class="num">${replyRate}%</td><td class="num">${convRate}%</td>
       <td class="num">${t.sales ? 'RM ' + fmt(t.sales) : '–'}</td>
-      <td class="num">${roi === null ? '–' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</td>`;
+      <td class="num">RM ${fmt(tCostRM.toFixed(2))}</td>
+      <td class="num">${roi === null ? '–' : roi.toFixed(2) + 'x'}</td>`;
     body.appendChild(tr);
   });
   document.getElementById('tmpl-count').textContent = entries.length + ' template';
-  if (!entries.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada data lagi</td></tr>';
+  if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data lagi</td></tr>';
 }
 
 ['filter-from', 'filter-to', 'filter-staff'].forEach(id => {
@@ -708,9 +714,9 @@ function renderDailyReport() {
   const byDate = {};
   rows.forEach(r => {
     const k = r.tarikh || '-';
-    byDate[k] = byDate[k] || { sent: 0, read: 0, reply: 0, buyer: 0, sales: 0, spend: 0 };
+    byDate[k] = byDate[k] || { sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
     const d = byDate[k];
-    d.sent += r.sent; d.read += r.read; d.reply += r.reply; d.buyer += r.buyer; d.sales += r.sales; d.spend += (r.spend || 0);
+    d.sent += r.sent; d.read += r.read; d.reply += r.reply; d.buyer += r.buyer; d.sales += r.sales;
   });
   const body = document.getElementById('daily-body');
   body.innerHTML = '';
@@ -720,18 +726,20 @@ function renderDailyReport() {
     const readRate = d.sent ? (d.read / d.sent * 100).toFixed(1) : '0.0';
     const replyRate = d.sent ? (d.reply / d.sent * 100).toFixed(1) : '0.0';
     const convRate = d.sent ? (d.buyer / d.sent * 100).toFixed(2) : '0.00';
-    const roas = d.spend ? (d.sales / d.spend) : null;
-    const roi = d.spend ? ((d.sales - d.spend) / d.spend * 100) : null;
+    const dCostEUR = costEUR(d.sent);
+    const dCostRM = costRM(d.sent);
+    const roi = dCostRM ? (d.sales / dCostRM) : null;
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="tname">${date}</td><td class="num">${fmt(d.sent)}</td>
       <td class="num">${readRate}%</td><td class="num">${replyRate}%</td>
       <td class="num">${fmt(d.buyer)}</td><td class="num">${convRate}%</td>
       <td class="num">${d.sales ? 'RM ' + fmt(d.sales) : '–'}</td>
-      <td class="num">${roas === null ? '–' : roas.toFixed(2) + 'x'}</td>
-      <td class="num">${roi === null ? '–' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</td>`;
+      <td class="num">€${dCostEUR.toFixed(2)}</td>
+      <td class="num">RM ${fmt(dCostRM.toFixed(2))}</td>
+      <td class="num">${roi === null ? '–' : roi.toFixed(2) + 'x'}</td>`;
     body.appendChild(tr);
   });
-  if (!dates.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada data lagi</td></tr>';
+  if (!dates.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data lagi</td></tr>';
 }
 
 function renderPosterPerformance() {
@@ -739,9 +747,9 @@ function renderPosterPerformance() {
   const byPoster = {};
   rows.forEach(r => {
     const k = r.poster;
-    byPoster[k] = byPoster[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0, spend: 0 };
+    byPoster[k] = byPoster[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
     const p = byPoster[k];
-    p.sessions++; p.sent += r.sent; p.read += r.read; p.reply += r.reply; p.buyer += r.buyer; p.sales += r.sales; p.spend += (r.spend || 0);
+    p.sessions++; p.sent += r.sent; p.read += r.read; p.reply += r.reply; p.buyer += r.buyer; p.sales += r.sales;
   });
   const body = document.getElementById('poster-perf-body');
   body.innerHTML = '';
@@ -750,17 +758,19 @@ function renderPosterPerformance() {
     const readRate = p.sent ? (p.read / p.sent * 100).toFixed(1) : '0.0';
     const replyRate = p.sent ? (p.reply / p.sent * 100).toFixed(1) : '0.0';
     const convRate = p.sent ? (p.buyer / p.sent * 100).toFixed(2) : '0.00';
-    const roi = p.spend ? ((p.sales - p.spend) / p.spend * 100) : null;
+    const pCostRM = costRM(p.sent);
+    const roi = pCostRM ? (p.sales / pCostRM) : null;
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="rank">${i + 1}</td><td class="tname">${name}</td>
       <td class="num">${p.sessions}</td><td class="num">${fmt(p.sent)}</td><td class="num">${readRate}%</td>
       <td class="num">${replyRate}%</td><td class="num">${convRate}%</td>
       <td class="num">${p.sales ? 'RM ' + fmt(p.sales) : '–'}</td>
-      <td class="num">${roi === null ? '–' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</td>`;
+      <td class="num">RM ${fmt(pCostRM.toFixed(2))}</td>
+      <td class="num">${roi === null ? '–' : roi.toFixed(2) + 'x'}</td>`;
     body.appendChild(tr);
   });
   document.getElementById('poster-perf-count').textContent = entries.length + ' poster';
-  if (!entries.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada data poster lagi</td></tr>';
+  if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data poster lagi</td></tr>';
 }
 
 ['lap-filter-from', 'lap-filter-to'].forEach(id => {

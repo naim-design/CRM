@@ -71,8 +71,8 @@
           </div>
           <div class="form-grid two" style="margin-top:16px;">
             <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
-            <div class="field"><label>Perbelanjaan Iklan / Spend (RM)</label><input type="number" id="entry-spend" min="0" step="0.01" value="0"></div>
           </div>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:6px;">💡 Kos blasting dikira automatik dari jumlah Sent (€0.0116/mesej) — tak perlu masukkan manual.</p>
           <div class="form-actions"><button type="submit" class="btn btn-primary">Simpan Entri</button></div>
         </form>
       </div>
@@ -95,8 +95,8 @@
           <div class="stat-card accent-mint"><div class="label">Total Sent</div><div class="value" id="stat-sent">0</div><div class="foot" id="stat-sessions">0 entri</div></div>
           <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="stat-buyer">0</div><div class="foot" id="stat-conv">0.00% conversion</div></div>
           <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
-          <div class="stat-card"><div class="label">Perbelanjaan Iklan</div><div class="value" id="stat-spend">RM 0</div></div>
-          <div class="stat-card accent-mint"><div class="label">ROI</div><div class="value" id="stat-roi">0%</div><div class="foot" id="stat-roas">ROAS 0.00x</div></div>
+          <div class="stat-card"><div class="label">Kos Blasting</div><div class="value" id="stat-cost-rm">RM 0</div><div class="foot" id="stat-cost-eur">€0.00</div></div>
+          <div class="stat-card accent-mint"><div class="label">ROI</div><div class="value" id="stat-roi">0.00x</div><div class="foot">Sales ÷ Kos</div></div>
         </div>
       </div>
 
@@ -116,7 +116,7 @@
           <span class="hint-chip" id="tmpl-count">0 template</span>
         </div>
         <table class="tbl">
-          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>ROI</th></tr></thead>
+          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
           <tbody id="tmpl-body"></tbody>
         </table>
       </section>
@@ -147,7 +147,7 @@
       <section>
         <div class="section-head"><h2><span class="idx">01</span>Laporan Harian</h2></div>
         <table class="tbl">
-          <thead><tr><th>Tarikh</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>ROAS</th><th>ROI</th></tr></thead>
+          <thead><tr><th>Tarikh</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
           <tbody id="daily-body"></tbody>
         </table>
       </section>
@@ -158,7 +158,7 @@
           <span class="hint-chip" id="poster-perf-count">0 poster</span>
         </div>
         <table class="tbl">
-          <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>ROI</th></tr></thead>
+          <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
           <tbody id="poster-perf-body"></tbody>
         </table>
       </section>
