@@ -104,6 +104,30 @@ function startListeners() {
 }
 
 // ============================================================
+// LIVE PREVIEW — Kos & rate dikira terus semasa Input Data ditaip
+// ============================================================
+function updateEntryLivePreview() {
+  const sent = Number(document.getElementById('entry-sent').value || 0);
+  const read = Number(document.getElementById('entry-read').value || 0);
+  const reply = Number(document.getElementById('entry-reply').value || 0);
+  const buyer = Number(document.getElementById('entry-buyer').value || 0);
+
+  const eur = costEUR(sent);
+  const rm = costRM(sent);
+  document.getElementById('entry-cost-preview').textContent = `Kos: RM ${rm.toFixed(2)} (€${eur.toFixed(2)})`;
+
+  const responRate = sent ? (read / sent * 100) : 0;
+  const replyRate = sent ? (reply / sent * 100) : 0;
+  const convRate = sent ? (buyer / sent * 100) : 0;
+  document.getElementById('live-respon-rate').textContent = responRate.toFixed(1) + '%';
+  document.getElementById('live-reply-rate').textContent = replyRate.toFixed(1) + '%';
+  document.getElementById('live-conv-rate').textContent = convRate.toFixed(2) + '%';
+}
+['entry-sent', 'entry-read', 'entry-reply', 'entry-buyer'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateEntryLivePreview);
+});
+
+// ============================================================
 // INPUT DATA — Entry blast harian
 // ============================================================
 document.getElementById('entry-form').addEventListener('submit', async (e) => {
@@ -131,6 +155,7 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     toast('Entri disimpan ✓');
     e.target.reset();
     document.getElementById('entry-tarikh').value = todayStr();
+    updateEntryLivePreview();
   } catch (err) {
     toast('Gagal simpan: ' + err.message, true);
   } finally {
