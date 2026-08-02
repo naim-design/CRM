@@ -120,6 +120,7 @@ body { padding-bottom: 60px; }
     radial-gradient(900px 500px at -10% 20%, rgba(46,123,196,0.04), transparent 55%), var(--bg);
 }
 [data-theme="light"] .btn-primary { color: #FFFFFF; }
+[data-theme="light"] header.top { background: rgba(255,255,255,0.88); }
 
 .theme-toggle {
   background: var(--surface-raised); border: 1px solid var(--line); color: var(--text);
