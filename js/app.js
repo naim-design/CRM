@@ -65,6 +65,7 @@ auth.onAuthStateChanged(async (user) => {
   document.getElementById('todo-date').value = todayStr();
   document.getElementById('todo-filter-date').value = todayStr();
   populateStaffFilter();
+  loadKnownSources();
   startListeners();
 });
 
@@ -77,7 +78,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
-    if (btn.dataset.view === 'contacts') { loadContactStats(); loadContactsPage('first'); }
+    if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); }
   });
 });
 
@@ -89,6 +90,8 @@ function startListeners() {
     renderTemplateReport();
     renderDailyReport();
     renderPosterPerformance();
+    renderWabotPerformance();
+    renderEntriesList();
   }, err => toast('Ralat baca data: ' + err.message, true));
 
   unsubTodos = db.collection('todos').orderBy('createdAt', 'desc').onSnapshot(snap => {
@@ -130,16 +133,18 @@ function updateEntryLivePreview() {
 // ============================================================
 // INPUT DATA — Entry blast harian
 // ============================================================
+let editingEntryId = null;
+
 document.getElementById('entry-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const btn = e.target.querySelector('button[type=submit]');
-  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const btn = document.getElementById('entry-submit-btn');
+  btn.disabled = true; btn.textContent = editingEntryId ? 'Mengemaskini...' : 'Menyimpan...';
   const payload = {
-    staffId: currentUser.uid,
-    staffName: currentProfile.name,
     tarikh: document.getElementById('entry-tarikh').value,
     source: document.getElementById('entry-source').value.trim() || 'Umum',
     template: document.getElementById('entry-template').value.trim() || 'Tanpa nama',
+    kategori: document.getElementById('entry-kategori').value,
+    wabotAccount: document.getElementById('entry-wabot').value,
     poster: document.getElementById('entry-poster').value || '',
     sent: Number(document.getElementById('entry-sent').value || 0),
     delivered: Number(document.getElementById('entry-delivered').value || 0),
@@ -148,20 +153,102 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     failed: Number(document.getElementById('entry-failed').value || 0),
     buyer: Number(document.getElementById('entry-buyer').value || 0),
     sales: Number(document.getElementById('entry-sales').value || 0),
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
   };
   try {
-    await db.collection('entries').add(payload);
-    toast('Entri disimpan ✓');
+    if (editingEntryId) {
+      await db.collection('entries').doc(editingEntryId).update(payload);
+      toast('Entri dikemaskini ✓');
+      cancelEditEntry();
+    } else {
+      payload.staffId = currentUser.uid;
+      payload.staffName = currentProfile.name;
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('entries').add(payload);
+      toast('Entri disimpan ✓');
+    }
     e.target.reset();
     document.getElementById('entry-tarikh').value = todayStr();
     updateEntryLivePreview();
   } catch (err) {
     toast('Gagal simpan: ' + err.message, true);
   } finally {
-    btn.disabled = false; btn.textContent = 'Simpan Entri';
+    btn.disabled = false; btn.textContent = editingEntryId ? 'Kemaskini Entri' : 'Simpan Entri';
   }
 });
+
+function startEditEntry(id) {
+  const entry = allEntries.find(en => en.id === id);
+  if (!entry) return;
+  editingEntryId = id;
+  document.getElementById('entry-tarikh').value = entry.tarikh || todayStr();
+  document.getElementById('entry-source').value = entry.source || '';
+  document.getElementById('entry-template').value = entry.template || '';
+  document.getElementById('entry-kategori').value = entry.kategori || 'Projek Susu';
+  document.getElementById('entry-wabot').value = entry.wabotAccount || document.querySelector('#entry-wabot option').value;
+  document.getElementById('entry-poster').value = entry.poster || '';
+  document.getElementById('entry-sent').value = entry.sent || 0;
+  document.getElementById('entry-delivered').value = entry.delivered || 0;
+  document.getElementById('entry-read').value = entry.read || 0;
+  document.getElementById('entry-reply').value = entry.reply || 0;
+  document.getElementById('entry-failed').value = entry.failed || 0;
+  document.getElementById('entry-buyer').value = entry.buyer || 0;
+  document.getElementById('entry-sales').value = entry.sales || 0;
+  updateEntryLivePreview();
+  document.getElementById('entry-form-title').textContent = 'Edit Entri Blast';
+  document.getElementById('entry-submit-btn').textContent = 'Kemaskini Entri';
+  document.getElementById('entry-cancel-edit-btn').style.display = 'inline-flex';
+  document.querySelector('.app-nav button[data-view="input"]').click();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEditEntry() {
+  editingEntryId = null;
+  document.getElementById('entry-form-title').textContent = 'Input Entri Blast Harian';
+  document.getElementById('entry-submit-btn').textContent = 'Simpan Entri';
+  document.getElementById('entry-cancel-edit-btn').style.display = 'none';
+  document.getElementById('entry-form').reset();
+  document.getElementById('entry-tarikh').value = todayStr();
+  updateEntryLivePreview();
+}
+document.getElementById('entry-cancel-edit-btn').addEventListener('click', cancelEditEntry);
+
+async function deleteEntry(id) {
+  if (!confirm('Padam entri ni? Tindakan ni tak boleh diundur.')) return;
+  try {
+    await db.collection('entries').doc(id).delete();
+    toast('Entri dipadam ✓');
+    if (editingEntryId === id) cancelEditEntry();
+  } catch (err) {
+    toast('Gagal padam: ' + err.message, true);
+  }
+}
+
+function renderEntriesList() {
+  const sorted = [...allEntries].sort((a, b) => (b.tarikh || '').localeCompare(a.tarikh || ''));
+  const body = document.getElementById('entries-list-body');
+  body.innerHTML = '';
+  const LIMIT = 100;
+  sorted.slice(0, LIMIT).forEach(en => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="tname">${en.tarikh || '-'}</td>
+      <td style="font-size:12px;">${en.kategori || '-'}</td>
+      <td style="font-size:12px; color:var(--muted);">${en.staffName || '-'}</td>
+      <td style="font-size:12px;">${en.source || '-'}</td>
+      <td style="font-size:12px;">${en.template || '-'}</td>
+      <td style="font-size:11px; color:var(--muted);">${(en.wabotAccount || '-').split(' (')[0]}</td>
+      <td class="num">${fmt(en.sent)}</td>
+      <td class="num">${en.sales ? 'RM ' + fmt(en.sales) : '–'}</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button class="btn-ghost entry-edit-btn" data-id="${en.id}" style="width:auto; padding:5px 10px; font-size:11px; margin-right:6px;">Edit</button>
+        <button class="btn-ghost entry-del-btn" data-id="${en.id}" style="width:auto; padding:5px 10px; font-size:11px; color:var(--coral); border-color:rgba(255,122,104,0.3);">Padam</button>
+      </td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById('entries-list-count').textContent = fmt(sorted.length) + ' entri' + (sorted.length > LIMIT ? ` (papar ${LIMIT} terkini)` : '');
+  document.querySelectorAll('.entry-edit-btn').forEach(b => b.onclick = () => startEditEntry(b.dataset.id));
+  document.querySelectorAll('.entry-del-btn').forEach(b => b.onclick = () => deleteEntry(b.dataset.id));
+  if (!sorted.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada entri lagi.</td></tr>';
+}
 
 // ============================================================
 // DASHBOARD — Kira & render stats dari data live
@@ -170,10 +257,12 @@ function filteredEntries() {
   const from = document.getElementById('filter-from').value;
   const to = document.getElementById('filter-to').value;
   const staff = document.getElementById('filter-staff').value;
+  const kategori = document.getElementById('filter-kategori').value;
   return allEntries.filter(en => {
     if (from && en.tarikh < from) return false;
     if (to && en.tarikh > to) return false;
     if (staff && en.staffId !== staff) return false;
+    if (kategori && en.kategori !== kategori) return false;
     return true;
   });
 }
@@ -271,7 +360,7 @@ function renderTemplateReport() {
   if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data lagi</td></tr>';
 }
 
-['filter-from', 'filter-to', 'filter-staff'].forEach(id => {
+['filter-from', 'filter-to', 'filter-staff', 'filter-kategori'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => { renderDashboard(); renderTemplateReport(); });
 });
 
@@ -290,27 +379,52 @@ async function populateStaffFilter() {
 // CONTACTS — scale untuk puluhan ribu rekod (server-side query,
 // bukan load semua ke memori)
 // ============================================================
-const CONTACT_SOURCES = ['WhatsApp', 'TikTok', 'Facebook Ads', 'Instagram', 'Organic / Rujukan', 'Lain-lain'];
 const PAGE_SIZE = 50;
 let contactCursors = [null]; // cursor stack ikut page
 let contactPageIdx = 0;
 let lastContactDocs = [];
+let knownSources = [];
+
+// ---- Dynamic source registry (sumber sekarang free-text, bukan senarai tetap) ----
+async function registerSource(source) {
+  if (!source) return;
+  try {
+    await db.collection('meta').doc('contactSources').set({
+      sources: firebase.firestore.FieldValue.arrayUnion(source)
+    }, { merge: true });
+  } catch (e) { /* diam-diam gagal, tak kritikal */ }
+}
+async function loadKnownSources() {
+  try {
+    const snap = await db.collection('meta').doc('contactSources').get();
+    knownSources = snap.exists ? (snap.data().sources || []) : [];
+    const list = document.getElementById('source-suggestions');
+    list.innerHTML = '';
+    knownSources.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      list.appendChild(opt);
+    });
+  } catch (e) { /* diam-diam gagal */ }
+}
 
 document.getElementById('contact-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = document.getElementById('contact-name').value.trim();
   const phone = document.getElementById('contact-phone').value.trim();
-  const source = document.getElementById('contact-source').value;
+  const source = document.getElementById('contact-source').value.trim() || 'Lain-lain';
   if (!name || !phone) return;
   try {
     await db.collection('contacts').add({
       name, phone, source, status: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    registerSource(source);
     e.target.reset();
     toast('Rekod ditambah ✓');
     loadContactStats();
     loadContactsPage('first');
+    loadKnownSources();
   } catch (err) {
     toast('Gagal tambah rekod: ' + err.message, true);
   }
@@ -342,7 +456,8 @@ async function loadContactStats() {
 
     const body = document.getElementById('source-stat-body');
     body.innerHTML = '<tr><td colspan="4" class="empty-state">Mengira...</td></tr>';
-    const rows = await Promise.all(CONTACT_SOURCES.map(async (src) => {
+    if (!knownSources.length) await loadKnownSources();
+    const rows = await Promise.all(knownSources.map(async (src) => {
       const [t, b] = await Promise.all([
         getCount(col.where('source', '==', src)),
         getCount(col.where('source', '==', src).where('status', '==', 'blasted')),
@@ -367,7 +482,7 @@ async function loadContactStats() {
 function buildContactQuery() {
   let q = db.collection('contacts').orderBy('createdAt', 'desc');
   const status = document.getElementById('filter-contact-status').value;
-  const source = document.getElementById('filter-contact-source').value;
+  const source = document.getElementById('filter-contact-source').value.trim();
   if (status) q = q.where('status', '==', status);
   if (source) q = q.where('source', '==', source);
   return q;
@@ -439,7 +554,11 @@ async function reloadCurrentContactPage() {
 }
 
 document.getElementById('filter-contact-status').addEventListener('change', () => loadContactsPage('first'));
-document.getElementById('filter-contact-source').addEventListener('change', () => loadContactsPage('first'));
+let sourceFilterDebounce = null;
+document.getElementById('filter-contact-source').addEventListener('input', () => {
+  clearTimeout(sourceFilterDebounce);
+  sourceFilterDebounce = setTimeout(() => loadContactsPage('first'), 500);
+});
 document.getElementById('contact-refresh-btn').addEventListener('click', () => { loadContactStats(); loadContactsPage('first'); });
 document.getElementById('prev-page').addEventListener('click', () => loadContactsPage('prev'));
 document.getElementById('next-page').addEventListener('click', () => loadContactsPage('next'));
@@ -467,7 +586,43 @@ document.getElementById('bulk-blast-btn').addEventListener('click', async () => 
   } catch (err) {
     toast('Gagal kemaskini: ' + err.message, true);
   } finally {
-    btn.textContent = 'Tandakan dipilih: Dah Blast';
+    btn.textContent = 'Tandakan dipilih (page ni): Dah Blast';
+  }
+});
+
+// ---- Tandakan SEMUA hasil tapisan sebagai Dah Blast (bukan setakat 50/page) ----
+document.getElementById('bulk-blast-all-btn').addEventListener('click', async () => {
+  const source = document.getElementById('filter-contact-source').value.trim();
+  const scopeLabel = source ? `sumber "${source}"` : 'SEMUA sumber';
+  if (!confirm(`Ni akan tandakan SEMUA rekod BELUM BLAST dalam ${scopeLabel} sebagai Dah Blast (bukan setakat page semasa). Teruskan?`)) return;
+
+  const btn = document.getElementById('bulk-blast-all-btn');
+  const progressEl = document.getElementById('bulk-all-progress');
+  btn.disabled = true;
+  progressEl.style.display = 'block';
+  let total = 0;
+  try {
+    while (true) {
+      let q = db.collection('contacts').where('status', '==', 'pending');
+      if (source) q = q.where('source', '==', source);
+      q = q.limit(400);
+      const snap = await q.get();
+      if (snap.empty) break;
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.update(d.ref, { status: 'blasted' }));
+      await batch.commit();
+      total += snap.docs.length;
+      progressEl.textContent = `${fmt(total)} rekod ditandakan Dah Blast setakat ni...`;
+      if (snap.docs.length < 400) break;
+    }
+    toast(`${fmt(total)} rekod berjaya ditandakan Dah Blast ✓`);
+    loadContactStats();
+    loadContactsPage('first');
+  } catch (err) {
+    toast('Gagal kemaskini bulk: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
   }
 });
 
@@ -512,28 +667,42 @@ document.querySelectorAll('.import-tab').forEach(tab => {
   });
 });
 
+// Parser robust: cari lajur yang "kelihatan macam nombor telefon" (7-15 digit)
+// dalam mana-mana kedudukan, tak kisah susunan nama/nombor atau bilangan lajur.
+// Ni elak masalah "detect sikit sahaja" bila data sebenar tak konsisten formatnya.
 function parseBulkRows(raw) {
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const lines = raw.split(/\r?\n/)
+    .map(l => l.replace(/^\uFEFF/, '').trim())
+    .filter(Boolean);
   if (!lines.length) return [];
-  // Detect delimiter: tab (Excel/Sheets paste) atau koma (CSV)
   const delim = lines[0].includes('\t') ? '\t' : ',';
-  let startIdx = 0;
-  const firstCols = lines[0].split(delim);
-  if (firstCols[1] && !/\d{6,}/.test(firstCols[1])) startIdx = 1; // skip header row
   const rows = [];
-  for (let i = startIdx; i < lines.length; i++) {
-    const cols = lines[i].split(delim);
-    const name = (cols[0] || '').trim();
-    const phone = (cols[1] || '').trim().replace(/[^0-9+]/g, '');
-    if (name && phone) rows.push({ name, phone });
+  for (let i = 0; i < lines.length; i++) {
+    const cols = lines[i].split(delim).map(c => c.trim().replace(/^"+|"+$/g, ''));
+    let phoneIdx = -1, phone = '';
+    for (let j = 0; j < cols.length; j++) {
+      const digits = cols[j].replace(/[^0-9]/g, '');
+      if (digits.length >= 7 && digits.length <= 15) { phoneIdx = j; phone = digits; break; }
+    }
+    if (phoneIdx === -1) continue; // baris tanpa nombor sah (termasuk baris header) — skip
+    const nameParts = cols.filter((_, j) => j !== phoneIdx).filter(Boolean);
+    const name = nameParts.join(' ').trim() || 'Tanpa Nama';
+    rows.push({ name, phone });
   }
   return rows;
 }
 
+// ---- Live count preview semasa bulk paste ----
+document.getElementById('paste-data').addEventListener('input', () => {
+  const raw = document.getElementById('paste-data').value;
+  const count = raw.trim() ? parseBulkRows(raw).length : 0;
+  document.getElementById('paste-count').textContent = fmt(count) + ' rekod dikesan';
+});
+
 // ---- Import (batched writes, chunks of 400) — terima Bulk Paste atau fail CSV ----
 document.getElementById('csv-import-btn').addEventListener('click', async () => {
   const activeMode = document.querySelector('.import-tab.active').dataset.mode;
-  const source = document.getElementById('csv-source').value;
+  const source = document.getElementById('csv-source').value.trim() || 'Lain-lain';
   const btn = document.getElementById('csv-import-btn');
   const wrap = document.getElementById('csv-progress-wrap');
   const bar = document.getElementById('csv-progress-bar');
@@ -553,7 +722,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
       const raw = await file.text();
       rows = parseBulkRows(raw);
     }
-    if (!rows.length) throw new Error('Tiada baris rekod yang sah dijumpai (perlukan nama & nombor)');
+    if (!rows.length) throw new Error('Tiada baris rekod yang sah dijumpai (perlukan sekurang-kurangnya satu nombor 7-15 digit setiap baris)');
 
     const CHUNK = 400;
     let done = 0;
@@ -573,11 +742,14 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
       bar.style.width = pct + '%';
       text.textContent = `${fmt(done)} / ${fmt(rows.length)} rekod diimport (${pct}%)`;
     }
+    registerSource(source);
     toast(fmt(rows.length) + ' rekod berjaya diimport ✓');
     document.getElementById('paste-data').value = '';
+    document.getElementById('paste-count').textContent = '0 rekod dikesan';
     document.getElementById('csv-file').value = '';
     loadContactStats();
     loadContactsPage('first');
+    loadKnownSources();
   } catch (err) {
     toast('Gagal import: ' + err.message, true);
   } finally {
@@ -737,9 +909,11 @@ function populatePosterSelect() {
 function lapFilteredEntries() {
   const from = document.getElementById('lap-filter-from').value;
   const to = document.getElementById('lap-filter-to').value;
+  const kategori = document.getElementById('lap-filter-kategori').value;
   return allEntries.filter(en => {
     if (from && en.tarikh < from) return false;
     if (to && en.tarikh > to) return false;
+    if (kategori && en.kategori !== kategori) return false;
     return true;
   });
 }
@@ -749,9 +923,9 @@ function renderDailyReport() {
   const byDate = {};
   rows.forEach(r => {
     const k = r.tarikh || '-';
-    byDate[k] = byDate[k] || { sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
+    byDate[k] = byDate[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
     const d = byDate[k];
-    d.sent += r.sent; d.read += r.read; d.reply += r.reply; d.buyer += r.buyer; d.sales += r.sales;
+    d.sessions++; d.sent += r.sent; d.read += r.read; d.reply += r.reply; d.buyer += r.buyer; d.sales += r.sales;
   });
   const body = document.getElementById('daily-body');
   body.innerHTML = '';
@@ -765,7 +939,7 @@ function renderDailyReport() {
     const dCostRM = costRM(d.sent);
     const roi = dCostRM ? (d.sales / dCostRM) : null;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="tname">${date}</td><td class="num">${fmt(d.sent)}</td>
+    tr.innerHTML = `<td class="tname">${date}</td><td class="num">${d.sessions}</td><td class="num">${fmt(d.sent)}</td>
       <td class="num">${readRate}%</td><td class="num">${replyRate}%</td>
       <td class="num">${fmt(d.buyer)}</td><td class="num">${convRate}%</td>
       <td class="num">${d.sales ? 'RM ' + fmt(d.sales) : '–'}</td>
@@ -774,7 +948,7 @@ function renderDailyReport() {
       <td class="num">${roi === null ? '–' : roi.toFixed(2) + 'x'}</td>`;
     body.appendChild(tr);
   });
-  if (!dates.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data lagi</td></tr>';
+  if (!dates.length) body.innerHTML = '<tr><td colspan="11" class="empty-state">Tiada data lagi</td></tr>';
 }
 
 function renderPosterPerformance() {
@@ -808,6 +982,37 @@ function renderPosterPerformance() {
   if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data poster lagi</td></tr>';
 }
 
-['lap-filter-from', 'lap-filter-to'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => { renderDailyReport(); renderPosterPerformance(); });
+function renderWabotPerformance() {
+  const rows = lapFilteredEntries().filter(r => r.wabotAccount);
+  const byAccount = {};
+  rows.forEach(r => {
+    const k = r.wabotAccount;
+    byAccount[k] = byAccount[k] || { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 };
+    const a = byAccount[k];
+    a.sessions++; a.sent += r.sent; a.read += r.read; a.reply += r.reply; a.buyer += r.buyer; a.sales += r.sales;
+  });
+  const body = document.getElementById('wabot-perf-body');
+  body.innerHTML = '';
+  const entries = Object.entries(byAccount).sort((a, b) => (b[1].buyer / (b[1].sent || 1)) - (a[1].buyer / (a[1].sent || 1)));
+  entries.forEach(([name, a], i) => {
+    const readRate = a.sent ? (a.read / a.sent * 100).toFixed(1) : '0.0';
+    const replyRate = a.sent ? (a.reply / a.sent * 100).toFixed(1) : '0.0';
+    const convRate = a.sent ? (a.buyer / a.sent * 100).toFixed(2) : '0.00';
+    const aCostRM = costRM(a.sent);
+    const roi = aCostRM ? (a.sales / aCostRM) : null;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="rank">${i + 1}</td><td class="tname">${name}</td>
+      <td class="num">${a.sessions}</td><td class="num">${fmt(a.sent)}</td><td class="num">${readRate}%</td>
+      <td class="num">${replyRate}%</td><td class="num">${convRate}%</td>
+      <td class="num">${a.sales ? 'RM ' + fmt(a.sales) : '–'}</td>
+      <td class="num">RM ${fmt(aCostRM.toFixed(2))}</td>
+      <td class="num">${roi === null ? '–' : roi.toFixed(2) + 'x'}</td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById('wabot-perf-count').textContent = entries.length + ' akaun';
+  if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data akaun lagi</td></tr>';
+}
+
+['lap-filter-from', 'lap-filter-to', 'lap-filter-kategori'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => { renderDailyReport(); renderPosterPerformance(); renderWabotPerformance(); });
 });
