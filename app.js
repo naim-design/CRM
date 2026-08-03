@@ -317,15 +317,25 @@ document.getElementById('contact-form').addEventListener('submit', async (e) => 
 });
 
 // ---- Stats (aggregation count queries — murah walaupun puluhan ribu rekod) ----
+// getCount() cuba guna .count() (murah), tapi fallback ke .get() kalau SDK/browser tak sokong
+async function getCount(query) {
+  try {
+    if (typeof query.count === 'function') {
+      const snap = await query.count().get();
+      return snap.data().count;
+    }
+  } catch (e) { /* fallback di bawah */ }
+  const snap = await query.get();
+  return snap.size;
+}
+
 async function loadContactStats() {
   try {
     const col = db.collection('contacts');
-    const [totalSnap, blastedSnap] = await Promise.all([
-      col.count().get(),
-      col.where('status', '==', 'blasted').count().get(),
+    const [total, blasted] = await Promise.all([
+      getCount(col),
+      getCount(col.where('status', '==', 'blasted')),
     ]);
-    const total = totalSnap.data().count;
-    const blasted = blastedSnap.data().count;
     document.getElementById('cstat-total').textContent = fmt(total);
     document.getElementById('cstat-blasted').textContent = fmt(blasted);
     document.getElementById('cstat-pending').textContent = fmt(total - blasted);
@@ -334,10 +344,10 @@ async function loadContactStats() {
     body.innerHTML = '<tr><td colspan="4" class="empty-state">Mengira...</td></tr>';
     const rows = await Promise.all(CONTACT_SOURCES.map(async (src) => {
       const [t, b] = await Promise.all([
-        col.where('source', '==', src).count().get(),
-        col.where('source', '==', src).where('status', '==', 'blasted').count().get(),
+        getCount(col.where('source', '==', src)),
+        getCount(col.where('source', '==', src).where('status', '==', 'blasted')),
       ]);
-      return { src, total: t.data().count, blasted: b.data().count };
+      return { src, total: t, blasted: b };
     }));
     body.innerHTML = '';
     rows.filter(r => r.total > 0).forEach(r => {
