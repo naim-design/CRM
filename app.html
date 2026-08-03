@@ -46,7 +46,7 @@
 
     <!-- ================= INPUT DATA ================= -->
     <div id="view-input" class="view active" style="padding-top:36px;">
-      <div class="section-head"><h2>Input Entri Blast Harian</h2></div>
+      <div class="section-head"><h2 id="entry-form-title">Input Entri Blast Harian</h2></div>
       <div class="form-card">
         <form id="entry-form">
           <div class="form-grid">
@@ -54,7 +54,24 @@
             <div class="field"><label>Sumber / Source</label><input type="text" id="entry-source" placeholder="cth: Ads FB, Organic"></div>
             <div class="field"><label>Nama Template</label><input type="text" id="entry-template" placeholder="cth: Promo Susu V2"></div>
           </div>
-          <div class="form-grid two" style="margin-top:16px;">
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field"><label>Kategori Laporan</label>
+              <select id="entry-kategori">
+                <option>Projek Susu</option>
+                <option>Promo Jus</option>
+                <option>Database WS/Lead</option>
+              </select>
+            </div>
+            <div class="field"><label>Akaun WABOT digunakan</label>
+              <select id="entry-wabot">
+                <option>MAMARIAM SDN BHD 5 (01111920528)</option>
+                <option>MAMARIAM OFFICIAL (01111920587)</option>
+                <option>MAMARIAM SDN BHD 8 (01111920523)</option>
+                <option>Mamariam Sdn Bhd 3 (60148769013)</option>
+                <option>Fatihah Bizz (601121001339)</option>
+                <option>Fatihah Bizz (6014-2881728)</option>
+              </select>
+            </div>
             <div class="field"><label>Poster digunakan</label>
               <select id="entry-poster"><option value="">- Tiada / Tak Berkaitan -</option></select>
             </div>
@@ -74,16 +91,30 @@
           <div class="form-grid two" style="margin-top:16px;">
             <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
           </div>
-          <p style="font-size:11.5px; color:var(--muted-2); margin-top:6px;">💡 Kos blasting dikira automatik dari jumlah Sent (€0.0116/mesej) — tak perlu masukkan manual.</p>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:6px;">💡 Kos blasting dikira automatik dari jumlah Sent (€0.0116/mesej) — tak perlu masukkan manual. Laporan Keseluruhan & Laporan Harian automatik terima semua entri, tak kira kategori.</p>
 
           <div id="entry-live-stats" class="stat-row" style="margin-top:16px;">
             <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="live-respon-rate" style="font-size:22px;">0.0%</div></div>
             <div class="stat-card"><div class="label">Reply Rate<br><small style="font-weight:400;">(Reply/Sent)</small></div><div class="value" id="live-reply-rate" style="font-size:22px;">0.0%</div></div>
             <div class="stat-card"><div class="label">Conversion Rate<br><small style="font-weight:400;">(Buyer/Sent)</small></div><div class="value" id="live-conv-rate" style="font-size:22px;">0.00%</div></div>
           </div>
-          <div class="form-actions"><button type="submit" class="btn btn-primary">Simpan Entri</button></div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="entry-submit-btn" style="width:auto; padding:11px 26px;">Simpan Entri</button>
+            <button type="button" class="btn btn-ghost" id="entry-cancel-edit-btn" style="width:auto; padding:11px 26px; display:none;">Batal Edit</button>
+          </div>
         </form>
       </div>
+
+      <section style="margin-top:36px;">
+        <div class="section-head">
+          <h2><span class="idx">•</span>Senarai Entri (Edit / Padam)</h2>
+          <span class="hint-chip" id="entries-list-count">0 entri</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Tarikh</th><th>Kategori</th><th>Staff</th><th>Sumber</th><th>Template</th><th>Wabot</th><th>Sent</th><th>Sales</th><th style="text-align:right;">Tindakan</th></tr></thead>
+          <tbody id="entries-list-body"></tbody>
+        </table>
+      </section>
     </div>
 
     <!-- ================= DASHBOARD ================= -->
@@ -96,6 +127,12 @@
           <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="filter-to"></div>
           <div class="field" style="margin:0;"><label>Staff</label>
             <select id="filter-staff" class="filter-box"><option value="">Semua Staff</option></select>
+          </div>
+          <div class="field" style="margin:0;"><label>Kategori Laporan</label>
+            <select id="filter-kategori" class="filter-box">
+              <option value="">Semua (Keseluruhan)</option>
+              <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option>
+            </select>
           </div>
         </div>
 
@@ -150,12 +187,18 @@
       <div class="table-controls">
         <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="lap-filter-from"></div>
         <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="lap-filter-to"></div>
+        <div class="field" style="margin:0;"><label>Kategori Laporan</label>
+          <select id="lap-filter-kategori" class="filter-box">
+            <option value="">Semua (Keseluruhan)</option>
+            <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option>
+          </select>
+        </div>
       </div>
 
       <section>
         <div class="section-head"><h2><span class="idx">01</span>Laporan Harian</h2></div>
         <table class="tbl">
-          <thead><tr><th>Tarikh</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
+          <thead><tr><th>Tarikh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
           <tbody id="daily-body"></tbody>
         </table>
       </section>
@@ -168,6 +211,17 @@
         <table class="tbl">
           <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
           <tbody id="poster-perf-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">03</span>Prestasi Akaun WABOT</h2>
+          <span class="hint-chip" id="wabot-perf-count">0 akaun</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Akaun WABOT</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
+          <tbody id="wabot-perf-body"></tbody>
         </table>
       </section>
     </div>
@@ -202,23 +256,22 @@
 
           <div id="import-mode-paste" class="import-mode active">
             <div class="field">
-              <label>Paste terus dari Excel / Google Sheets (kolum: nama, nombor)</label>
+              <label>Paste terus dari Excel / Google Sheets (nama & nombor, mana-mana susunan lajur)</label>
               <textarea id="paste-data" rows="8" placeholder="Ali	60123456789
 Siti	60198765432
 Ahmad	60112223344"></textarea>
+              <div id="paste-count" style="font-size:12px; color:var(--mint); margin-top:6px; font-family:'IBM Plex Mono';">0 rekod dikesan</div>
             </div>
           </div>
 
           <div id="import-mode-file" class="import-mode">
-            <div class="field"><label>Fail CSV (kolum: nama,nombor)</label><input type="file" id="csv-file" accept=".csv"></div>
+            <div class="field"><label>Fail CSV (nama & nombor, mana-mana susunan lajur)</label><input type="file" id="csv-file" accept=".csv"></div>
           </div>
 
           <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-top:14px;">
             <div class="field"><label>Sumber untuk batch ni</label>
-              <select id="csv-source">
-                <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
-                <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
-              </select>
+              <input type="text" id="csv-source" placeholder="cth: TikTok, WhatsApp, FB Ads..." list="source-suggestions">
+              <datalist id="source-suggestions"></datalist>
             </div>
             <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import Database</button></div>
           </div>
@@ -228,7 +281,7 @@ Ahmad	60112223344"></textarea>
             </div>
             <div id="csv-progress-text" style="font-size:12px; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono';"></div>
           </div>
-          <p style="font-size:11.5px; color:var(--muted-2); margin-top:12px;">Bulk paste terima format tab (terus dari Excel/Sheets) atau koma. Baris header (cth "nama,nombor") automatik dikesan & diabaikan.</p>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:12px;">Sistem auto-kesan nombor telefon dalam mana-mana lajur (tak kisah susunan nama/nombor). Baris header automatik dikesan & diabaikan.</p>
         </div>
       </section>
 
@@ -240,10 +293,7 @@ Ahmad	60112223344"></textarea>
             <div class="field"><label>Nama</label><input type="text" id="contact-name" required></div>
             <div class="field"><label>No. Telefon</label><input type="text" id="contact-phone" required></div>
             <div class="field"><label>Sumber</label>
-              <select id="contact-source">
-                <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
-                <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
-              </select>
+              <input type="text" id="contact-source" placeholder="cth: TikTok, WhatsApp..." list="source-suggestions">
             </div>
             <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="submit" class="btn btn-primary">+ Tambah</button></div>
           </form>
@@ -269,17 +319,15 @@ Ahmad	60112223344"></textarea>
             <option value="pending">Belum Blast</option>
             <option value="blasted">Dah Blast</option>
           </select>
-          <select class="filter-box" id="filter-contact-source">
-            <option value="">Semua Sumber</option>
-            <option>WhatsApp</option><option>TikTok</option><option>Facebook Ads</option>
-            <option>Instagram</option><option>Organic / Rujukan</option><option>Lain-lain</option>
-          </select>
+          <input type="text" class="search-box" id="filter-contact-source" placeholder="Tapis ikut sumber (cth: TikTok)..." list="source-suggestions" style="max-width:220px;">
           <button class="btn btn-ghost" id="contact-refresh-btn" style="width:auto; padding:9px 16px;">↻ Refresh</button>
           <span class="hint-chip" id="contact-count">0 dipapar</span>
         </div>
-        <div style="display:flex; justify-content:flex-end; margin-top:10px;">
-          <button class="btn btn-ghost" id="bulk-blast-btn" style="width:auto; padding:8px 16px; font-size:12px;" disabled>Tandakan dipilih: Dah Blast</button>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="bulk-blast-btn" style="width:auto; padding:8px 16px; font-size:12px;" disabled>Tandakan dipilih (page ni): Dah Blast</button>
+          <button class="btn btn-primary" id="bulk-blast-all-btn" style="width:auto; padding:8px 16px; font-size:12px;">Tandakan SEMUA hasil tapisan: Dah Blast</button>
         </div>
+        <div id="bulk-all-progress" style="display:none; font-size:12px; color:var(--mint); margin-top:8px; font-family:'IBM Plex Mono';"></div>
         <table class="tbl" style="margin-top:10px;">
           <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
           <tbody id="contact-body"></tbody>
