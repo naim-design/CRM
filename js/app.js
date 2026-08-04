@@ -526,10 +526,14 @@ function renderContactRows(docs) {
       <td class="tname">${c.name}</td>
       <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
       <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
-      <td style="text-align:right;">
+      <td>
         <span class="status-pill ${c.status}" style="cursor:pointer;" data-id="${d.id}" data-status="${c.status}">
           ${c.status === 'blasted' ? 'Dah Blast' : 'Belum Blast'}
         </span>
+      </td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button class="btn-ghost contact-edit-btn" data-id="${d.id}" data-name="${(c.name||'').replace(/"/g,'&quot;')}" data-phone="${c.phone||''}" data-source="${(c.source||'').replace(/"/g,'&quot;')}" style="width:auto; padding:5px 10px; font-size:11px; margin-right:6px;">Edit</button>
+        <button class="btn-ghost contact-del-btn" data-id="${d.id}" style="width:auto; padding:5px 10px; font-size:11px; color:var(--coral); border-color:rgba(255,122,104,0.3);">Padam</button>
       </td>`;
     body.appendChild(tr);
   });
@@ -541,9 +545,66 @@ function renderContactRows(docs) {
       loadContactStats();
     };
   });
+  document.querySelectorAll('.contact-edit-btn').forEach(btn => {
+    btn.onclick = () => openEditContactModal(btn.dataset.id, btn.dataset.name, btn.dataset.phone, btn.dataset.source);
+  });
+  document.querySelectorAll('.contact-del-btn').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Padam rekod ni? Tindakan ni tak boleh diundur.')) return;
+      try {
+        await db.collection('contacts').doc(btn.dataset.id).delete();
+        toast('Rekod dipadam ✓');
+        reloadCurrentContactPage();
+        loadContactStats();
+      } catch (err) {
+        toast('Gagal padam: ' + err.message, true);
+      }
+    };
+  });
   document.querySelectorAll('.row-check').forEach(cb => cb.addEventListener('change', updateBulkButtonState));
-  if (!docs.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada rekod dijumpai.</td></tr>';
+  if (!docs.length) body.innerHTML = '<tr><td colspan="6" class="empty-state">Tiada rekod dijumpai.</td></tr>';
 }
+
+// ---- Edit contact modal ----
+let editingContactId = null;
+function openEditContactModal(id, name, phone, source) {
+  editingContactId = id;
+  document.getElementById('edit-contact-name').value = name || '';
+  document.getElementById('edit-contact-phone').value = phone || '';
+  document.getElementById('edit-contact-source').value = source || '';
+  document.getElementById('edit-contact-modal').classList.add('show');
+}
+function closeEditContactModal() {
+  editingContactId = null;
+  document.getElementById('edit-contact-modal').classList.remove('show');
+}
+document.getElementById('edit-contact-cancel').addEventListener('click', closeEditContactModal);
+document.getElementById('edit-contact-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'edit-contact-modal') closeEditContactModal();
+});
+document.getElementById('edit-contact-save').addEventListener('click', async () => {
+  if (!editingContactId) return;
+  const name = document.getElementById('edit-contact-name').value.trim();
+  const phone = document.getElementById('edit-contact-phone').value.trim();
+  const source = document.getElementById('edit-contact-source').value.trim() || 'Lain-lain';
+  if (!name || !phone) { toast('Nama & nombor tak boleh kosong', true); return; }
+  const btn = document.getElementById('edit-contact-save');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    await db.collection('contacts').doc(editingContactId).update({ name, phone, source });
+    registerSource(source);
+    toast('Rekod dikemaskini ✓');
+    closeEditContactModal();
+    reloadCurrentContactPage();
+    loadContactStats();
+    loadKnownSources();
+  } catch (err) {
+    toast('Gagal kemaskini: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan';
+  }
+});
+
 // reload semasa page tanpa gerakkan cursor (lepas toggle status)
 async function reloadCurrentContactPage() {
   const q = buildContactQuery().limit(PAGE_SIZE);
@@ -620,6 +681,50 @@ document.getElementById('bulk-blast-all-btn').addEventListener('click', async ()
     loadContactsPage('first');
   } catch (err) {
     toast('Gagal kemaskini bulk: ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
+  }
+});
+
+// ---- Padam SEMUA hasil tapisan (elak batch salah upload perlu padam satu-satu) ----
+document.getElementById('bulk-delete-all-btn').addEventListener('click', async () => {
+  const status = document.getElementById('filter-contact-status').value;
+  const source = document.getElementById('filter-contact-source').value.trim();
+  if (!status && !source) {
+    if (!confirm('⚠️ Tiada tapisan status/sumber dipilih — ni akan PADAM SEMUA rekod dalam database (bukan setakat batch tertentu)! Betul-betul nak teruskan?')) return;
+  }
+  const scopeParts = [];
+  if (status) scopeParts.push(status === 'blasted' ? 'Dah Blast' : 'Belum Blast');
+  if (source) scopeParts.push(`sumber "${source}"`);
+  const scopeLabel = scopeParts.length ? scopeParts.join(' + ') : 'SEMUA rekod';
+  if (!confirm(`Ni akan PADAM SEMUA rekod (${scopeLabel}) secara kekal. Tindakan ni TAK BOLEH diundur. Teruskan?`)) return;
+
+  const btn = document.getElementById('bulk-delete-all-btn');
+  const progressEl = document.getElementById('bulk-all-progress');
+  btn.disabled = true;
+  progressEl.style.display = 'block';
+  let total = 0;
+  try {
+    while (true) {
+      let q = db.collection('contacts');
+      if (status) q = q.where('status', '==', status);
+      if (source) q = q.where('source', '==', source);
+      q = q.limit(400);
+      const snap = await q.get();
+      if (snap.empty) break;
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+      total += snap.docs.length;
+      progressEl.textContent = `${fmt(total)} rekod dipadam setakat ni...`;
+      if (snap.docs.length < 400) break;
+    }
+    toast(`${fmt(total)} rekod berjaya dipadam ✓`);
+    loadContactStats();
+    loadContactsPage('first');
+  } catch (err) {
+    toast('Gagal padam bulk: ' + err.message, true);
   } finally {
     btn.disabled = false;
     setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
