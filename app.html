@@ -30,6 +30,7 @@
         <button data-view="poster">Poster</button>
         <button data-view="laporan">Laporan</button>
         <button data-view="contacts">Database</button>
+        <button data-view="filter">Filter</button>
         <button data-view="todo">To-Do</button>
       </nav>
       <div class="user-badge">
@@ -51,6 +52,7 @@
         <form id="entry-form">
           <div class="form-grid">
             <div class="field"><label>Tarikh</label><input type="date" id="entry-tarikh" required></div>
+            <div class="field"><label>Masa Blasting</label><input type="time" id="entry-masa"></div>
             <div class="field"><label>Sumber / Source</label><input type="text" id="entry-source" placeholder="cth: Ads FB, Organic"></div>
             <div class="field"><label>Nama Template</label><input type="text" id="entry-template" placeholder="cth: Promo Susu V2"></div>
           </div>
@@ -224,6 +226,25 @@
           <tbody id="wabot-perf-body"></tbody>
         </table>
       </section>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">04</span>Prestasi Ikut Hari</h2></div>
+        <table class="tbl">
+          <thead><tr><th>Hari</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
+          <tbody id="dayofweek-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">05</span>Prestasi Ikut Waktu</h2>
+          <span class="hint-chip">Berdasarkan entri yang ada Masa Blasting diisi</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Waktu</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
+          <tbody id="hourofday-body"></tbody>
+        </table>
+      </section>
     </div>
 
     <!-- ================= CONTACTS ================= -->
@@ -233,8 +254,10 @@
       <!-- Stats -->
       <div class="stat-row" style="margin-bottom:24px;">
         <div class="stat-card accent-mint"><div class="label">Total Database</div><div class="value" id="cstat-total">–</div></div>
-        <div class="stat-card"><div class="label">Dah Blast</div><div class="value" id="cstat-blasted">–</div></div>
         <div class="stat-card"><div class="label">Belum Blast</div><div class="value" id="cstat-pending">–</div></div>
+        <div class="stat-card"><div class="label">Dah Blast</div><div class="value" id="cstat-blasted">–</div></div>
+        <div class="stat-card"><div class="label">Dah Reply</div><div class="value" id="cstat-replied">–</div></div>
+        <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="cstat-buyer">–</div></div>
       </div>
 
       <section>
@@ -330,6 +353,8 @@ Ahmad	60112223344"></textarea>
             <option value="">Semua Status</option>
             <option value="pending">Belum Blast</option>
             <option value="blasted">Dah Blast</option>
+            <option value="replied">Dah Reply</option>
+            <option value="buyer">Jadi Buyer</option>
           </select>
           <input type="text" class="search-box" id="filter-contact-source" placeholder="Tapis ikut sumber (cth: TikTok)..." list="source-suggestions" style="max-width:220px;">
           <button class="btn btn-ghost" id="contact-refresh-btn" style="width:auto; padding:9px 16px;">↻ Refresh</button>
@@ -353,6 +378,37 @@ Ahmad	60112223344"></textarea>
           </div>
         </div>
       </section>
+    </div>
+
+    <!-- ================= FILTER / SEGMENTASI DATABASE ================= -->
+    <div id="view-filter" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Filter Database</h2></div>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:18px;">Cari & senaraikan kontak ikut status (Buyer, Dah Reply, dll) dan sumber — sesuai untuk buat senarai follow-up atau kempen susulan.</p>
+
+      <div class="table-controls">
+        <select class="filter-box" id="seg-filter-status">
+          <option value="">Semua Status</option>
+          <option value="pending">Belum Blast</option>
+          <option value="blasted">Dah Blast</option>
+          <option value="replied">Dah Reply</option>
+          <option value="buyer">Jadi Buyer</option>
+        </select>
+        <input type="text" class="search-box" id="seg-filter-source" placeholder="Tapis ikut sumber (cth: TikTok)..." list="source-suggestions" style="max-width:220px;">
+        <button class="btn btn-primary" id="seg-search-btn" style="width:auto; padding:9px 20px;">Cari</button>
+      </div>
+
+      <div class="stat-row" style="margin-top:18px;">
+        <div class="stat-card accent-mint"><div class="label">Hasil Dijumpai</div><div class="value" id="seg-result-count">–</div><div class="foot" id="seg-result-note">Papar sehingga 500 rekod pertama</div></div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin:14px 0;">
+        <button class="btn btn-ghost" id="seg-copy-btn" style="width:auto; padding:9px 18px; font-size:12.5px;">📋 Salin Semua Nombor (hasil carian)</button>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
+        <tbody id="seg-result-body"><tr><td colspan="4" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
+      </table>
     </div>
 
     <!-- ================= TO-DO HARIAN ================= -->
