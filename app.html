@@ -326,10 +326,11 @@ Ahmad	60112223344"></textarea>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; flex-wrap:wrap;">
           <button class="btn btn-ghost" id="bulk-blast-btn" style="width:auto; padding:8px 16px; font-size:12px;" disabled>Tandakan dipilih (page ni): Dah Blast</button>
           <button class="btn btn-primary" id="bulk-blast-all-btn" style="width:auto; padding:8px 16px; font-size:12px;">Tandakan SEMUA hasil tapisan: Dah Blast</button>
+          <button class="btn btn-danger" id="bulk-delete-all-btn" style="width:auto; padding:8px 16px; font-size:12px;">🗑️ Padam SEMUA hasil tapisan</button>
         </div>
         <div id="bulk-all-progress" style="display:none; font-size:12px; color:var(--mint); margin-top:8px; font-family:'IBM Plex Mono';"></div>
         <table class="tbl" style="margin-top:10px;">
-          <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
+          <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Status</th><th style="text-align:right;">Tindakan</th></tr></thead>
           <tbody id="contact-body"></tbody>
         </table>
         <div class="pagination">
@@ -359,6 +360,20 @@ Ahmad	60112223344"></textarea>
       <div id="todo-list" style="margin-top:16px; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 
+  </div>
+</div>
+
+<!-- Edit Contact Modal -->
+<div class="modal-backdrop" id="edit-contact-modal">
+  <div class="modal-box">
+    <h3>Edit Rekod</h3>
+    <div class="field"><label>Nama</label><input type="text" id="edit-contact-name"></div>
+    <div class="field"><label>No. Telefon</label><input type="text" id="edit-contact-phone"></div>
+    <div class="field"><label>Sumber</label><input type="text" id="edit-contact-source" list="source-suggestions"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="edit-contact-cancel">Batal</button>
+      <button class="btn btn-primary" id="edit-contact-save">Simpan</button>
+    </div>
   </div>
 </div>
 
