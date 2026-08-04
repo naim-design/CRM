@@ -91,6 +91,8 @@ function startListeners() {
     renderDailyReport();
     renderPosterPerformance();
     renderWabotPerformance();
+    renderDayOfWeek();
+    renderHourOfDay();
     renderEntriesList();
   }, err => toast('Ralat baca data: ' + err.message, true));
 
@@ -141,6 +143,7 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
   btn.disabled = true; btn.textContent = editingEntryId ? 'Mengemaskini...' : 'Menyimpan...';
   const payload = {
     tarikh: document.getElementById('entry-tarikh').value,
+    masa: document.getElementById('entry-masa').value || '',
     source: document.getElementById('entry-source').value.trim() || 'Umum',
     template: document.getElementById('entry-template').value.trim() || 'Tanpa nama',
     kategori: document.getElementById('entry-kategori').value,
@@ -181,6 +184,7 @@ function startEditEntry(id) {
   if (!entry) return;
   editingEntryId = id;
   document.getElementById('entry-tarikh').value = entry.tarikh || todayStr();
+  document.getElementById('entry-masa').value = entry.masa || '';
   document.getElementById('entry-source').value = entry.source || '';
   document.getElementById('entry-template').value = entry.template || '';
   document.getElementById('entry-kategori').value = entry.kategori || 'Projek Susu';
@@ -446,30 +450,35 @@ async function getCount(query) {
 async function loadContactStats() {
   try {
     const col = db.collection('contacts');
-    const [total, blasted] = await Promise.all([
+    const [total, pending, blasted, replied, buyer] = await Promise.all([
       getCount(col),
+      getCount(col.where('status', '==', 'pending')),
       getCount(col.where('status', '==', 'blasted')),
+      getCount(col.where('status', '==', 'replied')),
+      getCount(col.where('status', '==', 'buyer')),
     ]);
     document.getElementById('cstat-total').textContent = fmt(total);
+    document.getElementById('cstat-pending').textContent = fmt(pending);
     document.getElementById('cstat-blasted').textContent = fmt(blasted);
-    document.getElementById('cstat-pending').textContent = fmt(total - blasted);
+    document.getElementById('cstat-replied').textContent = fmt(replied);
+    document.getElementById('cstat-buyer').textContent = fmt(buyer);
 
     const body = document.getElementById('source-stat-body');
     body.innerHTML = '<tr><td colspan="4" class="empty-state">Mengira...</td></tr>';
     if (!knownSources.length) await loadKnownSources();
     const rows = await Promise.all(knownSources.map(async (src) => {
-      const [t, b] = await Promise.all([
+      const [t, p] = await Promise.all([
         getCount(col.where('source', '==', src)),
-        getCount(col.where('source', '==', src).where('status', '==', 'blasted')),
+        getCount(col.where('source', '==', src).where('status', '==', 'pending')),
       ]);
-      return { src, total: t, blasted: b };
+      return { src, total: t, pending: p };
     }));
     body.innerHTML = '';
     rows.filter(r => r.total > 0).forEach(r => {
       const tr = document.createElement('tr');
       tr.innerHTML = `<td class="tname">${r.src}</td><td class="num">${fmt(r.total)}</td>
-        <td class="num" style="color:#35E0AC;">${fmt(r.blasted)}</td>
-        <td class="num" style="color:#F0AC52;">${fmt(r.total - r.blasted)}</td>`;
+        <td class="num" style="color:#35E0AC;">${fmt(r.total - r.pending)}</td>
+        <td class="num" style="color:#F0AC52;">${fmt(r.pending)}</td>`;
       body.appendChild(tr);
     });
     if (!rows.some(r => r.total > 0)) body.innerHTML = '<tr><td colspan="4" class="empty-state">Tiada data lagi</td></tr>';
@@ -515,6 +524,10 @@ async function loadContactsPage(dir) {
   }
 }
 
+function statusLabel(s) {
+  return { pending: 'Belum Blast', blasted: 'Dah Blast', replied: 'Dah Reply', buyer: 'Jadi Buyer' }[s] || 'Belum Blast';
+}
+
 function renderContactRows(docs) {
   const body = document.getElementById('contact-body');
   body.innerHTML = '';
@@ -527,9 +540,12 @@ function renderContactRows(docs) {
       <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
       <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
       <td>
-        <span class="status-pill ${c.status}" style="cursor:pointer;" data-id="${d.id}" data-status="${c.status}">
-          ${c.status === 'blasted' ? 'Dah Blast' : 'Belum Blast'}
-        </span>
+        <select class="status-select" data-id="${d.id}" style="background:var(--surface-raised); border:1px solid var(--line); border-radius:20px; padding:4px 10px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--text); cursor:pointer;">
+          <option value="pending" ${c.status === 'pending' || !c.status ? 'selected' : ''}>Belum Blast</option>
+          <option value="blasted" ${c.status === 'blasted' ? 'selected' : ''}>Dah Blast</option>
+          <option value="replied" ${c.status === 'replied' ? 'selected' : ''}>Dah Reply</option>
+          <option value="buyer" ${c.status === 'buyer' ? 'selected' : ''}>Jadi Buyer</option>
+        </select>
       </td>
       <td style="text-align:right; white-space:nowrap;">
         <button class="btn-ghost contact-edit-btn" data-id="${d.id}" data-name="${(c.name||'').replace(/"/g,'&quot;')}" data-phone="${c.phone||''}" data-source="${(c.source||'').replace(/"/g,'&quot;')}" style="width:auto; padding:5px 10px; font-size:11px; margin-right:6px;">Edit</button>
@@ -537,11 +553,9 @@ function renderContactRows(docs) {
       </td>`;
     body.appendChild(tr);
   });
-  document.querySelectorAll('.status-pill').forEach(pill => {
-    pill.onclick = async () => {
-      const newStatus = pill.dataset.status === 'blasted' ? 'pending' : 'blasted';
-      await db.collection('contacts').doc(pill.dataset.id).update({ status: newStatus });
-      reloadCurrentContactPage();
+  document.querySelectorAll('.status-select').forEach(sel => {
+    sel.onchange = async () => {
+      await db.collection('contacts').doc(sel.dataset.id).update({ status: sel.value });
       loadContactStats();
     };
   });
@@ -754,7 +768,7 @@ async function doLookup() {
         <div class="todo-text">${c.name} — ${c.phone}</div>
         <div class="todo-meta">Sumber: ${c.source || '–'}</div>
       </div>
-      <span class="status-pill ${c.status}">${c.status === 'blasted' ? 'Dah Blast' : 'Belum Blast'}</span>`;
+      <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>`;
       resultEl.appendChild(div);
     });
   } catch (err) {
@@ -1190,6 +1204,112 @@ function renderWabotPerformance() {
   if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data akaun lagi</td></tr>';
 }
 
+const DAY_NAMES_MS = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+
+function renderDayOfWeek() {
+  const rows = lapFilteredEntries();
+  const byDay = {};
+  DAY_NAMES_MS.forEach(d => { byDay[d] = { sessions: 0, sent: 0, buyer: 0, sales: 0 }; });
+  rows.forEach(r => {
+    if (!r.tarikh) return;
+    const dow = new Date(r.tarikh + 'T00:00:00').getDay();
+    const label = DAY_NAMES_MS[dow];
+    const d = byDay[label];
+    d.sessions++; d.sent += r.sent; d.buyer += r.buyer; d.sales += r.sales;
+  });
+  const body = document.getElementById('dayofweek-body');
+  body.innerHTML = '';
+  DAY_NAMES_MS.forEach(label => {
+    const d = byDay[label];
+    const convRate = d.sent ? (d.buyer / d.sent * 100).toFixed(2) : '0.00';
+    const avgSales = d.sessions ? (d.sales / d.sessions) : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="tname">${label}</td><td class="num">${d.sessions}</td><td class="num">${fmt(d.sent)}</td>
+      <td class="num">${fmt(d.buyer)}</td><td class="num">${convRate}%</td>
+      <td class="num">${d.sales ? 'RM ' + fmt(d.sales) : '–'}</td>
+      <td class="num">${d.sessions ? 'RM ' + fmt(avgSales.toFixed(2)) : '–'}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+function renderHourOfDay() {
+  const rows = lapFilteredEntries().filter(r => r.masa);
+  const byHour = {};
+  rows.forEach(r => {
+    const hour = parseInt(r.masa.split(':')[0], 10);
+    if (isNaN(hour)) return;
+    const label = String(hour).padStart(2, '0') + ':00 - ' + String(hour).padStart(2, '0') + ':59';
+    byHour[label] = byHour[label] || { hour, sessions: 0, sent: 0, buyer: 0, sales: 0 };
+    const h = byHour[label];
+    h.sessions++; h.sent += r.sent; h.buyer += r.buyer; h.sales += r.sales;
+  });
+  const body = document.getElementById('hourofday-body');
+  body.innerHTML = '';
+  const entries = Object.entries(byHour).sort((a, b) => a[1].hour - b[1].hour);
+  entries.forEach(([label, h]) => {
+    const convRate = h.sent ? (h.buyer / h.sent * 100).toFixed(2) : '0.00';
+    const avgSales = h.sessions ? (h.sales / h.sessions) : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="tname">${label}</td><td class="num">${h.sessions}</td><td class="num">${fmt(h.sent)}</td>
+      <td class="num">${fmt(h.buyer)}</td><td class="num">${convRate}%</td>
+      <td class="num">${h.sales ? 'RM ' + fmt(h.sales) : '–'}</td>
+      <td class="num">${h.sessions ? 'RM ' + fmt(avgSales.toFixed(2)) : '–'}</td>`;
+    body.appendChild(tr);
+  });
+  if (!entries.length) body.innerHTML = '<tr><td colspan="7" class="empty-state">Tiada entri dengan Masa Blasting diisi lagi</td></tr>';
+}
+
 ['lap-filter-from', 'lap-filter-to', 'lap-filter-kategori'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => { renderDailyReport(); renderPosterPerformance(); renderWabotPerformance(); });
+  document.getElementById(id).addEventListener('change', () => {
+    renderDailyReport(); renderPosterPerformance(); renderWabotPerformance();
+    renderDayOfWeek(); renderHourOfDay();
+  });
+});
+
+// ============================================================
+// FILTER / SEGMENTASI DATABASE — cari ikut status (Buyer, Reply, dll) + sumber
+// ============================================================
+let segLastResults = [];
+
+document.getElementById('seg-search-btn').addEventListener('click', async () => {
+  const status = document.getElementById('seg-filter-status').value;
+  const source = document.getElementById('seg-filter-source').value.trim();
+  const body = document.getElementById('seg-result-body');
+  body.innerHTML = '<tr><td colspan="4" class="empty-state">Mencari...</td></tr>';
+  document.getElementById('seg-result-count').textContent = '–';
+  try {
+    let q = db.collection('contacts').orderBy('createdAt', 'desc');
+    if (status) q = q.where('status', '==', status);
+    if (source) q = q.where('source', '==', source);
+    q = q.limit(500);
+    const snap = await q.get();
+    segLastResults = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('seg-result-count').textContent = fmt(segLastResults.length);
+    document.getElementById('seg-result-note').textContent = segLastResults.length >= 500
+      ? 'Papar 500 rekod pertama sahaja — sempitkan tapisan untuk hasil lebih tepat'
+      : 'Semua hasil dipapar';
+    body.innerHTML = '';
+    segLastResults.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="tname">${c.name}</td>
+        <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
+        <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
+        <td style="text-align:right;"><span class="status-pill ${c.status}">${statusLabel(c.status)}</span></td>`;
+      body.appendChild(tr);
+    });
+    if (!segLastResults.length) body.innerHTML = '<tr><td colspan="4" class="empty-state">Tiada hasil untuk tapisan ni.</td></tr>';
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="4" class="empty-state">Ralat: ' + err.message + '</td></tr>';
+  }
+});
+
+document.getElementById('seg-copy-btn').addEventListener('click', async () => {
+  if (!segLastResults.length) { toast('Tiada hasil untuk disalin — cari dulu', true); return; }
+  const numbers = segLastResults.map(c => c.phone).join('\n');
+  try {
+    await navigator.clipboard.writeText(numbers);
+    toast(fmt(segLastResults.length) + ' nombor disalin ke clipboard ✓');
+  } catch (err) {
+    toast('Gagal salin — browser tak sokong clipboard', true);
+  }
 });
