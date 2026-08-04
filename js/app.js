@@ -78,7 +78,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
-    if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); }
+    if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); loadImportBatches(); }
   });
 });
 
@@ -829,6 +829,11 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
     }
     if (!rows.length) throw new Error('Tiada baris rekod yang sah dijumpai (perlukan sekurang-kurangnya satu nombor 7-15 digit setiap baris)');
 
+    // Setiap import dapat satu batchId unik — supaya boleh padam SATU sesi import
+    // penuh sekali klik lepas ni (tak payah cari satu-satu nombor).
+    const batchRef = db.collection('importBatches').doc();
+    const batchId = batchRef.id;
+
     const CHUNK = 400;
     let done = 0;
     for (let i = 0; i < rows.length; i += CHUNK) {
@@ -838,6 +843,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
         const ref = db.collection('contacts').doc();
         batch.set(ref, {
           name: r.name, phone: r.phone, source, status: 'pending',
+          importBatchId: batchId,
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         });
       });
@@ -847,6 +853,11 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
       bar.style.width = pct + '%';
       text.textContent = `${fmt(done)} / ${fmt(rows.length)} rekod diimport (${pct}%)`;
     }
+    await batchRef.set({
+      source, count: rows.length,
+      createdBy: currentProfile.name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
     registerSource(source);
     toast(fmt(rows.length) + ' rekod berjaya diimport ✓');
     document.getElementById('paste-data').value = '';
@@ -855,6 +866,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
     loadContactStats();
     loadContactsPage('first');
     loadKnownSources();
+    loadImportBatches();
   } catch (err) {
     toast('Gagal import: ' + err.message, true);
   } finally {
@@ -862,6 +874,66 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
     setTimeout(() => { wrap.style.display = 'none'; bar.style.width = '0%'; }, 2000);
   }
 });
+
+// ============================================================
+// SEJARAH IMPORT — padam satu sesi import penuh sekali klik
+// ============================================================
+async function loadImportBatches() {
+  const body = document.getElementById('batch-body');
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Memuatkan...</td></tr>';
+  try {
+    const snap = await db.collection('importBatches').orderBy('createdAt', 'desc').limit(50).get();
+    body.innerHTML = '';
+    document.getElementById('batch-count').textContent = fmt(snap.size) + ' batch';
+    snap.forEach(d => {
+      const b = d.data();
+      const dateStr = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toLocaleString('ms-MY') : '-';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="font-size:12px;">${dateStr}</td>
+        <td class="tname">${b.source || '-'}</td>
+        <td class="num">${fmt(b.count || 0)}</td>
+        <td style="font-size:12px; color:var(--muted);">${b.createdBy || '-'}</td>
+        <td style="text-align:right;">
+          <button class="btn-ghost batch-del-btn" data-id="${d.id}" data-count="${b.count || 0}" style="width:auto; padding:5px 10px; font-size:11px; color:var(--coral); border-color:rgba(255,122,104,0.3);">🗑️ Padam Batch Ini</button>
+        </td>`;
+      body.appendChild(tr);
+    });
+    document.querySelectorAll('.batch-del-btn').forEach(btn => {
+      btn.onclick = () => deleteImportBatch(btn.dataset.id, btn.dataset.count);
+    });
+    if (snap.empty) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada sejarah import lagi (import lepas update ni akan muncul di sini).</td></tr>';
+  } catch (err) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-state">Ralat: ' + err.message + '</td></tr>';
+  }
+}
+
+async function deleteImportBatch(batchId, count) {
+  if (!confirm(`Ni akan padam SEMUA ${fmt(count)} rekod dari batch import ni secara kekal. Teruskan?`)) return;
+  const progressEl = document.getElementById('bulk-all-progress');
+  progressEl.style.display = 'block';
+  let total = 0;
+  try {
+    while (true) {
+      const snap = await db.collection('contacts').where('importBatchId', '==', batchId).limit(400).get();
+      if (snap.empty) break;
+      const batch = db.batch();
+      snap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+      total += snap.docs.length;
+      progressEl.textContent = `${fmt(total)} rekod dipadam setakat ni...`;
+      if (snap.docs.length < 400) break;
+    }
+    await db.collection('importBatches').doc(batchId).delete();
+    toast(`Batch dipadam — ${fmt(total)} rekod dibuang ✓`);
+    loadContactStats();
+    loadContactsPage('first');
+    loadImportBatches();
+  } catch (err) {
+    toast('Gagal padam batch: ' + err.message, true);
+  } finally {
+    setTimeout(() => { progressEl.style.display = 'none'; }, 3000);
+  }
+}
 
 // ============================================================
 // TO-DO HARIAN — CRUD
