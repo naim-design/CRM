@@ -72,6 +72,8 @@ body { padding-bottom: 60px; }
 
 .role-badge { font-family:'IBM Plex Mono'; font-size:10px; padding:2px 8px; border-radius:20px; background:var(--surface-raised); color:var(--muted); border:1px solid var(--line); }
 .role-badge.admin { color:var(--amber); border-color:rgba(240,172,82,0.3); }
+.status-pill.replied { background: var(--blue-dim); color: var(--blue); }
+.status-pill.buyer { background: var(--amber-dim); color: var(--amber); }
 
 /* ---- To-Do ---- */
 .todo-item { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
