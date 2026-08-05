@@ -79,6 +79,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); loadImportBatches(); }
+    if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); }
   });
 });
 
@@ -528,6 +529,40 @@ function statusLabel(s) {
   return { pending: 'Belum Blast', blasted: 'Dah Blast', replied: 'Dah Reply', buyer: 'Jadi Buyer' }[s] || 'Belum Blast';
 }
 
+// ---- Tags pelanggan (boleh lebih dari satu serentak) ----
+const CONTACT_TAGS = [
+  { key: 'buyer', label: 'Buyer' },
+  { key: 'stop', label: 'Stop / Tak Nak Iklan' },
+  { key: 'hamil', label: 'Hamil' },
+  { key: 'ikhtiar', label: 'Ikhtiar' },
+  { key: 'reply', label: 'Dah Reply' },
+];
+function renderTagBadges(tags) {
+  if (!tags || !tags.length) return '<span style="color:var(--muted-2); font-size:11px;">–</span>';
+  return tags.map(t => {
+    const def = CONTACT_TAGS.find(d => d.key === t);
+    return `<span class="tag-badge ${t}">${def ? def.label : t}</span>`;
+  }).join('');
+}
+function buildTagCheckRow(containerId, selectedTags, onChangeCb) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  CONTACT_TAGS.forEach(t => {
+    const isChecked = (selectedTags || []).includes(t.key);
+    const label = document.createElement('label');
+    label.className = 'tag-check-item' + (isChecked ? ' active' : '');
+    label.innerHTML = `<input type="checkbox" value="${t.key}" ${isChecked ? 'checked' : ''}> ${t.label}`;
+    label.querySelector('input').addEventListener('change', (e) => {
+      label.classList.toggle('active', e.target.checked);
+      if (onChangeCb) onChangeCb();
+    });
+    el.appendChild(label);
+  });
+}
+function getCheckedTags(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(cb => cb.value);
+}
+
 function renderContactRows(docs) {
   const body = document.getElementById('contact-body');
   body.innerHTML = '';
@@ -539,6 +574,7 @@ function renderContactRows(docs) {
       <td class="tname">${c.name}</td>
       <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
       <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
+      <td style="max-width:160px;">${renderTagBadges(c.tags)}</td>
       <td>
         <select class="status-select" data-id="${d.id}" style="background:var(--surface-raised); border:1px solid var(--line); border-radius:20px; padding:4px 10px; font-size:11px; font-family:'IBM Plex Mono'; color:var(--text); cursor:pointer;">
           <option value="pending" ${c.status === 'pending' || !c.status ? 'selected' : ''}>Belum Blast</option>
@@ -548,7 +584,7 @@ function renderContactRows(docs) {
         </select>
       </td>
       <td style="text-align:right; white-space:nowrap;">
-        <button class="btn-ghost contact-edit-btn" data-id="${d.id}" data-name="${(c.name||'').replace(/"/g,'&quot;')}" data-phone="${c.phone||''}" data-source="${(c.source||'').replace(/"/g,'&quot;')}" style="width:auto; padding:5px 10px; font-size:11px; margin-right:6px;">Edit</button>
+        <button class="btn-ghost contact-edit-btn" data-id="${d.id}" data-name="${(c.name||'').replace(/"/g,'&quot;')}" data-phone="${c.phone||''}" data-source="${(c.source||'').replace(/"/g,'&quot;')}" data-tags="${(c.tags||[]).join(',')}" style="width:auto; padding:5px 10px; font-size:11px; margin-right:6px;">Edit</button>
         <button class="btn-ghost contact-del-btn" data-id="${d.id}" style="width:auto; padding:5px 10px; font-size:11px; color:var(--coral); border-color:rgba(255,122,104,0.3);">Padam</button>
       </td>`;
     body.appendChild(tr);
@@ -560,7 +596,7 @@ function renderContactRows(docs) {
     };
   });
   document.querySelectorAll('.contact-edit-btn').forEach(btn => {
-    btn.onclick = () => openEditContactModal(btn.dataset.id, btn.dataset.name, btn.dataset.phone, btn.dataset.source);
+    btn.onclick = () => openEditContactModal(btn.dataset.id, btn.dataset.name, btn.dataset.phone, btn.dataset.source, btn.dataset.tags ? btn.dataset.tags.split(',').filter(Boolean) : []);
   });
   document.querySelectorAll('.contact-del-btn').forEach(btn => {
     btn.onclick = async () => {
@@ -576,16 +612,17 @@ function renderContactRows(docs) {
     };
   });
   document.querySelectorAll('.row-check').forEach(cb => cb.addEventListener('change', updateBulkButtonState));
-  if (!docs.length) body.innerHTML = '<tr><td colspan="6" class="empty-state">Tiada rekod dijumpai.</td></tr>';
+  if (!docs.length) body.innerHTML = '<tr><td colspan="7" class="empty-state">Tiada rekod dijumpai.</td></tr>';
 }
 
 // ---- Edit contact modal ----
 let editingContactId = null;
-function openEditContactModal(id, name, phone, source) {
+function openEditContactModal(id, name, phone, source, tags) {
   editingContactId = id;
   document.getElementById('edit-contact-name').value = name || '';
   document.getElementById('edit-contact-phone').value = phone || '';
   document.getElementById('edit-contact-source').value = source || '';
+  buildTagCheckRow('edit-contact-tags', tags || []);
   document.getElementById('edit-contact-modal').classList.add('show');
 }
 function closeEditContactModal() {
@@ -601,11 +638,12 @@ document.getElementById('edit-contact-save').addEventListener('click', async () 
   const name = document.getElementById('edit-contact-name').value.trim();
   const phone = document.getElementById('edit-contact-phone').value.trim();
   const source = document.getElementById('edit-contact-source').value.trim() || 'Lain-lain';
+  const tags = getCheckedTags('edit-contact-tags');
   if (!name || !phone) { toast('Nama & nombor tak boleh kosong', true); return; }
   const btn = document.getElementById('edit-contact-save');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
-    await db.collection('contacts').doc(editingContactId).update({ name, phone, source });
+    await db.collection('contacts').doc(editingContactId).update({ name, phone, source, tags });
     registerSource(source);
     toast('Rekod dikemaskini ✓');
     closeEditContactModal();
@@ -762,14 +800,26 @@ async function doLookup() {
     resultEl.innerHTML = '';
     snap.forEach(d => {
       const c = d.data();
-      const div = document.createElement('div');
-      div.className = 'todo-item';
-      div.innerHTML = `<div style="flex:1;">
-        <div class="todo-text">${c.name} — ${c.phone}</div>
-        <div class="todo-meta">Sumber: ${c.source || '–'}</div>
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:10px;';
+      wrap.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
+        <div>
+          <div class="todo-text">${c.name} — ${c.phone}</div>
+          <div class="todo-meta">Sumber: ${c.source || '–'}</div>
+        </div>
+        <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>
       </div>
-      <span class="status-pill ${c.status}">${statusLabel(c.status)}</span>`;
-      resultEl.appendChild(div);
+      <div class="tag-check-row" id="lookup-tags-${d.id}" style="margin-top:12px; margin-bottom:0;"></div>`;
+      resultEl.appendChild(wrap);
+      buildTagCheckRow(`lookup-tags-${d.id}`, c.tags || [], async () => {
+        const newTags = getCheckedTags(`lookup-tags-${d.id}`);
+        try {
+          await db.collection('contacts').doc(d.id).update({ tags: newTags });
+          toast('Tag dikemaskini ✓');
+        } catch (err) {
+          toast('Gagal kemaskini tag: ' + err.message, true);
+        }
+      });
     });
   } catch (err) {
     resultEl.innerHTML = '<div class="empty-state">Ralat: ' + err.message + '</div>';
@@ -971,37 +1021,56 @@ document.getElementById('todo-form').addEventListener('submit', async (e) => {
 });
 
 document.getElementById('todo-filter-date').addEventListener('change', renderTodos);
+document.getElementById('todo-view-all-btn').addEventListener('click', () => {
+  document.getElementById('todo-filter-date').value = '';
+  renderTodos();
+});
+
+function renderTodoItem(container, t) {
+  const item = document.createElement('div');
+  item.className = 'todo-item' + (t.done ? ' done' : '');
+  item.innerHTML = `
+    <div class="todo-check ${t.done ? 'checked' : ''}" data-id="${t.id}" data-done="${t.done}">${t.done ? '✓' : ''}</div>
+    <div style="flex:1;">
+      <div class="todo-text">${t.text}</div>
+      <div class="todo-meta">${t.staffName || ''}</div>
+    </div>
+    <button class="todo-del" data-id="${t.id}">✕</button>`;
+  item.querySelector('.todo-check').onclick = async () => {
+    await db.collection('todos').doc(t.id).update({ done: !t.done });
+  };
+  item.querySelector('.todo-del').onclick = async () => {
+    if (confirm('Padam tugasan ni?')) await db.collection('todos').doc(t.id).delete();
+  };
+  container.appendChild(item);
+}
 
 function renderTodos() {
   const date = document.getElementById('todo-filter-date').value;
-  const rows = allTodos.filter(t => !date || t.date === date);
-  document.getElementById('todo-count').textContent = fmt(rows.length) + ' tugasan';
   const list = document.getElementById('todo-list');
   list.innerHTML = '';
-  rows.forEach(t => {
-    const item = document.createElement('div');
-    item.className = 'todo-item' + (t.done ? ' done' : '');
-    item.innerHTML = `
-      <div class="todo-check ${t.done ? 'checked' : ''}" data-id="${t.id}" data-done="${t.done}">${t.done ? '✓' : ''}</div>
-      <div style="flex:1;">
-        <div class="todo-text">${t.text}</div>
-        <div class="todo-meta">${t.staffName || ''}</div>
-      </div>
-      <button class="todo-del" data-id="${t.id}">✕</button>`;
-    list.appendChild(item);
+
+  if (date) {
+    const rows = allTodos.filter(t => t.date === date);
+    document.getElementById('todo-count').textContent = fmt(rows.length) + ' tugasan';
+    rows.forEach(t => renderTodoItem(list, t));
+    if (!rows.length) list.innerHTML = '<div class="empty-state">Tiada tugasan untuk tarikh ni.</div>';
+    return;
+  }
+
+  // Tiada tarikh dipilih — papar SEMUA hari, disusun ikut kumpulan tarikh (terkini dulu)
+  document.getElementById('todo-count').textContent = fmt(allTodos.length) + ' tugasan (semua hari)';
+  const byDate = {};
+  allTodos.forEach(t => { (byDate[t.date] = byDate[t.date] || []).push(t); });
+  const dates = Object.keys(byDate).sort().reverse();
+  if (!dates.length) { list.innerHTML = '<div class="empty-state">Tiada tugasan lagi.</div>'; return; }
+  dates.forEach(d => {
+    const header = document.createElement('div');
+    header.className = 'todo-date-header';
+    header.textContent = d;
+    list.appendChild(header);
+    byDate[d].forEach(t => renderTodoItem(list, t));
   });
-  document.querySelectorAll('.todo-check').forEach(el => {
-    el.onclick = async () => {
-      const newDone = el.dataset.done !== 'true';
-      await db.collection('todos').doc(el.dataset.id).update({ done: newDone });
-    };
-  });
-  document.querySelectorAll('.todo-del').forEach(el => {
-    el.onclick = async () => {
-      if (confirm('Padam tugasan ni?')) await db.collection('todos').doc(el.dataset.id).delete();
-    };
-  });
-  if (!rows.length) list.innerHTML = '<div class="empty-state">Tiada tugasan untuk tarikh ni.</div>';
 }
 
 // ============================================================
@@ -1274,15 +1343,24 @@ let segLastResults = [];
 document.getElementById('seg-search-btn').addEventListener('click', async () => {
   const status = document.getElementById('seg-filter-status').value;
   const source = document.getElementById('seg-filter-source').value.trim();
+  const phone = document.getElementById('seg-filter-phone').value.trim();
+  const tags = getCheckedTags('seg-filter-tags');
   const body = document.getElementById('seg-result-body');
-  body.innerHTML = '<tr><td colspan="4" class="empty-state">Mencari...</td></tr>';
+  body.innerHTML = '<tr><td colspan="5" class="empty-state">Mencari...</td></tr>';
   document.getElementById('seg-result-count').textContent = '–';
   try {
-    let q = db.collection('contacts').orderBy('createdAt', 'desc');
-    if (status) q = q.where('status', '==', status);
-    if (source) q = q.where('source', '==', source);
-    q = q.limit(500);
-    const snap = await q.get();
+    let snap;
+    if (phone) {
+      // Carian terus ikut nombor — abaikan tapisan lain, tepat 1 kontak
+      snap = await db.collection('contacts').where('phone', '==', phone).limit(5).get();
+    } else {
+      let q = db.collection('contacts').orderBy('createdAt', 'desc');
+      if (status) q = q.where('status', '==', status);
+      if (source) q = q.where('source', '==', source);
+      if (tags.length) q = q.where('tags', 'array-contains-any', tags);
+      q = q.limit(500);
+      snap = await q.get();
+    }
     segLastResults = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     document.getElementById('seg-result-count').textContent = fmt(segLastResults.length);
     document.getElementById('seg-result-note').textContent = segLastResults.length >= 500
@@ -1294,12 +1372,13 @@ document.getElementById('seg-search-btn').addEventListener('click', async () => 
       tr.innerHTML = `<td class="tname">${c.name}</td>
         <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
         <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
+        <td style="max-width:160px;">${renderTagBadges(c.tags)}</td>
         <td style="text-align:right;"><span class="status-pill ${c.status}">${statusLabel(c.status)}</span></td>`;
       body.appendChild(tr);
     });
-    if (!segLastResults.length) body.innerHTML = '<tr><td colspan="4" class="empty-state">Tiada hasil untuk tapisan ni.</td></tr>';
+    if (!segLastResults.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada hasil untuk tapisan ni.</td></tr>';
   } catch (err) {
-    body.innerHTML = '<tr><td colspan="4" class="empty-state">Ralat: ' + err.message + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="empty-state">Ralat: ' + err.message + '</td></tr>';
   }
 });
 
