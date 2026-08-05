@@ -75,6 +75,20 @@ body { padding-bottom: 60px; }
 .status-pill.replied { background: var(--blue-dim); color: var(--blue); }
 .status-pill.buyer { background: var(--amber-dim); color: var(--amber); }
 
+/* ---- Tags ---- */
+.tag-badge { display:inline-flex; align-items:center; font-family:'IBM Plex Mono'; font-size:10px; padding:2px 8px;
+  border-radius:20px; margin:1px 3px 1px 0; white-space:nowrap; }
+.tag-badge.buyer { background: var(--amber-dim); color: var(--amber); }
+.tag-badge.stop { background: var(--coral-dim); color: var(--coral); }
+.tag-badge.hamil { background: rgba(200,120,220,0.14); color: #C878DC; }
+.tag-badge.ikhtiar { background: var(--blue-dim); color: var(--blue); }
+.tag-badge.reply { background: var(--mint-dim); color: var(--mint); }
+.tag-check-row { display:flex; flex-wrap:wrap; gap:10px; margin:10px 0; }
+.tag-check-item { display:flex; align-items:center; gap:6px; background:var(--surface-raised); border:1px solid var(--line);
+  border-radius:20px; padding:6px 12px; cursor:pointer; font-size:12px; }
+.tag-check-item input { cursor:pointer; }
+.tag-check-item.active { border-color:var(--mint); color:var(--mint); }
+
 /* ---- To-Do ---- */
 .todo-item { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
   border-radius:10px; padding:13px 16px; }
@@ -87,6 +101,9 @@ body { padding-bottom: 60px; }
 .todo-meta { font-size:11px; color:var(--muted-2); font-family:'IBM Plex Mono'; }
 .todo-del { background:none; border:none; color:var(--muted-2); cursor:pointer; font-size:16px; padding:4px 8px; }
 .todo-del:hover { color:var(--coral); }
+.todo-date-header { font-family:'IBM Plex Mono'; font-size:12px; color:var(--mint); font-weight:600;
+  margin-top:18px; margin-bottom:2px; padding-bottom:6px; border-bottom:1px solid var(--line-soft); }
+.todo-date-header:first-child { margin-top:0; }
 
 /* ---- Poster ---- */
 .poster-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; }
