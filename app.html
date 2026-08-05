@@ -62,6 +62,7 @@
                 <option>Projek Susu</option>
                 <option>Promo Jus</option>
                 <option>Database WS/Lead</option>
+                <option>Projek Leads Ikhtiar (NaimFani)</option>
               </select>
             </div>
             <div class="field"><label>Akaun WABOT digunakan</label>
@@ -133,7 +134,7 @@
           <div class="field" style="margin:0;"><label>Kategori Laporan</label>
             <select id="filter-kategori" class="filter-box">
               <option value="">Semua (Keseluruhan)</option>
-              <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option>
+              <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
             </select>
           </div>
         </div>
@@ -192,7 +193,7 @@
         <div class="field" style="margin:0;"><label>Kategori Laporan</label>
           <select id="lap-filter-kategori" class="filter-box">
             <option value="">Semua (Keseluruhan)</option>
-            <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option>
+            <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
           </select>
         </div>
       </div>
@@ -367,7 +368,7 @@ Ahmad	60112223344"></textarea>
         </div>
         <div id="bulk-all-progress" style="display:none; font-size:12px; color:var(--mint); margin-top:8px; font-family:'IBM Plex Mono';"></div>
         <table class="tbl" style="margin-top:10px;">
-          <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Status</th><th style="text-align:right;">Tindakan</th></tr></thead>
+          <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th>Status</th><th style="text-align:right;">Tindakan</th></tr></thead>
           <tbody id="contact-body"></tbody>
         </table>
         <div class="pagination">
@@ -397,6 +398,12 @@ Ahmad	60112223344"></textarea>
         <button class="btn btn-primary" id="seg-search-btn" style="width:auto; padding:9px 20px;">Cari</button>
       </div>
 
+      <div class="tag-check-row" id="seg-filter-tags"></div>
+
+      <div style="margin-top:10px;">
+        <input type="text" class="search-box" id="seg-filter-phone" placeholder="Atau taip terus nombor untuk cari 1 kontak..." style="max-width:320px;">
+      </div>
+
       <div class="stat-row" style="margin-top:18px;">
         <div class="stat-card accent-mint"><div class="label">Hasil Dijumpai</div><div class="value" id="seg-result-count">–</div><div class="foot" id="seg-result-note">Papar sehingga 500 rekod pertama</div></div>
       </div>
@@ -406,8 +413,8 @@ Ahmad	60112223344"></textarea>
       </div>
 
       <table class="tbl">
-        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th style="text-align:right;">Status</th></tr></thead>
-        <tbody id="seg-result-body"><tr><td colspan="4" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
+        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th style="text-align:right;">Status</th></tr></thead>
+        <tbody id="seg-result-body"><tr><td colspan="5" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
       </table>
     </div>
 
@@ -423,6 +430,7 @@ Ahmad	60112223344"></textarea>
       </div>
       <div class="table-controls">
         <div class="field" style="margin:0;"><label>Papar tarikh</label><input type="date" id="todo-filter-date"></div>
+        <button class="btn btn-ghost" id="todo-view-all-btn" style="width:auto; padding:9px 16px;">📅 Papar Semua Hari</button>
         <span class="hint-chip" id="todo-count">0 tugasan</span>
       </div>
       <div id="todo-list" style="margin-top:16px; display:flex; flex-direction:column; gap:8px;"></div>
@@ -438,6 +446,9 @@ Ahmad	60112223344"></textarea>
     <div class="field"><label>Nama</label><input type="text" id="edit-contact-name"></div>
     <div class="field"><label>No. Telefon</label><input type="text" id="edit-contact-phone"></div>
     <div class="field"><label>Sumber</label><input type="text" id="edit-contact-source" list="source-suggestions"></div>
+    <div class="field"><label>Tag Pelanggan</label>
+      <div class="tag-check-row" id="edit-contact-tags"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="edit-contact-cancel">Batal</button>
       <button class="btn btn-primary" id="edit-contact-save">Simpan</button>
