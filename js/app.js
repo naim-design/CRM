@@ -10,6 +10,8 @@ let unsubPosters = null;
 let allEntries = [];
 let allTodos = [];
 let allPosters = [];
+let allFeedback = [];
+let unsubFeedback = null;
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -79,7 +81,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); loadImportBatches(); }
-    if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); }
+    if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); populateBatchSelect(); }
   });
 });
 
@@ -107,6 +109,11 @@ function startListeners() {
     renderPosters();
     populatePosterSelect();
   }, err => toast('Ralat baca poster: ' + err.message, true));
+
+  unsubFeedback = db.collection('feedback').orderBy('createdAt', 'desc').onSnapshot(snap => {
+    allFeedback = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderFeedback();
+  }, err => toast('Ralat baca feedback: ' + err.message, true));
 }
 
 // ============================================================
@@ -362,7 +369,27 @@ function renderTemplateReport() {
     body.appendChild(tr);
   });
   document.getElementById('tmpl-count').textContent = entries.length + ' template';
-  if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data lagi</td></tr>';
+  if (!entries.length) { body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data lagi</td></tr>'; return; }
+
+  // Baris Jumlah keseluruhan
+  const T = entries.reduce((a, [, t]) => {
+    a.sessions += t.sessions; a.sent += t.sent; a.read += t.read; a.reply += t.reply; a.buyer += t.buyer; a.sales += t.sales;
+    return a;
+  }, { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 });
+  const tReadRate = T.sent ? (T.read / T.sent * 100).toFixed(1) : '0.0';
+  const tReplyRate = T.sent ? (T.reply / T.sent * 100).toFixed(1) : '0.0';
+  const tConvRate = T.sent ? (T.buyer / T.sent * 100).toFixed(2) : '0.00';
+  const tCostRMAll = costRM(T.sent);
+  const tRoiAll = tCostRMAll ? (T.sales / tCostRMAll) : null;
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td></td><td class="tname">JUMLAH</td>
+    <td class="num">${T.sessions}</td><td class="num">${fmt(T.sent)}</td><td class="num">${tReadRate}%</td>
+    <td class="num">${tReplyRate}%</td><td class="num">${tConvRate}%</td>
+    <td class="num">${T.sales ? 'RM ' + fmt(T.sales) : '–'}</td>
+    <td class="num">RM ${fmt(tCostRMAll.toFixed(2))}</td>
+    <td class="num">${tRoiAll === null ? '–' : tRoiAll.toFixed(2) + 'x'}</td>`;
+  body.appendChild(totalTr);
 }
 
 ['filter-from', 'filter-to', 'filter-staff', 'filter-kategori'].forEach(id => {
@@ -1164,6 +1191,69 @@ function populatePosterSelect() {
 }
 
 // ============================================================
+// FEEDBACK — kategori + ayat + gambar (dimampatkan, simpan dalam Firestore)
+// ============================================================
+document.getElementById('feedback-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('feedback-submit-btn');
+  const kategori = document.getElementById('feedback-kategori').value;
+  const text = document.getElementById('feedback-text').value.trim();
+  const file = document.getElementById('feedback-file').files[0];
+  if (!text || !file) return;
+  btn.disabled = true; btn.textContent = 'Memproses gambar...';
+  try {
+    const dataUrl = await compressImageToBase64(file);
+    if (dataUrl.length > 900000) throw new Error('Gambar masih terlalu besar lepas dimampatkan. Cuba guna gambar lain.');
+    btn.textContent = 'Menyimpan...';
+    await db.collection('feedback').add({
+      kategori, text, imageData: dataUrl,
+      createdBy: currentProfile.name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    e.target.reset();
+    toast('Feedback berjaya disimpan ✓');
+  } catch (err) {
+    toast('Gagal simpan feedback: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan Feedback';
+  }
+});
+
+document.getElementById('feedback-filter-kategori').addEventListener('change', renderFeedback);
+
+function renderFeedback() {
+  const kategori = document.getElementById('feedback-filter-kategori').value;
+  const rows = kategori ? allFeedback.filter(f => f.kategori === kategori) : allFeedback;
+  document.getElementById('feedback-count').textContent = fmt(rows.length) + ' feedback';
+  const grid = document.getElementById('feedback-grid');
+  grid.innerHTML = '';
+  rows.forEach(f => {
+    const dateStr = f.createdAt && f.createdAt.toDate ? f.createdAt.toDate().toLocaleDateString('ms-MY') : '';
+    const card = document.createElement('div');
+    card.className = 'feedback-card';
+    card.innerHTML = `<img src="${f.imageData}" alt="feedback">
+      <div class="fb-body">
+        <span class="fb-kategori">${f.kategori}</span>
+        <div class="fb-text">${(f.text || '').replace(/</g, '&lt;')}</div>
+        <div class="fb-foot"><span>${f.createdBy || ''} · ${dateStr}</span>
+        <button class="fb-del" data-id="${f.id}">✕</button></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  document.querySelectorAll('.fb-del').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm('Padam feedback ni?')) return;
+      try {
+        await db.collection('feedback').doc(btn.dataset.id).delete();
+      } catch (err) {
+        toast('Gagal padam: ' + err.message, true);
+      }
+    };
+  });
+  if (!rows.length) grid.innerHTML = '<div class="empty-state">Tiada feedback lagi — tambah di atas.</div>';
+}
+
+// ============================================================
 // LAPORAN — Harian & Prestasi Poster
 // ============================================================
 function lapFilteredEntries() {
@@ -1208,7 +1298,29 @@ function renderDailyReport() {
       <td class="num">${roi === null ? '–' : roi.toFixed(2) + 'x'}</td>`;
     body.appendChild(tr);
   });
-  if (!dates.length) body.innerHTML = '<tr><td colspan="11" class="empty-state">Tiada data lagi</td></tr>';
+  if (!dates.length) { body.innerHTML = '<tr><td colspan="11" class="empty-state">Tiada data lagi</td></tr>'; return; }
+
+  const T = dates.reduce((a, date) => {
+    const d = byDate[date];
+    a.sessions += d.sessions; a.sent += d.sent; a.read += d.read; a.reply += d.reply; a.buyer += d.buyer; a.sales += d.sales;
+    return a;
+  }, { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 });
+  const tReadRate = T.sent ? (T.read / T.sent * 100).toFixed(1) : '0.0';
+  const tReplyRate = T.sent ? (T.reply / T.sent * 100).toFixed(1) : '0.0';
+  const tConvRate = T.sent ? (T.buyer / T.sent * 100).toFixed(2) : '0.00';
+  const tCostEURAll = costEUR(T.sent);
+  const tCostRMAll = costRM(T.sent);
+  const tRoiAll = tCostRMAll ? (T.sales / tCostRMAll) : null;
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td class="tname">JUMLAH</td><td class="num">${T.sessions}</td><td class="num">${fmt(T.sent)}</td>
+    <td class="num">${tReadRate}%</td><td class="num">${tReplyRate}%</td>
+    <td class="num">${fmt(T.buyer)}</td><td class="num">${tConvRate}%</td>
+    <td class="num">${T.sales ? 'RM ' + fmt(T.sales) : '–'}</td>
+    <td class="num">€${tCostEURAll.toFixed(2)}</td>
+    <td class="num">RM ${fmt(tCostRMAll.toFixed(2))}</td>
+    <td class="num">${tRoiAll === null ? '–' : tRoiAll.toFixed(2) + 'x'}</td>`;
+  body.appendChild(totalTr);
 }
 
 function renderPosterPerformance() {
@@ -1239,7 +1351,26 @@ function renderPosterPerformance() {
     body.appendChild(tr);
   });
   document.getElementById('poster-perf-count').textContent = entries.length + ' poster';
-  if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data poster lagi</td></tr>';
+  if (!entries.length) { body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data poster lagi</td></tr>'; return; }
+
+  const T = entries.reduce((a, [, p]) => {
+    a.sessions += p.sessions; a.sent += p.sent; a.read += p.read; a.reply += p.reply; a.buyer += p.buyer; a.sales += p.sales;
+    return a;
+  }, { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 });
+  const tReadRate = T.sent ? (T.read / T.sent * 100).toFixed(1) : '0.0';
+  const tReplyRate = T.sent ? (T.reply / T.sent * 100).toFixed(1) : '0.0';
+  const tConvRate = T.sent ? (T.buyer / T.sent * 100).toFixed(2) : '0.00';
+  const tCostRMAll = costRM(T.sent);
+  const tRoiAll = tCostRMAll ? (T.sales / tCostRMAll) : null;
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td></td><td class="tname">JUMLAH</td>
+    <td class="num">${T.sessions}</td><td class="num">${fmt(T.sent)}</td><td class="num">${tReadRate}%</td>
+    <td class="num">${tReplyRate}%</td><td class="num">${tConvRate}%</td>
+    <td class="num">${T.sales ? 'RM ' + fmt(T.sales) : '–'}</td>
+    <td class="num">RM ${fmt(tCostRMAll.toFixed(2))}</td>
+    <td class="num">${tRoiAll === null ? '–' : tRoiAll.toFixed(2) + 'x'}</td>`;
+  body.appendChild(totalTr);
 }
 
 function renderWabotPerformance() {
@@ -1270,7 +1401,26 @@ function renderWabotPerformance() {
     body.appendChild(tr);
   });
   document.getElementById('wabot-perf-count').textContent = entries.length + ' akaun';
-  if (!entries.length) body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data akaun lagi</td></tr>';
+  if (!entries.length) { body.innerHTML = '<tr><td colspan="10" class="empty-state">Tiada data akaun lagi</td></tr>'; return; }
+
+  const T = entries.reduce((a, [, acc]) => {
+    a.sessions += acc.sessions; a.sent += acc.sent; a.read += acc.read; a.reply += acc.reply; a.buyer += acc.buyer; a.sales += acc.sales;
+    return a;
+  }, { sessions: 0, sent: 0, read: 0, reply: 0, buyer: 0, sales: 0 });
+  const tReadRate = T.sent ? (T.read / T.sent * 100).toFixed(1) : '0.0';
+  const tReplyRate = T.sent ? (T.reply / T.sent * 100).toFixed(1) : '0.0';
+  const tConvRate = T.sent ? (T.buyer / T.sent * 100).toFixed(2) : '0.00';
+  const tCostRMAll = costRM(T.sent);
+  const tRoiAll = tCostRMAll ? (T.sales / tCostRMAll) : null;
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td></td><td class="tname">JUMLAH</td>
+    <td class="num">${T.sessions}</td><td class="num">${fmt(T.sent)}</td><td class="num">${tReadRate}%</td>
+    <td class="num">${tReplyRate}%</td><td class="num">${tConvRate}%</td>
+    <td class="num">${T.sales ? 'RM ' + fmt(T.sales) : '–'}</td>
+    <td class="num">RM ${fmt(tCostRMAll.toFixed(2))}</td>
+    <td class="num">${tRoiAll === null ? '–' : tRoiAll.toFixed(2) + 'x'}</td>`;
+  body.appendChild(totalTr);
 }
 
 const DAY_NAMES_MS = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
@@ -1299,6 +1449,21 @@ function renderDayOfWeek() {
       <td class="num">${d.sessions ? 'RM ' + fmt(avgSales.toFixed(2)) : '–'}</td>`;
     body.appendChild(tr);
   });
+
+  const T = DAY_NAMES_MS.reduce((a, label) => {
+    const d = byDay[label];
+    a.sessions += d.sessions; a.sent += d.sent; a.buyer += d.buyer; a.sales += d.sales;
+    return a;
+  }, { sessions: 0, sent: 0, buyer: 0, sales: 0 });
+  const tConvRate = T.sent ? (T.buyer / T.sent * 100).toFixed(2) : '0.00';
+  const tAvgSales = T.sessions ? (T.sales / T.sessions) : 0;
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td class="tname">JUMLAH</td><td class="num">${T.sessions}</td><td class="num">${fmt(T.sent)}</td>
+    <td class="num">${fmt(T.buyer)}</td><td class="num">${tConvRate}%</td>
+    <td class="num">${T.sales ? 'RM ' + fmt(T.sales) : '–'}</td>
+    <td class="num">${T.sessions ? 'RM ' + fmt(tAvgSales.toFixed(2)) : '–'}</td>`;
+  body.appendChild(totalTr);
 }
 
 function renderHourOfDay() {
@@ -1325,7 +1490,21 @@ function renderHourOfDay() {
       <td class="num">${h.sessions ? 'RM ' + fmt(avgSales.toFixed(2)) : '–'}</td>`;
     body.appendChild(tr);
   });
-  if (!entries.length) body.innerHTML = '<tr><td colspan="7" class="empty-state">Tiada entri dengan Masa Blasting diisi lagi</td></tr>';
+  if (!entries.length) { body.innerHTML = '<tr><td colspan="7" class="empty-state">Tiada entri dengan Masa Blasting diisi lagi</td></tr>'; return; }
+
+  const T = entries.reduce((a, [, h]) => {
+    a.sessions += h.sessions; a.sent += h.sent; a.buyer += h.buyer; a.sales += h.sales;
+    return a;
+  }, { sessions: 0, sent: 0, buyer: 0, sales: 0 });
+  const tConvRate = T.sent ? (T.buyer / T.sent * 100).toFixed(2) : '0.00';
+  const tAvgSales = T.sessions ? (T.sales / T.sessions) : 0;
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td class="tname">JUMLAH</td><td class="num">${T.sessions}</td><td class="num">${fmt(T.sent)}</td>
+    <td class="num">${fmt(T.buyer)}</td><td class="num">${tConvRate}%</td>
+    <td class="num">${T.sales ? 'RM ' + fmt(T.sales) : '–'}</td>
+    <td class="num">${T.sessions ? 'RM ' + fmt(tAvgSales.toFixed(2)) : '–'}</td>`;
+  body.appendChild(totalTr);
 }
 
 ['lap-filter-from', 'lap-filter-to', 'lap-filter-kategori'].forEach(id => {
@@ -1336,13 +1515,32 @@ function renderHourOfDay() {
 });
 
 // ============================================================
-// FILTER / SEGMENTASI DATABASE — cari ikut status (Buyer, Reply, dll) + sumber
+// FILTER / SEGMENTASI DATABASE — cari ikut status (Buyer, Reply, dll) + sumber + batch
 // ============================================================
 let segLastResults = [];
+
+async function populateBatchSelect() {
+  const sel = document.getElementById('seg-filter-batch');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Semua Batch Import</option>';
+  try {
+    const snap = await db.collection('importBatches').orderBy('createdAt', 'desc').limit(50).get();
+    snap.forEach(d => {
+      const b = d.data();
+      const dateStr = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().toLocaleString('ms-MY') : '';
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = `${dateStr} — ${b.source || '-'} (${fmt(b.count || 0)} rekod)`;
+      sel.appendChild(opt);
+    });
+    sel.value = current;
+  } catch (e) { /* diam-diam gagal */ }
+}
 
 document.getElementById('seg-search-btn').addEventListener('click', async () => {
   const status = document.getElementById('seg-filter-status').value;
   const source = document.getElementById('seg-filter-source').value.trim();
+  const batchId = document.getElementById('seg-filter-batch').value;
   const phone = document.getElementById('seg-filter-phone').value.trim();
   const tags = getCheckedTags('seg-filter-tags');
   const body = document.getElementById('seg-result-body');
@@ -1357,6 +1555,7 @@ document.getElementById('seg-search-btn').addEventListener('click', async () => 
       let q = db.collection('contacts').orderBy('createdAt', 'desc');
       if (status) q = q.where('status', '==', status);
       if (source) q = q.where('source', '==', source);
+      if (batchId) q = q.where('importBatchId', '==', batchId);
       if (tags.length) q = q.where('tags', 'array-contains-any', tags);
       q = q.limit(500);
       snap = await q.get();
