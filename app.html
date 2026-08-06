@@ -37,6 +37,7 @@
         <button data-view="contacts">Database</button>
         <button data-view="filter">Filter</button>
         <button data-view="todo">To-Do</button>
+        <button data-view="recap">Recap Jun</button>
       </nav>
       <div class="user-badge">
         <button class="theme-toggle" id="theme-toggle" title="Tukar tema">🌙</button>
@@ -149,9 +150,34 @@
           <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="stat-buyer">0</div><div class="foot" id="stat-conv">0.00% conversion</div></div>
           <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
           <div class="stat-card"><div class="label">Kos Blasting</div><div class="value" id="stat-cost-rm">RM 0</div><div class="foot" id="stat-cost-eur">€0.00</div></div>
-          <div class="stat-card accent-mint"><div class="label">ROI</div><div class="value" id="stat-roi">0.00x</div><div class="foot">Sales ÷ Kos</div></div>
+          <div class="stat-card accent-mint"><div class="label">ROAS</div><div class="value" id="stat-roi">0.00x</div><div class="foot">Sales ÷ Kos</div></div>
+        </div>
+        <div class="stat-row" style="margin-top:14px;">
+          <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="stat-respon-rate">0.0%</div></div>
+          <div class="stat-card"><div class="label">Reply Rate<br><small style="font-weight:400;">(Reply/Sent)</small></div><div class="value" id="stat-reply-rate">0.0%</div></div>
+          <div class="stat-card"><div class="label">Conversion Rate<br><small style="font-weight:400;">(Buyer/Sent)</small></div><div class="value" id="stat-conv-rate">0.00%</div></div>
         </div>
       </div>
+
+      <section id="topup-section" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Topup Blasting <small style="font-weight:400; color:var(--muted); font-size:11px;">(Keseluruhan sahaja)</small></h2></div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="label">Total Topup</div><div class="value" id="topup-total-eur">€0.00</div><div class="foot" id="topup-total-rm">RM 0.00</div></div>
+          <div class="stat-card"><div class="label">Kos Digunakan</div><div class="value" id="topup-used-rm">RM 0.00</div></div>
+          <div class="stat-card accent-mint"><div class="label">Baki Topup</div><div class="value" id="topup-balance-rm">RM 0.00</div></div>
+        </div>
+        <div class="form-card" style="margin-top:16px;">
+          <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="field" style="margin:0; flex:1; min-width:160px;"><label>Amaun Topup (€)</label><input type="number" id="topup-amount" min="0" step="0.01" placeholder="cth: 90" required></div>
+            <div class="field" style="margin:0; flex:2; min-width:200px;"><label>Nota (pilihan)</label><input type="text" id="topup-note" placeholder="cth: Topup Wabot Ogos"></div>
+            <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah Topup</button>
+          </form>
+        </div>
+        <table class="tbl" style="margin-top:14px;">
+          <thead><tr><th>Tarikh</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
+          <tbody id="topup-history-body"></tbody>
+        </table>
+      </section>
 
       <section>
         <div class="section-head"><h2><span class="idx">01</span>Funnel</h2></div>
@@ -169,10 +195,47 @@
           <span class="hint-chip" id="tmpl-count">0 template</span>
         </div>
         <table class="tbl">
-          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
+          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="tmpl-body"></tbody>
         </table>
       </section>
+
+      <!-- Kandungan tambahan khas ikut kategori (report/gambar rujukan) -->
+      <section id="kategori-susu-extra" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Dashboard Rujukan — Projek Susu</h2></div>
+        <div class="report-embed-grid">
+          <div class="report-embed-card">
+            <div class="report-embed-title">Flow Follow Up Susu (3 Hari, 3 Set)</div>
+            <div class="report-embed-preview" onclick="openReportModal('reports/susu-followup-3set.html','Flow Follow Up Susu (3 Hari, 3 Set)')">
+              <iframe src="reports/susu-followup-3set.html" loading="lazy"></iframe>
+              <div class="report-embed-overlay">Klik untuk lihat penuh</div>
+            </div>
+          </div>
+          <div class="report-embed-card">
+            <div class="report-embed-title">Data Dashboard Susu — Jun 2026</div>
+            <div class="report-embed-preview" onclick="openReportModal('reports/susu-jun-2026.html','Data Dashboard Susu — Jun 2026')">
+              <iframe src="reports/susu-jun-2026.html" loading="lazy"></iframe>
+              <div class="report-embed-overlay">Klik untuk lihat penuh</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="kategori-naimfani-extra" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Rujukan — Projek Leads Ikhtiar (NaimFani)</h2></div>
+        <div class="poster-grid">
+          <div class="poster-card"><img src="assets/leads-ikhtiar-jus.jpg" alt="Database WhatsApp Leads Ikhtiar Follow Up 4 Hari" onclick="openImageModal(this.src)" style="cursor:zoom-in;"></div>
+          <div class="poster-card"><img src="assets/leads-ikhtiar-susu.jpg" alt="Database WhatsApp Leads Ikhtiar Follow Up 6 Hari" onclick="openImageModal(this.src)" style="cursor:zoom-in;"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= RECAP JUN ================= -->
+    <div id="view-recap" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Recap Jun — Dashboard Keseluruhan</h2></div>
+      <div class="recap-frame-wrap">
+        <iframe src="reports/recap-keseluruhan.html" id="recap-iframe"></iframe>
+      </div>
     </div>
 
     <!-- ================= POSTER ================= -->
@@ -242,7 +305,7 @@
       <section>
         <div class="section-head"><h2><span class="idx">01</span>Laporan Harian</h2></div>
         <table class="tbl">
-          <thead><tr><th>Tarikh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
+          <thead><tr><th>Tarikh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="daily-body"></tbody>
         </table>
       </section>
@@ -253,7 +316,7 @@
           <span class="hint-chip" id="poster-perf-count">0 poster</span>
         </div>
         <table class="tbl">
-          <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
+          <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="poster-perf-body"></tbody>
         </table>
       </section>
@@ -264,7 +327,7 @@
           <span class="hint-chip" id="wabot-perf-count">0 akaun</span>
         </div>
         <table class="tbl">
-          <thead><tr><th>#</th><th>Akaun WABOT</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th></tr></thead>
+          <thead><tr><th>#</th><th>Akaun WABOT</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="wabot-perf-body"></tbody>
         </table>
       </section>
@@ -498,6 +561,25 @@ Ahmad	60112223344"></textarea>
       <button class="btn btn-ghost" id="edit-contact-cancel">Batal</button>
       <button class="btn btn-primary" id="edit-contact-save">Simpan</button>
     </div>
+  </div>
+</div>
+
+<!-- Report Full-View Modal -->
+<div class="modal-backdrop" id="report-modal">
+  <div class="report-modal-box">
+    <div class="report-modal-head">
+      <span id="report-modal-title">Dashboard</span>
+      <button id="report-modal-close">✕</button>
+    </div>
+    <iframe id="report-modal-iframe" src=""></iframe>
+  </div>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div class="modal-backdrop" id="image-modal">
+  <div class="image-modal-box">
+    <button id="image-modal-close">✕</button>
+    <img id="image-modal-img" src="" alt="preview">
   </div>
 </div>
 

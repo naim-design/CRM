@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#3f2f49">
+<title>Mamariam CRM — Dashboard Follow Up Susu</title>
+<style>
+:root{
+ --bg:#f7f3ee;--bg2:#f0ebf3;--card:rgba(255,255,255,.92);--ink:#202534;--muted:#747b89;
+ --line:rgba(82,60,94,.12);--navy:#20273b;--plum:#72517d;--plum2:#ab8db3;--rose:#c98391;
+ --teal:#2e9085;--blue:#4b7fb8;--green:#2f8b68;--amber:#bf8737;--red:#c55a66;
+ --shadow:0 18px 50px rgba(55,42,72,.09);--soft:0 8px 26px rgba(55,42,72,.06)
+}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{
+ margin:0;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;
+ background:
+ radial-gradient(circle at 8% 4%,rgba(171,141,179,.22),transparent 25rem),
+ radial-gradient(circle at 94% 7%,rgba(201,131,145,.15),transparent 23rem),
+ linear-gradient(180deg,var(--bg),#faf9f7 54%,var(--bg2));
+}
+button,input{font:inherit}.top{position:sticky;top:0;z-index:30;background:rgba(247,243,238,.84);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.topin,.wrap{width:min(1480px,calc(100% - 42px));margin:auto}.topin{min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:950}.mark{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,#4a3554,var(--plum),var(--rose));box-shadow:0 12px 28px rgba(114,81,125,.25)}
+.actions{display:flex;gap:9px}.btn{border:1px solid rgba(114,81,125,.16);background:rgba(255,255,255,.82);color:var(--ink);padding:10px 14px;border-radius:12px;font-size:11px;font-weight:850;cursor:pointer}
+.wrap{padding:28px 0 68px}.hero{display:grid;grid-template-columns:1.35fr .65fr;gap:18px}.hero-main,.hero-side{border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
+.hero-main{position:relative;padding:37px 39px;color:#fff;background:radial-gradient(circle at 90% 8%,rgba(255,255,255,.17),transparent 17rem),linear-gradient(135deg,#20273b,#40344b 48%,#72517d)}
+.hero-main:after{content:"";position:absolute;width:220px;height:220px;right:-60px;bottom:-95px;border-radius:50%;border:1px solid rgba(255,255,255,.13);box-shadow:0 0 0 30px rgba(255,255,255,.035),0 0 0 62px rgba(255,255,255,.022)}
+.eyebrow{position:relative;z-index:1;display:inline-flex;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.10);font-size:10px;text-transform:uppercase;letter-spacing:.13em;font-weight:950;color:#f1e8f4}
+h1{position:relative;z-index:1;margin:14px 0 10px;font-size:clamp(35px,4vw,58px);line-height:1.02;letter-spacing:-2.2px}.hero-copy{position:relative;z-index:1;max-width:850px;color:rgba(255,255,255,.76);font-size:13px}
+.pills{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.pill{padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.10);font-size:10.5px;font-weight:850}
+.hero-side{position:relative;padding:30px;background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(249,244,250,.94));border:1px solid var(--line);display:flex;flex-direction:column;justify-content:space-between}
+.hero-side:after{content:"ROI";position:absolute;right:18px;top:4px;font-size:92px;font-weight:950;letter-spacing:-6px;color:rgba(114,81,125,.045)}
+.side-label{position:relative;z-index:1;font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:var(--plum);font-weight:950}.side-value{position:relative;z-index:1;margin:10px 0 5px;font-size:46px;font-weight:950;letter-spacing:-1.5px;color:var(--green)}
+.side-copy{position:relative;z-index:1;font-size:11.5px;color:var(--muted)}.progress{position:relative;z-index:1;height:9px;background:#ece8ee;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--plum),var(--rose),var(--teal))}
+.notice{display:grid;grid-template-columns:42px 1fr;gap:12px;padding:16px 18px;background:rgba(255,255,255,.80);border:1px solid var(--line);border-radius:17px;margin:18px 0;color:#687181;font-size:10.8px;box-shadow:var(--soft)}
+.notice-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#f0e7f3,#fff);color:var(--plum);display:grid;place-items:center;font-weight:950}.notice strong{display:block;color:#293040;font-size:11.7px;margin-bottom:2px}
+.warning{border-color:rgba(191,135,55,.25);background:linear-gradient(145deg,#fff9ef,#fff)}.warning .notice-icon{background:#fff1d6;color:#966525}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:19px 0}.filters{display:flex;gap:8px;flex-wrap:wrap}.filter{border:1px solid rgba(114,81,125,.14);background:rgba(255,255,255,.78);color:#687080;border-radius:12px;padding:10px 14px;font-size:11px;font-weight:850;cursor:pointer}.filter.active{background:linear-gradient(135deg,var(--navy),#4a3554);color:#fff;border-color:transparent;box-shadow:0 10px 22px rgba(76,53,88,.19)}
+.formula{padding:10px 13px;border-radius:12px;background:rgba(255,255,255,.76);border:1px solid var(--line);font-size:10.5px;font-weight:850;color:#687080}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px}.kpi{position:relative;min-width:0;min-height:128px;padding:19px 18px;border-radius:20px;background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(253,251,252,.93));border:1px solid var(--line);box-shadow:var(--soft);overflow:hidden}
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--plum),var(--rose));opacity:.78}.kl{font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:#7c8492;font-weight:950;white-space:nowrap}.kv{margin:12px 0 3px;font-size:clamp(23px,2vw,31px);font-weight:950;letter-spacing:-1px;white-space:nowrap}.kn{font-size:9.8px;color:#9298a4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi.roi{background:linear-gradient(155deg,#eef8f4,#fff);border-color:rgba(47,139,104,.18)}.kpi.roi:before{background:linear-gradient(180deg,var(--green),var(--teal))}.kpi.roi .kv{color:var(--green)}
+.kpi.cost{background:linear-gradient(155deg,#f6eff8,#fff);border-color:rgba(114,81,125,.16)}.kpi.cost .kv{color:#4a3554}.kpi.sales{background:linear-gradient(155deg,#fff4f4,#fff)}.kpi.sales:before{background:linear-gradient(180deg,var(--rose),#dcaa82)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:16px}.card{background:rgba(255,255,255,.91);border:1px solid var(--line);border-radius:22px;box-shadow:var(--soft);overflow:hidden}.s12{grid-column:span 12}.s8{grid-column:span 8}.s7{grid-column:span 7}.s6{grid-column:span 6}.s5{grid-column:span 5}.s4{grid-column:span 4}
+.head{padding:21px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}.title{margin:0;font-size:15px;font-weight:950;letter-spacing:-.25px}.sub{margin:5px 0 0;font-size:10.7px;color:var(--muted)}.body{padding:15px 22px 22px}.chart{min-height:285px}.chart svg{display:block;width:100%;height:auto}
+.funnel{display:grid;gap:10px}.frow{display:grid;grid-template-columns:82px 1fr 96px;gap:10px;align-items:center}.flabel{font-size:10.5px;color:#667084;font-weight:850}.ftrack{height:31px;border-radius:9px;background:#f0edf2;overflow:hidden}.ffill{height:100%;border-radius:9px;background:linear-gradient(90deg,var(--plum),var(--plum2));color:#fff;display:flex;align-items:center;padding-left:10px;font-size:9.5px;font-weight:950;min-width:2px}.fvalue{text-align:right;font-size:10.5px;font-weight:950}.frate{display:block;color:#969dab;font-size:8.5px}
+.analysis{display:grid;gap:10px}.aitem{display:grid;grid-template-columns:32px 1fr;gap:10px;padding:12px;border-radius:14px;background:linear-gradient(145deg,#fbf9fc,#fff);border:1px solid rgba(114,81,125,.08)}.aicon{width:32px;height:32px;border-radius:10px;background:linear-gradient(145deg,#efe5f2,#fff);color:var(--plum);display:grid;place-items:center;font-size:11px;font-weight:950}.aitem strong{font-size:11.2px}.aitem p{margin:3px 0 0;color:#747d8e;font-size:10px}
+.template-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.template-card{padding:18px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(165deg,#fff,#faf7fb)}.template-name{display:flex;justify-content:space-between;gap:10px;font-size:11.8px;font-weight:950;margin-bottom:14px}.badge{padding:5px 8px;border-radius:999px;background:#eee5f1;color:#4a3554;font-size:8.5px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:11px}.metrics strong{display:block;font-size:19px;letter-spacing:-.45px}.metrics span{font-size:8.8px;color:#858e9e}
+.rank{display:grid;gap:12px}.rrow{display:grid;grid-template-columns:minmax(115px,1.1fr) minmax(130px,1.9fr) 108px;gap:12px;align-items:center}.rname{min-width:0}.rname strong{display:block;font-size:10.8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rname span{font-size:9px;color:#9097a6}.rtrack{height:22px;border-radius:8px;background:#f0edf2;overflow:hidden}.rfill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--teal),#6fbbb0)}.rstat{text-align:right;font-size:9px;color:#6d7587}.rstat strong{display:block;font-size:11.5px;color:var(--ink)}
+.table-tools{display:flex;gap:8px}.search{border:1px solid rgba(114,81,125,.14);background:#fff;border-radius:11px;padding:9px 11px;font-size:10.5px;width:205px;outline:none}.table-wrap{overflow:auto;max-height:520px;border-top:1px solid rgba(114,81,125,.08)}table{width:100%;border-collapse:collapse;font-size:10px}thead th{position:sticky;top:0;z-index:2;background:#f7f2f8;color:#6f7482;text-align:left;padding:12px 11px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.04em;font-size:8.5px;white-space:nowrap}tbody td{padding:11px;border-bottom:1px solid rgba(114,81,125,.075);vertical-align:top}tbody tr:nth-child(even){background:rgba(248,244,249,.52)}tbody tr:hover{background:#f4edf6}.right{text-align:right;white-space:nowrap}.database{max-width:270px}.database strong,.database small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.database small{color:#9098a7}.tag{display:inline-flex;padding:5px 8px;border-radius:999px;background:#eee5f1;color:#4a3554;font-size:8px;font-weight:950}.good{color:var(--green);font-weight:950}.warn{color:var(--amber);font-weight:950}.bad{color:var(--red);font-weight:950}.note{margin-top:17px;padding:16px 18px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.73);color:#737c8d;font-size:10.2px;box-shadow:var(--soft)}.footer{text-align:center;color:#8b93a2;font-size:9.5px;padding-top:28px}
+@media(max-width:1300px){.kpis{grid-template-columns:repeat(3,1fr)}.template-grid{grid-template-columns:repeat(2,1fr)}.s8,.s7{grid-column:span 12}.s6,.s5,.s4{grid-column:span 6}}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.template-grid{grid-template-columns:1fr}.s6,.s5,.s4{grid-column:span 12}.controls{flex-direction:column;align-items:flex-start}}
+@media(max-width:650px){.topin,.wrap{width:min(100% - 20px,1480px)}.brand-text{display:none}.actions .btn:first-child{display:none}.hero-main,.hero-side{padding:23px;border-radius:20px}h1{font-size:34px}.kpis{grid-template-columns:repeat(2,1fr)}.kpi{min-height:116px;padding:16px}.kv{font-size:22px}.chart{min-height:230px}.frow{grid-template-columns:64px 1fr 74px}.rrow{grid-template-columns:92px 1fr 75px}.search{width:135px}}
+@media print{.top,.controls,.table-tools{display:none}.wrap{width:100%;padding:0}.card,.hero-main,.hero-side,.kpi,.notice,.note{box-shadow:none}.table-wrap{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<div class="top"><div class="topin">
+ <div class="brand"><span class="mark">M</span><span class="brand-text">Mamariam CRM — Dashboard Susu</span></div>
+ <div class="actions"><button class="btn" id="exportBtn">Export CSV</button><button class="btn" onclick="window.print()">Print Report</button></div>
+</div></div>
+
+<div class="wrap">
+<section class="hero">
+ <div class="hero-main">
+  <div class="eyebrow">REPORT FOLLOW UP SUSU • JULAI–OGOS 2026</div>
+  <h1>Dashboard Prestasi CRM Susu</h1>
+  <div class="hero-copy">Ringkasan semua kempen blasting, engagement, buyer, sales dan ROI berdasarkan data terkini dalam fail.</div>
+  <div class="pills"><span class="pill" id="periodPill">—</span><span class="pill" id="campaignPill">—</span><span class="pill">Data source: XLSX</span></div>
+ </div>
+ <div class="hero-side">
+  <div><div class="side-label">Sales-to-cost ROI</div><div class="side-value" id="heroRoi">—</div><div class="side-copy" id="heroCopy">—</div></div>
+  <div class="progress"><span id="roiBar"></span></div>
+ </div>
+</section>
+
+<div class="notice">
+ <div class="notice-icon">ƒ</div>
+ <div><strong>Formula ROI</strong>ROI utama = Total Sales ÷ Total Kos RM. Net ROI = (Sales − Kos) ÷ Kos × 100%.</div>
+</div>
+
+<div class="notice warning">
+ <div class="notice-icon">!</div>
+ <div><strong>Data sumber diaudit semula</strong>Kolum ROI mengandungi #REF! atau kosong dan baris PURATA JUMLAH tidak konsisten. Dashboard mengira semula semua 9 kempen. Tarikh baris terakhir dinormalisasi kepada 2 Ogos 2026 berdasarkan nama database dan hari Ahad.</div>
+</div>
+
+<div class="controls">
+ <div class="filters" id="filters"></div>
+ <div class="formula">RM1 kos menghasilkan <span id="returnPerRm">—</span> sales</div>
+</div>
+
+<section class="kpis">
+ <div class="kpi"><div class="kl">Total blast</div><div class="kv" id="kBlast">—</div><div class="kn">Jumlah database</div></div>
+ <div class="kpi cost"><div class="kl">Total kos RM</div><div class="kv" id="kCost">—</div><div class="kn">Jumlah kos blasting</div></div>
+ <div class="kpi sales"><div class="kl">Total sales</div><div class="kv" id="kSales">—</div><div class="kn" id="salesNote">—</div></div>
+ <div class="kpi roi"><div class="kl">ROI</div><div class="kv" id="kRoi">—</div><div class="kn">Sales ÷ kos</div></div>
+ <div class="kpi"><div class="kl">Net ROI</div><div class="kv" id="kNetRoi">—</div><div class="kn" id="netReturnNote">—</div></div>
+ <div class="kpi"><div class="kl">Delivered</div><div class="kv" id="kDelivered">—</div><div class="kn" id="deliveryNote">—</div></div>
+ <div class="kpi"><div class="kl">Read rate</div><div class="kv" id="kRead">—</div><div class="kn" id="readNote">—</div></div>
+ <div class="kpi"><div class="kl">Reply rate</div><div class="kv" id="kReply">—</div><div class="kn" id="replyNote">—</div></div>
+ <div class="kpi"><div class="kl">Buyer</div><div class="kv" id="kBuyer">—</div><div class="kn" id="buyerNote">—</div></div>
+ <div class="kpi"><div class="kl">Average order</div><div class="kv" id="kAov">—</div><div class="kn">Sales ÷ buyer</div></div>
+</section>
+
+<section class="grid">
+ <article class="card s7"><div class="head"><div><h2 class="title">Trend sales dan ROI</h2><p class="sub">Bar menunjukkan sales; garisan menunjukkan ROI setiap kempen.</p></div></div><div class="body"><div class="chart" id="salesChart"></div></div></article>
+ <article class="card s5"><div class="head"><div><h2 class="title">CRM funnel</h2><p class="sub">Daripada sent sehingga menjadi buyer.</p></div></div><div class="body"><div class="funnel" id="funnel"></div></div></article>
+ <article class="card s8"><div class="head"><div><h2 class="title">Trend delivered, read dan reply</h2><p class="sub">Perubahan engagement mengikut tarikh.</p></div></div><div class="body"><div class="chart" id="engagementChart"></div></div></article>
+ <article class="card s4"><div class="head"><div><h2 class="title">Executive analysis</h2><p class="sub">Rumusan berdasarkan prestasi semasa.</p></div></div><div class="body"><div class="analysis" id="analysis"></div></div></article>
+ <article class="card s12"><div class="head"><div><h2 class="title">Prestasi mengikut template</h2><p class="sub">Followup, followup1, followup2 dan makluman dibandingkan.</p></div></div><div class="body"><div class="template-grid" id="templateGrid"></div></div></article>
+ <article class="card s6"><div class="head"><div><h2 class="title">ROI mengikut template</h2><p class="sub">Pulangan sales bagi setiap RM1 kos.</p></div></div><div class="body"><div class="chart" id="templateRoiChart"></div></div></article>
+ <article class="card s6"><div class="head"><div><h2 class="title">Kempen terbaik</h2><p class="sub">Ranking berdasarkan ROI kempen.</p></div></div><div class="body"><div class="rank" id="ranking"></div></div></article>
+ <article class="card s12"><div class="head"><div><h2 class="title">Semua kempen blasting susu</h2><p class="sub">Butiran kos, engagement, buyer, sales dan ROI.</p></div><div class="table-tools"><input class="search" id="search" placeholder="Cari template / database"><button class="btn" id="toggleRows">Tunjuk semua</button></div></div><div class="body" style="padding-left:0;padding-right:0;padding-bottom:0"><div class="table-wrap"><table><thead><tr><th>Tarikh</th><th>Template</th><th>Database</th><th class="right">Delivered</th><th class="right">Read</th><th class="right">Reply</th><th class="right">Buyer</th><th class="right">Kos</th><th class="right">Sales</th><th class="right">ROI</th></tr></thead><tbody id="campaignTable"></tbody></table></div></div></article>
+</section>
+
+<div class="note"><strong>Kesimpulan:</strong> Keseluruhan kempen menghasilkan RM346 sales daripada RM242.78 kos, bersamaan ROI 1.43x. Net return selepas kos blasting ialah RM103.22 dengan net ROI 42.52%.</div>
+<div class="footer">Mamariam CRM • Report Follow Up Susu • DATA BLASTING CRM 2026 (3).xlsx</div>
+</div>
+
+<script>
+const ROWS=[{"excel_row":3,"date":"2026-07-21","date_label":"21/07/2026","time":"9.40AM","day":"Selasa","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup","template_key":"followup","database":"Database Mix Retarget Susu 21/7/2026","euro":15.126399999999999,"blast":1304,"cost":70.791552,"sent":1236,"delivered":1176,"read":636,"reply":6,"buyer":0,"sales":0.0,"read_rate":54.08163265306123,"reply_rate":0.5102040816326531,"conversion_rate":0.0,"roi":0.0,"net_return":-70.791552,"minutes":580,"slot":"Pagi"},{"excel_row":4,"date":"2026-07-23","date_label":"23/07/2026","time":"9.00 AM","day":"Khamis","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup2","template_key":"followup2","database":"Database Retarget Mix Susu 23/7/2026","euro":13.7808,"blast":1188,"cost":64.49414399999999,"sent":1188,"delivered":1167,"read":629,"reply":6,"buyer":0,"sales":0.0,"read_rate":53.89888603256212,"reply_rate":0.5141388174807198,"conversion_rate":0.0,"roi":0.0,"net_return":-64.49414399999999,"minutes":540,"slot":"Pagi"},{"excel_row":5,"date":"2026-07-25","date_label":"25/07/2026","time":"8.15 AM","day":"Sabtu","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup1","template_key":"followup1","database":"Database Mix Retarget Susu 25/7/2026","euro":8.6884,"blast":749,"cost":40.661711999999994,"sent":749,"delivered":722,"read":527,"reply":2,"buyer":0,"sales":0.0,"read_rate":72.99168975069253,"reply_rate":0.2770083102493075,"conversion_rate":0.0,"roi":0.0,"net_return":-40.661711999999994,"minutes":495,"slot":"Pagi"},{"excel_row":6,"date":"2026-07-26","date_label":"26/07/2026","time":"4.46PM","day":"Ahad","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup1","template_key":"followup1","database":"Database Tiktok Solusi SUSU BIL 1-141 26/7/2026","euro":1.6239999999999999,"blast":140,"cost":7.600319999999999,"sent":140,"delivered":132,"read":83,"reply":1,"buyer":0,"sales":0.0,"read_rate":62.878787878787875,"reply_rate":0.7575757575757576,"conversion_rate":0.0,"roi":0.0,"net_return":-7.600319999999999,"minutes":1006,"slot":"Petang"},{"excel_row":7,"date":"2026-07-28","date_label":"28/07/2026","time":"8.45 AM","day":"Selasa","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup1","template_key":"followup1","database":"Database Tiktok Solusi SUSU Terbaru BIL 1-161 27/7/2026","euro":1.7399999999999998,"blast":150,"cost":8.143199999999998,"sent":150,"delivered":142,"read":92,"reply":5,"buyer":0,"sales":0.0,"read_rate":64.7887323943662,"reply_rate":3.5211267605633805,"conversion_rate":0.0,"roi":0.0,"net_return":-8.143199999999998,"minutes":525,"slot":"Pagi"},{"excel_row":8,"date":"2026-07-28","date_label":"28/07/2026","time":"11.45 AM","day":"Selasa","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup2","template_key":"followup2","database":"Database Retarget Susu (250) 28/7/2026","euro":2.8768,"blast":248,"cost":13.463423999999998,"sent":248,"delivered":227,"read":149,"reply":8,"buyer":1,"sales":49.0,"read_rate":65.63876651982379,"reply_rate":3.524229074889868,"conversion_rate":0.4405286343612335,"roi":3.639490221803904,"net_return":35.536576000000004,"minutes":705,"slot":"Pagi"},{"excel_row":9,"date":"2026-07-29","date_label":"29/07/2026","time":"3.19 PM","day":"Rabu","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup1","template_key":"followup1","database":"Database Tiktok Solusi SUSU Terbaru BIL 142-353 29/7/2026","euro":2.262,"blast":195,"cost":10.58616,"sent":195,"delivered":189,"read":125,"reply":6,"buyer":1,"sales":99.0,"read_rate":66.13756613756614,"reply_rate":3.1746031746031744,"conversion_rate":0.5291005291005291,"roi":9.351832959260015,"net_return":88.41384,"minutes":919,"slot":"Petang"},{"excel_row":10,"date":"2026-07-30","date_label":"30/07/2026","time":"7.30 PM","day":"Khamis","account":"MAMARIAM SDN BHD 5 (01111920528)","template":"followup2","template_key":"followup2","database":"Database Retarget Susu (250) 30/7/2026","euro":2.8768,"blast":248,"cost":13.463423999999998,"sent":248,"delivered":221,"read":133,"reply":2,"buyer":1,"sales":99.0,"read_rate":60.18099547511312,"reply_rate":0.904977375565611,"conversion_rate":0.4524886877828055,"roi":7.3532557542568675,"net_return":85.536576,"minutes":1170,"slot":"Malam"},{"excel_row":11,"date":"2026-08-02","date_label":"02/08/2026","time":"4.00PM","day":"Ahad","account":"Mamariam Sdn Bhd 3 (60148769013)","template":"makluman","template_key":"makluman","database":"Database Tiktok Retarget Susu Bil 1501 - 1750 2/8/2026","euro":2.9,"blast":250,"cost":13.572,"sent":250,"delivered":228,"read":152,"reply":4,"buyer":1,"sales":99.0,"read_rate":66.66666666666666,"reply_rate":1.7543859649122806,"conversion_rate":0.43859649122807015,"roi":7.294429708222812,"net_return":85.428,"minutes":960,"slot":"Petang"}];
+const TOTAL={"campaigns":9,"blast":4472.0,"euro":51.8752,"cost":242.77593599999997,"sent":4404.0,"delivered":4204.0,"read":2526.0,"reply":40.0,"buyer":4.0,"sales":346.0,"roi":1.4251824365327543,"net_return":103.22406400000003,"net_roi":42.51824365327544,"delivery_rate":95.45867393278837,"read_rate":60.08563273073264,"reply_rate":0.9514747859181731,"conversion_rate":0.09514747859181732,"aov":86.5,"sales_1k":82.30256898192198};
+const TEMPLATES=[{"key":"makluman","name":"makluman","campaigns":1,"blast":250,"cost":13.572,"sent":250,"delivered":228,"read":152,"reply":4,"buyer":1,"sales":99.0,"roi":7.294429708222812,"read_rate":66.66666666666666,"reply_rate":1.7543859649122806,"conversion_rate":0.43859649122807015,"sales_1k":434.2105263157895},{"key":"followup2","name":"followup2","campaigns":3,"blast":1684,"cost":91.420992,"sent":1684,"delivered":1615,"read":911,"reply":16,"buyer":2,"sales":148.0,"roi":1.618884205500636,"read_rate":56.408668730650156,"reply_rate":0.9907120743034057,"conversion_rate":0.12383900928792571,"sales_1k":91.64086687306501},{"key":"followup1","name":"followup1","campaigns":4,"blast":1234,"cost":66.99139199999999,"sent":1234,"delivered":1185,"read":827,"reply":14,"buyer":1,"sales":99.0,"roi":1.4778018047453023,"read_rate":69.78902953586498,"reply_rate":1.1814345991561181,"conversion_rate":0.08438818565400844,"sales_1k":83.54430379746836},{"key":"followup","name":"followup","campaigns":1,"blast":1304,"cost":70.791552,"sent":1236,"delivered":1176,"read":636,"reply":6,"buyer":0,"sales":0.0,"roi":0.0,"read_rate":54.08163265306123,"reply_rate":0.5102040816326531,"conversion_rate":0.0,"sales_1k":0.0}];
+let state={template:"All",search:"",showAll:false};
+const C={plum:"#72517d",rose:"#c98391",teal:"#2e9085",blue:"#4b7fb8",grid:"#ebe6ed",text:"#7c8492"};
+const f0=n=>new Intl.NumberFormat("en-MY",{maximumFractionDigits:0}).format(n||0);
+const f2=n=>new Intl.NumberFormat("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0);
+const rm=n=>"RM"+new Intl.NumberFormat("en-MY",{minimumFractionDigits:0,maximumFractionDigits:2}).format(n||0);
+const pct=n=>f2(n)+"%";
+const rate=(a,b)=>b?a/b*100:0;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
+const selected=()=>state.template==="All"?ROWS:ROWS.filter(r=>r.template_key===state.template);
+function calc(rows){
+ const sum=k=>rows.reduce((s,r)=>s+(+r[k]||0),0);
+ const cost=sum("cost"),sales=sum("sales"),sent=sum("sent"),delivered=sum("delivered"),read=sum("read"),reply=sum("reply"),buyer=sum("buyer");
+ return {campaigns:rows.length,blast:sum("blast"),cost,sales,roi:cost?sales/cost:0,netReturn:sales-cost,netRoi:cost?(sales-cost)/cost*100:0,sent,delivered,read,reply,buyer,deliveryRate:rate(delivered,sent),readRate:rate(read,delivered),replyRate:rate(reply,delivered),conversion:rate(buyer,delivered),aov:buyer?sales/buyer:0,sales1k:delivered?sales/delivered*1000:0};
+}
+function dateLabel(x){return new Date(x+"T00:00:00").toLocaleDateString("ms-MY",{day:"numeric",month:"short"})}
+function fullDate(x){return new Date(x+"T00:00:00").toLocaleDateString("ms-MY",{day:"numeric",month:"short",year:"numeric"})}
+function nice(v){if(v<=0)return 1;const p=10**Math.floor(Math.log10(v)),n=v/p;return(n<=1?1:n<=2?2:n<=5?5:10)*p}
+function path(points){return points.map((p,i)=>(i?"L":"M")+p[0].toFixed(2)+","+p[1].toFixed(2)).join(" ")}
+function renderFilters(){
+ const keys=["All",...TEMPLATES.map(x=>x.key)];
+ document.getElementById("filters").innerHTML=keys.map((k,i)=>`<button class="filter ${i===0?"active":""}" data-template="${esc(k)}">${k==="All"?"Keseluruhan":esc(k)}</button>`).join("");
+ document.querySelectorAll("[data-template]").forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll("[data-template]").forEach(x=>x.classList.remove("active"));btn.classList.add("active");state.template=btn.dataset.template;state.showAll=false;render();
+ });
+}
+function renderHero(rows,s){
+ const dates=rows.map(r=>r.date).sort();
+ document.getElementById("periodPill").textContent=dates.length?`${fullDate(dates[0])} – ${fullDate(dates.at(-1))}`:"—";
+ document.getElementById("campaignPill").textContent=`${s.campaigns} kempen`;
+ document.getElementById("heroRoi").textContent=s.roi.toFixed(2)+"x";
+ document.getElementById("heroCopy").textContent=`${rm(s.sales)} sales ÷ ${rm(s.cost)} kos`;
+ document.getElementById("roiBar").style.width=Math.min(100,s.roi/4*100)+"%";
+ document.getElementById("returnPerRm").textContent=`RM${s.roi.toFixed(2)}`;
+}
+function renderKpis(s){
+ const map={
+  kBlast:f0(s.blast),kCost:rm(s.cost),kSales:rm(s.sales),salesNote:`${rm(s.sales1k)} / 1,000 delivered`,
+  kRoi:s.roi.toFixed(2)+"x",kNetRoi:pct(s.netRoi),netReturnNote:`Net return ${rm(s.netReturn)}`,
+  kDelivered:f0(s.delivered),deliveryNote:`${pct(s.deliveryRate)} daripada sent`,
+  kRead:pct(s.readRate),readNote:`${f0(s.read)} read`,kReply:pct(s.replyRate),replyNote:`${f0(s.reply)} reply`,
+  kBuyer:f0(s.buyer),buyerNote:`${pct(s.conversion)} conversion`,kAov:rm(s.aov)
+ };
+ Object.entries(map).forEach(([id,v])=>document.getElementById(id).textContent=v);
+}
+function renderSalesChart(rows){
+ const el=document.getElementById("salesChart"),W=900,H=300,m={l:55,r:48,t:18,b:45},cw=W-m.l-m.r,ch=H-m.t-m.b,maxS=nice(Math.max(...rows.map(r=>r.sales),1)),maxR=Math.max(...rows.map(r=>r.roi),1),step=cw/rows.length,bw=Math.max(18,Math.min(48,step*.54));
+ let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+ for(let i=0;i<=4;i++){const y=m.t+ch*i/4,v=maxS*(1-i/4);svg+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="${C.grid}"/><text x="${m.l-8}" y="${y+3}" text-anchor="end" font-size="8.5" fill="${C.text}">${Math.round(v)}</text>`}
+ const pts=[];
+ rows.forEach((r,i)=>{const x=m.l+step*i+step/2,h=r.sales/maxS*ch,y=m.t+ch-h;svg+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${h}" rx="7" fill="${C.plum}" opacity="${r.sales?.9:.18}"><title>${fullDate(r.date)}: ${rm(r.sales)} sales</title></rect>`;pts.push([x,m.t+ch-r.roi/maxR*ch]);svg+=`<text x="${x}" y="${H-15}" text-anchor="middle" font-size="8.3" fill="${C.text}">${dateLabel(r.date)}</text>`});
+ svg+=`<path d="${path(pts)}" fill="none" stroke="${C.teal}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+ pts.forEach((p,i)=>svg+=`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="${C.teal}" stroke-width="2"><title>ROI ${rows[i].roi.toFixed(2)}x</title></circle>`);
+ el.innerHTML=svg+"</svg>";
+}
+function renderEngagement(rows){
+ const el=document.getElementById("engagementChart"),W=900,H=300,m={l:55,r:18,t:18,b:45},cw=W-m.l-m.r,ch=H-m.t-m.b,maxV=nice(Math.max(...rows.flatMap(r=>[r.delivered,r.read,r.reply]),1)),step=rows.length>1?cw/(rows.length-1):cw;
+ let svg=`<svg viewBox="0 0 ${W} ${H}">`;for(let i=0;i<=4;i++){const y=m.t+ch*i/4,v=maxV*(1-i/4);svg+=`<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="${C.grid}"/><text x="${m.l-8}" y="${y+3}" text-anchor="end" font-size="8.5" fill="${C.text}">${Math.round(v)}</text>`}
+ const del=[],read=[],reply=[];rows.forEach((r,i)=>{const x=m.l+(rows.length===1?cw/2:step*i);del.push([x,m.t+ch-r.delivered/maxV*ch]);read.push([x,m.t+ch-r.read/maxV*ch]);reply.push([x,m.t+ch-r.reply/maxV*ch]);svg+=`<text x="${x}" y="${H-15}" text-anchor="middle" font-size="8.3" fill="${C.text}">${dateLabel(r.date)}</text>`});
+ el.innerHTML=svg+`<path d="${path(del)}" fill="none" stroke="${C.blue}" stroke-width="3"/><path d="${path(read)}" fill="none" stroke="${C.rose}" stroke-width="3"/><path d="${path(reply)}" fill="none" stroke="${C.teal}" stroke-width="3"/></svg>`;
+}
+function renderFunnel(s){
+ const stages=[["Sent",s.sent],["Delivered",s.delivered],["Read",s.read],["Reply",s.reply],["Buyer",s.buyer]],max=Math.max(s.sent,1);
+ document.getElementById("funnel").innerHTML=stages.map((x,i)=>{const prev=i?stages[i-1][1]:x[1],w=Math.max(x[1]?2:0,x[1]/max*100);return`<div class="frow"><div class="flabel">${x[0]}</div><div class="ftrack"><div class="ffill" style="width:${w}%">${w>18?f0(x[1]):""}</div></div><div class="fvalue">${f0(x[1])}<span class="frate">${i?"↓ "+pct(rate(x[1],prev)):"100.00%"}</span></div></div>`}).join("");
+}
+function renderAnalysis(rows,s){
+ const best=[...rows].sort((a,b)=>b.roi-a.roi||b.sales-a.sales)[0],bestSales=[...rows].sort((a,b)=>b.sales-a.sales||b.roi-a.roi)[0],active=rows.filter(r=>r.sales>0),bestTpl=[...TEMPLATES].sort((a,b)=>b.roi-a.roi)[0];
+ const items=[
+  ["01","Keseluruhan",`${f0(s.blast)} blast menghasilkan ${rm(s.sales)} sales dengan ROI ${s.roi.toFixed(2)}x dan net ROI ${pct(s.netRoi)}.`],
+  ["02","Kempen paling efisien",`${fullDate(best.date)} pada ${best.time} mencatat ROI tertinggi ${best.roi.toFixed(2)}x daripada ${rm(best.sales)} sales.`],
+  ["03","Sales tertinggi",`${fullDate(bestSales.date)} menghasilkan ${rm(bestSales.sales)} dengan ${bestSales.buyer} buyer.`],
+  ["04","Corak conversion",`${active.length} daripada ${rows.length} kempen menghasilkan sales. Conversion mula konsisten bermula 28 Julai.`],
+  ["05","Engagement",`Read rate ${pct(s.readRate)} tetapi reply rate hanya ${pct(s.replyRate)}. Peluang terbesar ialah menaikkan reply tanpa menurunkan delivery.`],
+  ["06","Cadangan",`${bestTpl.name} mencatat ROI template tertinggi ${bestTpl.roi.toFixed(2)}x, tetapi hanya satu kempen. Gunakan followup2 sebagai benchmark scale kerana mempunyai beberapa kempen dan sales lebih stabil.`]
+ ];
+ document.getElementById("analysis").innerHTML=items.map(x=>`<div class="aitem"><div class="aicon">${x[0]}</div><div><strong>${esc(x[1])}</strong><p>${esc(x[2])}</p></div></div>`).join("");
+}
+function renderTemplateGrid(){
+ document.getElementById("templateGrid").innerHTML=TEMPLATES.map(x=>`<div class="template-card"><div class="template-name"><span>${esc(x.name)}</span><span class="badge">${x.campaigns} kempen</span></div><div class="metrics"><div><strong>${rm(x.sales)}</strong><span>Sales</span></div><div><strong>${x.roi.toFixed(2)}x</strong><span>ROI</span></div><div><strong>${f0(x.buyer)}</strong><span>Buyer</span></div><div><strong>${pct(x.reply_rate)}</strong><span>Reply rate</span></div><div><strong>${f0(x.delivered)}</strong><span>Delivered</span></div><div><strong>${rm(x.sales_1k)}</strong><span>Sales / 1k</span></div></div></div>`).join("");
+}
+function renderTemplateRoi(){
+ const items=TEMPLATES,W=760,H=Math.max(280,items.length*64+35),m={l:135,r:50,t:20,b:25},cw=W-m.l-m.r,rowH=62,max=Math.max(...items.map(x=>x.roi),1);
+ let svg=`<svg viewBox="0 0 ${W} ${H}">`;items.forEach((x,i)=>{const y=m.t+i*rowH+8,w=x.roi/max*cw;svg+=`<text x="${m.l-10}" y="${y+18}" text-anchor="end" font-size="11" font-weight="850" fill="#4d5668">${esc(x.name)}</text><rect x="${m.l}" y="${y}" width="${cw}" height="31" rx="9" fill="#f0edf2"/><rect x="${m.l}" y="${y}" width="${w}" height="31" rx="9" fill="${i===0?C.teal:C.plum}"/><text x="${Math.min(m.l+w+9,W-42)}" y="${y+20}" font-size="11" font-weight="950" fill="#202534">${x.roi.toFixed(2)}x</text>`});
+ document.getElementById("templateRoiChart").innerHTML=svg+"</svg>";
+}
+function renderRanking(rows){
+ const list=[...rows].sort((a,b)=>b.roi-a.roi||b.sales-a.sales),max=Math.max(...list.map(x=>x.roi),1);
+ document.getElementById("ranking").innerHTML=list.map(r=>`<div class="rrow"><div class="rname"><strong>${dateLabel(r.date)} · ${esc(r.template)}</strong><span>${rm(r.sales)} sales · ${r.buyer} buyer</span></div><div class="rtrack"><div class="rfill" style="width:${r.roi/max*100}%"></div></div><div class="rstat"><strong>${r.roi.toFixed(2)}x</strong>${rm(r.cost)} kos</div></div>`).join("");
+}
+function renderTable(rows){
+ let list=[...rows],q=state.search.trim().toLowerCase();if(q)list=list.filter(r=>(r.template+" "+r.database+" "+r.date_label).toLowerCase().includes(q));list.sort((a,b)=>b.date.localeCompare(a.date)||(b.minutes||0)-(a.minutes||0));if(!state.showAll)list=list.slice(0,9);
+ document.getElementById("campaignTable").innerHTML=list.map(r=>{const readClass=r.read_rate>=65?"good":r.read_rate>=55?"warn":"bad",replyClass=r.reply_rate>=3?"good":r.reply_rate>=1?"warn":"bad",roiClass=r.roi>=1?"good":r.roi>0?"warn":"bad";return`<tr><td>${fullDate(r.date)}<br><small style="color:#9098a7">${esc(r.time)}</small></td><td><span class="tag">${esc(r.template)}</span></td><td class="database"><strong>${esc(r.database)}</strong><small>${esc(r.account)}</small></td><td class="right">${f0(r.delivered)}</td><td class="right ${readClass}">${pct(r.read_rate)}</td><td class="right ${replyClass}">${pct(r.reply_rate)}</td><td class="right">${r.buyer}</td><td class="right">${rm(r.cost)}</td><td class="right"><strong>${rm(r.sales)}</strong></td><td class="right ${roiClass}">${r.roi.toFixed(2)}x</td></tr>`}).join("");
+}
+function render(){const rows=selected(),s=calc(rows);renderHero(rows,s);renderKpis(s);renderSalesChart(rows);renderEngagement(rows);renderFunnel(s);renderAnalysis(rows,s);renderTemplateGrid();renderTemplateRoi();renderRanking(rows);renderTable(rows)}
+document.getElementById("search").addEventListener("input",e=>{state.search=e.target.value;renderTable(selected())});
+document.getElementById("toggleRows").addEventListener("click",e=>{state.showAll=!state.showAll;e.target.textContent=state.showAll?"Tunjuk top 9":"Tunjuk semua";renderTable(selected())});
+document.getElementById("exportBtn").addEventListener("click",()=>{const headers=["Tarikh","Masa","Hari","Template","Database","Blast","Kos RM","Sent","Delivered","Read","Reply","Buyer","Sales RM","ROI"],lines=[headers,...selected().map(r=>[r.date_label,r.time,r.day,r.template,r.database,r.blast,r.cost,r.sent,r.delivered,r.read,r.reply,r.buyer,r.sales,r.roi])].map(a=>a.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"),blob=new Blob(["\ufeff"+lines],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="report_follow_up_susu_latest.csv";a.click();URL.revokeObjectURL(a.href)});
+renderFilters();render();
+</script>
+</body>
+</html>
