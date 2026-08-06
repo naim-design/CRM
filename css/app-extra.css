@@ -89,6 +89,21 @@ body { padding-bottom: 60px; }
 .tag-check-item input { cursor:pointer; }
 .tag-check-item.active { border-color:var(--mint); color:var(--mint); }
 
+/* ---- Feedback ---- */
+.feedback-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+.feedback-card { background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+.feedback-card img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--surface-raised); }
+.feedback-card .fb-body { padding:14px 16px; }
+.feedback-card .fb-kategori { font-family:'IBM Plex Mono'; font-size:10px; padding:2px 8px; border-radius:20px;
+  background:var(--mint-dim); color:var(--mint); display:inline-block; margin-bottom:8px; }
+.feedback-card .fb-text { font-size:13px; line-height:1.5; color:var(--text); margin-bottom:10px; }
+.feedback-card .fb-foot { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--muted-2); }
+.feedback-card .fb-del { background:none; border:none; color:var(--muted-2); cursor:pointer; font-size:14px; }
+.feedback-card .fb-del:hover { color:var(--coral); }
+.tbl tr.total-row { font-weight:700; border-top:2px solid var(--mint); }
+.tbl tr.total-row td { color:var(--mint); }
+.tbl tr.total-row td.tname { color:var(--mint); }
+
 /* ---- To-Do ---- */
 .todo-item { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
   border-radius:10px; padding:13px 16px; }
