@@ -28,6 +28,7 @@
         <button data-view="input" class="active">Input Data</button>
         <button data-view="dashboard">Dashboard</button>
         <button data-view="poster">Poster</button>
+        <button data-view="feedback">Feedback</button>
         <button data-view="laporan">Laporan</button>
         <button data-view="contacts">Database</button>
         <button data-view="filter">Filter</button>
@@ -182,6 +183,42 @@
       </div>
       <div class="table-controls"><span class="hint-chip" id="poster-count">0 poster</span></div>
       <div id="poster-grid" class="poster-grid"></div>
+    </div>
+
+    <!-- ================= FEEDBACK ================= -->
+    <div id="view-feedback" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Feedback Pelanggan</h2></div>
+      <div class="form-card" style="margin-bottom:24px;">
+        <form id="feedback-form">
+          <div class="form-grid two">
+            <div class="field"><label>Kategori Produk</label>
+              <select id="feedback-kategori">
+                <option>Jus Mamariam</option>
+                <option>Susu</option>
+                <option>Koko Zuriat</option>
+                <option>Minyak Ibu Damai</option>
+                <option>Roll Cool Mama</option>
+              </select>
+            </div>
+            <div class="field"><label>Gambar Feedback</label><input type="file" id="feedback-file" accept="image/*" required></div>
+          </div>
+          <div class="field" style="margin-top:16px;"><label>Ayat Feedback</label><textarea id="feedback-text" rows="3" placeholder="Taip feedback pelanggan di sini..." required></textarea></div>
+          <div class="form-actions" style="margin-top:12px;"><button type="submit" class="btn btn-primary" id="feedback-submit-btn">Simpan Feedback</button></div>
+        </form>
+      </div>
+
+      <div class="table-controls">
+        <select class="filter-box" id="feedback-filter-kategori">
+          <option value="">Semua Kategori</option>
+          <option>Jus Mamariam</option>
+          <option>Susu</option>
+          <option>Koko Zuriat</option>
+          <option>Minyak Ibu Damai</option>
+          <option>Roll Cool Mama</option>
+        </select>
+        <span class="hint-chip" id="feedback-count">0 feedback</span>
+      </div>
+      <div id="feedback-grid" class="feedback-grid" style="margin-top:14px;"></div>
     </div>
 
     <!-- ================= LAPORAN ================= -->
@@ -395,8 +432,12 @@ Ahmad	60112223344"></textarea>
           <option value="buyer">Jadi Buyer</option>
         </select>
         <input type="text" class="search-box" id="seg-filter-source" placeholder="Tapis ikut sumber (cth: TikTok)..." list="source-suggestions" style="max-width:220px;">
+        <select class="filter-box" id="seg-filter-batch" style="max-width:280px;">
+          <option value="">Semua Batch Import</option>
+        </select>
         <button class="btn btn-primary" id="seg-search-btn" style="width:auto; padding:9px 20px;">Cari</button>
       </div>
+      <p style="font-size:11px; color:var(--muted-2); margin-top:6px;">💡 Pilih "Batch Import" untuk filter terus dari satu sesi import tertentu (contoh: senarai yang awak masukkan semalam je).</p>
 
       <div class="tag-check-row" id="seg-filter-tags"></div>
 
