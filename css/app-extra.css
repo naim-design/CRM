@@ -104,6 +104,14 @@ body { padding-bottom: 60px; }
 .tbl tr.total-row td { color:var(--mint); }
 .tbl tr.total-row td.tname { color:var(--mint); }
 
+/* ---- Brand logo (auto-toggle warna ikut tema) ---- */
+.brand-logo { height:28px; width:auto; display:none; }
+.brand-logo-dark { display:inline-block; }
+.brand-logo-light { display:none; }
+[data-theme="light"] .brand-logo-dark { display:none; }
+[data-theme="light"] .brand-logo-light { display:inline-block; }
+.auth-brand .brand-logo { height:34px; margin-bottom:4px; }
+
 /* ---- To-Do ---- */
 .todo-item { display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
   border-radius:10px; padding:13px 16px; }
