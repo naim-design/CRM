@@ -18,7 +18,7 @@ function todayStr() { return new Date().toISOString().slice(0, 10); }
 
 // ---- Kos blasting (auto-kira dari jumlah Sent) ----
 const RATE_EUR_PER_SENT = 0.0116;   // kos setiap mesej dihantar, dalam EUR
-const EUR_TO_MYR = 4.68;            // kadar tukaran EUR -> RM
+const EUR_TO_MYR = 4.73;            // kadar tukaran EUR -> RM
 function costEUR(sent) { return (sent || 0) * RATE_EUR_PER_SENT; }
 function costRM(sent) { return costEUR(sent) * EUR_TO_MYR; }
 
@@ -69,6 +69,8 @@ auth.onAuthStateChanged(async (user) => {
   populateStaffFilter();
   loadKnownSources();
   startListeners();
+  startTopupListener();
+  updateTopupVisibility();
 });
 
 document.getElementById('logout-btn').onclick = () => auth.signOut();
@@ -97,6 +99,7 @@ function startListeners() {
     renderDayOfWeek();
     renderHourOfDay();
     renderEntriesList();
+    if (allTopups) renderTopups();
   }, err => toast('Ralat baca data: ' + err.message, true));
 
   unsubTodos = db.collection('todos').orderBy('createdAt', 'desc').onSnapshot(snap => {
@@ -300,6 +303,12 @@ function renderDashboard() {
   document.getElementById('stat-conv').textContent = convRate + '%';
   document.getElementById('stat-sessions').textContent = fmt(rows.length) + ' entri';
 
+  const responRate = totals.sent ? (totals.read / totals.sent * 100) : 0;
+  const replyRate = totals.sent ? (totals.reply / totals.sent * 100) : 0;
+  document.getElementById('stat-respon-rate').textContent = responRate.toFixed(1) + '%';
+  document.getElementById('stat-reply-rate').textContent = replyRate.toFixed(1) + '%';
+  document.getElementById('stat-conv-rate').textContent = convRate + '%';
+
   // Funnel
   const stages = [
     { label: 'Sent', value: totals.sent, color: '#59646A' },
@@ -393,7 +402,44 @@ function renderTemplateReport() {
 }
 
 ['filter-from', 'filter-to', 'filter-staff', 'filter-kategori'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => { renderDashboard(); renderTemplateReport(); });
+  document.getElementById(id).addEventListener('change', () => {
+    renderDashboard(); renderTemplateReport(); updateTopupVisibility();
+  });
+});
+
+function updateTopupVisibility() {
+  const kategori = document.getElementById('filter-kategori').value;
+  document.getElementById('topup-section').style.display = kategori ? 'none' : 'block';
+  document.getElementById('kategori-susu-extra').style.display = kategori === 'Projek Susu' ? 'block' : 'none';
+  document.getElementById('kategori-naimfani-extra').style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
+}
+
+// ---- Report full-view modal ----
+function openReportModal(url, title) {
+  document.getElementById('report-modal-title').textContent = title || 'Dashboard';
+  document.getElementById('report-modal-iframe').src = url;
+  document.getElementById('report-modal').classList.add('show');
+}
+function closeReportModal() {
+  document.getElementById('report-modal').classList.remove('show');
+  document.getElementById('report-modal-iframe').src = '';
+}
+document.getElementById('report-modal-close').addEventListener('click', closeReportModal);
+document.getElementById('report-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'report-modal') closeReportModal();
+});
+
+// ---- Image lightbox modal ----
+function openImageModal(src) {
+  document.getElementById('image-modal-img').src = src;
+  document.getElementById('image-modal').classList.add('show');
+}
+function closeImageModal() {
+  document.getElementById('image-modal').classList.remove('show');
+}
+document.getElementById('image-modal-close').addEventListener('click', closeImageModal);
+document.getElementById('image-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'image-modal') closeImageModal();
 });
 
 async function populateStaffFilter() {
@@ -1591,3 +1637,69 @@ document.getElementById('seg-copy-btn').addEventListener('click', async () => {
     toast('Gagal salin — browser tak sokong clipboard', true);
   }
 });
+
+// ============================================================
+// TOPUP BLASTING — track topup EUR/RM, hanya untuk Dashboard Keseluruhan
+// ============================================================
+let allTopups = [];
+let unsubTopups = null;
+
+function startTopupListener() {
+  unsubTopups = db.collection('topups').orderBy('createdAt', 'desc').onSnapshot(snap => {
+    allTopups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTopups();
+  }, err => toast('Ralat baca topup: ' + err.message, true));
+}
+
+document.getElementById('topup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type=submit]');
+  const amountEUR = Number(document.getElementById('topup-amount').value || 0);
+  const note = document.getElementById('topup-note').value.trim();
+  if (!amountEUR) return;
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    await db.collection('topups').add({
+      amountEUR, amountRM: amountEUR * EUR_TO_MYR, note,
+      createdBy: currentProfile.name,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    e.target.reset();
+    toast('Topup ditambah ✓');
+  } catch (err) {
+    toast('Gagal tambah topup: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '+ Tambah Topup';
+  }
+});
+
+function renderTopups() {
+  const totalEUR = allTopups.reduce((a, t) => a + (t.amountEUR || 0), 0);
+  const totalRM = allTopups.reduce((a, t) => a + (t.amountRM || 0), 0);
+  document.getElementById('topup-total-eur').textContent = '€' + totalEUR.toFixed(2);
+  document.getElementById('topup-total-rm').textContent = 'RM ' + fmt(totalRM.toFixed(2));
+
+  // Kos digunakan dikira dari SEMUA entri (keseluruhan, tak kira kategori/tarikh filter)
+  const totalSentAll = allEntries.reduce((a, r) => a + (r.sent || 0), 0);
+  const usedRM = costRM(totalSentAll);
+  document.getElementById('topup-used-rm').textContent = 'RM ' + fmt(usedRM.toFixed(2));
+
+  const balanceRM = totalRM - usedRM;
+  const balEl = document.getElementById('topup-balance-rm');
+  balEl.textContent = 'RM ' + fmt(balanceRM.toFixed(2));
+  balEl.style.color = balanceRM < 0 ? 'var(--coral)' : 'var(--mint)';
+
+  const body = document.getElementById('topup-history-body');
+  body.innerHTML = '';
+  allTopups.forEach(t => {
+    const dateStr = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleString('ms-MY') : '-';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="font-size:12px;">${dateStr}</td>
+      <td style="font-size:12px; color:var(--muted);">${t.note || '-'}</td>
+      <td class="num">€${(t.amountEUR || 0).toFixed(2)}</td>
+      <td class="num">RM ${fmt((t.amountRM || 0).toFixed(2))}</td>
+      <td style="font-size:12px; color:var(--muted);">${t.createdBy || '-'}</td>`;
+    body.appendChild(tr);
+  });
+  if (!allTopups.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada rekod topup lagi.</td></tr>';
+}
