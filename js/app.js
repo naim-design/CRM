@@ -523,28 +523,26 @@ async function getCount(query) {
 
 async function loadContactStats() {
   try {
-    // Total/Dah Blast/Belum Blast sekarang MANUAL (bukan auto-kira) — sebab isu quota/extract
+    // Total/Dah Blast/Belum Blast/Dah Reply/Jadi Buyer sekarang MANUAL (bukan auto-kira) — sebab isu quota/extract
     const manualSnap = await db.collection('meta').doc('manualDbStats').get();
     let manual = manualSnap.exists ? manualSnap.data() : null;
     if (!manual) {
-      manual = { blasted: 32360, pending: 13175, note: '' };
+      manual = { blasted: 32360, pending: 13175, replied: 723, buyer: 114, note: '' };
       await db.collection('meta').doc('manualDbStats').set(manual);
     }
     document.getElementById('cstat-blasted').textContent = fmt(manual.blasted || 0);
     document.getElementById('cstat-pending').textContent = fmt(manual.pending || 0);
     document.getElementById('cstat-total').textContent = fmt((manual.blasted || 0) + (manual.pending || 0));
+    document.getElementById('cstat-replied').textContent = fmt(manual.replied || 0);
+    document.getElementById('cstat-buyer').textContent = fmt(manual.buyer || 0);
     document.getElementById('cstat-note').textContent = manual.note || '';
     document.getElementById('cstat-input-blasted').value = manual.blasted || 0;
     document.getElementById('cstat-input-pending').value = manual.pending || 0;
+    document.getElementById('cstat-input-replied').value = manual.replied || 0;
+    document.getElementById('cstat-input-buyer').value = manual.buyer || 0;
     document.getElementById('cstat-input-note').value = manual.note || '';
 
     const col = db.collection('contacts');
-    const [replied, buyer] = await Promise.all([
-      getCount(col.where('status', '==', 'replied')),
-      getCount(col.where('status', '==', 'buyer')),
-    ]);
-    document.getElementById('cstat-replied').textContent = fmt(replied);
-    document.getElementById('cstat-buyer').textContent = fmt(buyer);
 
     const body = document.getElementById('source-stat-body');
     body.innerHTML = '<tr><td colspan="4" class="empty-state">Mengira...</td></tr>';
@@ -1719,12 +1717,14 @@ document.getElementById('cstat-edit-btn').addEventListener('click', () => {
 document.getElementById('cstat-save-btn').addEventListener('click', async () => {
   const blasted = Number(document.getElementById('cstat-input-blasted').value || 0);
   const pending = Number(document.getElementById('cstat-input-pending').value || 0);
+  const replied = Number(document.getElementById('cstat-input-replied').value || 0);
+  const buyer = Number(document.getElementById('cstat-input-buyer').value || 0);
   const note = document.getElementById('cstat-input-note').value.trim();
   const btn = document.getElementById('cstat-save-btn');
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
     await db.collection('meta').doc('manualDbStats').set({
-      blasted, pending, note,
+      blasted, pending, replied, buyer, note,
       updatedBy: currentProfile.name,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
