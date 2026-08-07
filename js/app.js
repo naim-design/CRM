@@ -523,17 +523,26 @@ async function getCount(query) {
 
 async function loadContactStats() {
   try {
+    // Total/Dah Blast/Belum Blast sekarang MANUAL (bukan auto-kira) — sebab isu quota/extract
+    const manualSnap = await db.collection('meta').doc('manualDbStats').get();
+    let manual = manualSnap.exists ? manualSnap.data() : null;
+    if (!manual) {
+      manual = { blasted: 32360, pending: 13175, note: '' };
+      await db.collection('meta').doc('manualDbStats').set(manual);
+    }
+    document.getElementById('cstat-blasted').textContent = fmt(manual.blasted || 0);
+    document.getElementById('cstat-pending').textContent = fmt(manual.pending || 0);
+    document.getElementById('cstat-total').textContent = fmt((manual.blasted || 0) + (manual.pending || 0));
+    document.getElementById('cstat-note').textContent = manual.note || '';
+    document.getElementById('cstat-input-blasted').value = manual.blasted || 0;
+    document.getElementById('cstat-input-pending').value = manual.pending || 0;
+    document.getElementById('cstat-input-note').value = manual.note || '';
+
     const col = db.collection('contacts');
-    const [total, pending, blasted, replied, buyer] = await Promise.all([
-      getCount(col),
-      getCount(col.where('status', '==', 'pending')),
-      getCount(col.where('status', '==', 'blasted')),
+    const [replied, buyer] = await Promise.all([
       getCount(col.where('status', '==', 'replied')),
       getCount(col.where('status', '==', 'buyer')),
     ]);
-    document.getElementById('cstat-total').textContent = fmt(total);
-    document.getElementById('cstat-pending').textContent = fmt(pending);
-    document.getElementById('cstat-blasted').textContent = fmt(blasted);
     document.getElementById('cstat-replied').textContent = fmt(replied);
     document.getElementById('cstat-buyer').textContent = fmt(buyer);
 
@@ -1679,15 +1688,13 @@ function renderTopups() {
   document.getElementById('topup-total-eur').textContent = '€' + totalEUR.toFixed(2);
   document.getElementById('topup-total-rm').textContent = 'RM ' + fmt(totalRM.toFixed(2));
 
-  // Kos digunakan dikira dari SEMUA entri (keseluruhan, tak kira kategori/tarikh filter)
+  // ROI (dengan Topup) = Total Sales keseluruhan / (Kos Blasting keseluruhan + Kos Topup Terkumpul)
   const totalSentAll = allEntries.reduce((a, r) => a + (r.sent || 0), 0);
-  const usedRM = costRM(totalSentAll);
-  document.getElementById('topup-used-rm').textContent = 'RM ' + fmt(usedRM.toFixed(2));
-
-  const balanceRM = totalRM - usedRM;
-  const balEl = document.getElementById('topup-balance-rm');
-  balEl.textContent = 'RM ' + fmt(balanceRM.toFixed(2));
-  balEl.style.color = balanceRM < 0 ? 'var(--coral)' : 'var(--mint)';
+  const totalSalesAll = allEntries.reduce((a, r) => a + (r.sales || 0), 0);
+  const kosBlastingAll = costRM(totalSentAll);
+  const denom = kosBlastingAll + totalRM;
+  const roiWithTopup = denom ? (totalSalesAll / denom) : 0;
+  document.getElementById('topup-roi').textContent = roiWithTopup.toFixed(2) + 'x';
 
   const body = document.getElementById('topup-history-body');
   body.innerHTML = '';
@@ -1703,3 +1710,30 @@ function renderTopups() {
   });
   if (!allTopups.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada rekod topup lagi.</td></tr>';
 }
+
+// ---- Edit manual Database stats (Total/Dah Blast/Belum Blast) ----
+document.getElementById('cstat-edit-btn').addEventListener('click', () => {
+  const wrap = document.getElementById('cstat-edit-form-wrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+});
+document.getElementById('cstat-save-btn').addEventListener('click', async () => {
+  const blasted = Number(document.getElementById('cstat-input-blasted').value || 0);
+  const pending = Number(document.getElementById('cstat-input-pending').value || 0);
+  const note = document.getElementById('cstat-input-note').value.trim();
+  const btn = document.getElementById('cstat-save-btn');
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    await db.collection('meta').doc('manualDbStats').set({
+      blasted, pending, note,
+      updatedBy: currentProfile.name,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    toast('Statistik database dikemaskini ✓');
+    document.getElementById('cstat-edit-form-wrap').style.display = 'none';
+    loadContactStats();
+  } catch (err) {
+    toast('Gagal simpan: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan';
+  }
+});
