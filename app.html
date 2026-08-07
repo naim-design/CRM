@@ -37,7 +37,7 @@
         <button data-view="contacts">Database</button>
         <button data-view="filter">Filter</button>
         <button data-view="todo">To-Do</button>
-        <button data-view="recap">Recap Jun</button>
+        <button data-view="recap">Recap Julai</button>
       </nav>
       <div class="user-badge">
         <button class="theme-toggle" id="theme-toggle" title="Tukar tema">🌙</button>
@@ -162,9 +162,9 @@
       <section id="topup-section" style="display:none;">
         <div class="section-head"><h2><span class="idx">•</span>Topup Blasting <small style="font-weight:400; color:var(--muted); font-size:11px;">(Keseluruhan sahaja)</small></h2></div>
         <div class="stat-row">
-          <div class="stat-card"><div class="label">Total Topup</div><div class="value" id="topup-total-eur">€0.00</div><div class="foot" id="topup-total-rm">RM 0.00</div></div>
-          <div class="stat-card"><div class="label">Kos Digunakan</div><div class="value" id="topup-used-rm">RM 0.00</div></div>
-          <div class="stat-card accent-mint"><div class="label">Baki Topup</div><div class="value" id="topup-balance-rm">RM 0.00</div></div>
+          <div class="stat-card"><div class="label">Jumlah Topup (€)</div><div class="value" id="topup-total-eur">€0.00</div></div>
+          <div class="stat-card accent-mint"><div class="label">Kos Topup (RM)</div><div class="value" id="topup-total-rm">RM 0.00</div></div>
+          <div class="stat-card accent-amber"><div class="label">ROI (dengan Topup)</div><div class="value" id="topup-roi">0.00x</div><div class="foot">Sales ÷ (Kos Blasting + Kos Topup)</div></div>
         </div>
         <div class="form-card" style="margin-top:16px;">
           <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
@@ -232,7 +232,7 @@
 
     <!-- ================= RECAP JUN ================= -->
     <div id="view-recap" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>Recap Jun — Dashboard Keseluruhan</h2></div>
+      <div class="section-head" style="padding-top:36px;"><h2>Recap Julai — Dashboard Keseluruhan</h2></div>
       <div class="recap-frame-wrap">
         <iframe src="reports/recap-keseluruhan.html" id="recap-iframe"></iframe>
       </div>
@@ -357,12 +357,25 @@
       <div class="section-head" style="padding-top:36px;"><h2>Database</h2></div>
 
       <!-- Stats -->
-      <div class="stat-row" style="margin-bottom:24px;">
+      <div class="stat-row" style="margin-bottom:10px;">
         <div class="stat-card accent-mint"><div class="label">Total Database</div><div class="value" id="cstat-total">–</div></div>
         <div class="stat-card"><div class="label">Belum Blast</div><div class="value" id="cstat-pending">–</div></div>
         <div class="stat-card"><div class="label">Dah Blast</div><div class="value" id="cstat-blasted">–</div></div>
         <div class="stat-card"><div class="label">Dah Reply</div><div class="value" id="cstat-replied">–</div></div>
         <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="cstat-buyer">–</div></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:8px;">
+        <p id="cstat-note" style="font-size:12px; color:var(--muted); margin:0;"></p>
+        <button class="btn btn-ghost" id="cstat-edit-btn" style="width:auto; padding:6px 14px; font-size:12px;">✏️ Edit Manual</button>
+      </div>
+      <div class="form-card" id="cstat-edit-form-wrap" style="display:none; margin-bottom:24px;">
+        <div class="form-grid two">
+          <div class="field"><label>Dah Blast</label><input type="number" id="cstat-input-blasted" min="0"></div>
+          <div class="field"><label>Belum Blast</label><input type="number" id="cstat-input-pending" min="0"></div>
+        </div>
+        <div class="field" style="margin-top:16px;"><label>Nota (contoh: pecahan database TikTok, dll)</label><textarea id="cstat-input-note" rows="2" placeholder="cth: Database TikTok — 20,000 rekod, import Ogos 2026"></textarea></div>
+        <div class="form-actions" style="margin-top:12px;"><button class="btn btn-primary" id="cstat-save-btn" style="width:auto; padding:10px 22px;">Simpan</button></div>
+        <p style="font-size:11px; color:var(--muted-2); margin-top:10px;">💡 Nombor ni dikemaskini manual (bukan auto-kira) — sebab isu extract/quota. "Total Database" akan dikira automatik dari Dah Blast + Belum Blast.</p>
       </div>
 
       <section>
