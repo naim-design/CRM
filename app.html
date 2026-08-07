@@ -151,6 +151,7 @@
           <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
           <div class="stat-card"><div class="label">Kos Blasting</div><div class="value" id="stat-cost-rm">RM 0</div><div class="foot" id="stat-cost-eur">€0.00</div></div>
           <div class="stat-card accent-mint"><div class="label">ROAS</div><div class="value" id="stat-roi">0.00x</div><div class="foot">Sales ÷ Kos</div></div>
+          <div class="stat-card accent-amber" id="stat-roi-topup-wrap" style="display:none;"><div class="label">ROI (dengan Topup)</div><div class="value" id="topup-roi">0.00x</div><div class="foot">Sales ÷ (Kos Blasting + Kos Topup)</div></div>
         </div>
         <div class="stat-row" style="margin-top:14px;">
           <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="stat-respon-rate">0.0%</div></div>
@@ -164,7 +165,6 @@
         <div class="stat-row">
           <div class="stat-card"><div class="label">Jumlah Topup (€)</div><div class="value" id="topup-total-eur">€0.00</div></div>
           <div class="stat-card accent-mint"><div class="label">Kos Topup (RM)</div><div class="value" id="topup-total-rm">RM 0.00</div></div>
-          <div class="stat-card accent-amber"><div class="label">ROI (dengan Topup)</div><div class="value" id="topup-roi">0.00x</div><div class="foot">Sales ÷ (Kos Blasting + Kos Topup)</div></div>
         </div>
         <div class="form-card" style="margin-top:16px;">
           <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
@@ -506,6 +506,20 @@ Ahmad	60112223344"></textarea>
     <div id="view-filter" class="view">
       <div class="section-head" style="padding-top:36px;"><h2>Filter Database</h2></div>
       <p style="font-size:12.5px; color:var(--muted); margin-bottom:18px;">Cari & senaraikan kontak ikut status (Buyer, Dah Reply, dll) dan sumber — sesuai untuk buat senarai follow-up atau kempen susulan.</p>
+
+      <div class="form-card" style="margin-bottom:18px;">
+        <div class="field">
+          <label>🏷️ Tag Bulk sebagai Buyer — Paste Nombor (satu nombor / baris, boleh sekali dengan nama)</label>
+          <textarea id="seg-buyer-paste" rows="6" placeholder="60123456789
+60198765432
+Ahmad	60112223344"></textarea>
+          <div id="seg-buyer-paste-count" style="font-size:12px; color:var(--mint); margin-top:6px; font-family:'IBM Plex Mono';">0 nombor dikesan</div>
+        </div>
+        <div class="form-actions" style="margin-top:10px;">
+          <button type="button" id="seg-buyer-tag-btn" class="btn btn-primary" style="width:auto; padding:10px 20px;">🏷️ Tag sebagai Buyer & Papar Hasil</button>
+        </div>
+        <div id="seg-buyer-tag-result" style="font-size:12.5px; color:var(--muted); margin-top:12px; white-space:pre-line;"></div>
+      </div>
 
       <div class="table-controls">
         <select class="filter-box" id="seg-filter-status">
