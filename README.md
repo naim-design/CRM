@@ -85,3 +85,6 @@ Boleh juga guna **Firebase Hosting** kalau nak (`firebase deploy` selepas `fireb
 ## Nota Keselamatan
 
 Rules Firestore yang disertakan (`firestore.rules.txt`) benarkan **semua user yang log masuk** baca & tulis semua data — sesuai untuk tool internal team kecil. Kalau team lebih besar dan nak had staff biasa dari edit/padam data staff lain, bagitahu saya — saya boleh ketatkan rules ikut role.
+
+## V2 — Wabot Live Add-on
+Tab lama dan collection lama dikekalkan. Modul tambahan: Wabot Live, Analytics Pro, Campaign Manager dan AI Insight. Lihat `WABOT_SETUP.md` untuk setup webhook.
