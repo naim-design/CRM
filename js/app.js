@@ -1642,6 +1642,26 @@ document.getElementById('seg-buyer-paste').addEventListener('input', () => {
   document.getElementById('seg-buyer-paste-count').textContent = fmt(count) + ' nombor dikesan';
 });
 
+// Nombor MY kadang disimpan dalam format berbeza ikut cara ia diimport dulu:
+// dgn kod negara (60113324660), tanpa kod negara + ada 0 (0113324660), atau tanpa 0 langsung (113324660).
+// Kita generate semua variasi yg munasabah supaya padanan tetap jumpa walau format tak 100% sama.
+function phoneVariants(digits) {
+  const variants = new Set([digits]);
+  if (digits.startsWith('60') && digits.length > 8) {
+    const rest = digits.slice(2);
+    variants.add('0' + rest);
+    variants.add(rest);
+  } else if (digits.startsWith('0')) {
+    const rest = digits.slice(1);
+    variants.add('60' + rest);
+    variants.add(rest);
+  } else {
+    variants.add('60' + digits);
+    variants.add('0' + digits);
+  }
+  return [...variants];
+}
+
 document.getElementById('seg-buyer-tag-btn').addEventListener('click', async () => {
   const btn = document.getElementById('seg-buyer-tag-btn');
   const resultBox = document.getElementById('seg-buyer-tag-result');
@@ -1654,22 +1674,29 @@ document.getElementById('seg-buyer-tag-btn').addEventListener('click', async () 
   resultBox.textContent = 'Mencari & menanda ' + fmt(phones.length) + ' nombor...';
   try {
     const matched = [];
-    const foundPhones = new Set();
-    const CHUNK = 10; // had 'in' query Firestore
+    const foundOriginals = new Set();
+    const CHUNK = 9; // 9 nombor asal x sehingga 3 variasi = 27, bawah had 30 utk 'in' query Firestore
     for (let i = 0; i < phones.length; i += CHUNK) {
       const chunk = phones.slice(i, i + CHUNK);
-      const snap = await db.collection('contacts').where('phone', 'in', chunk).get();
+      // peta setiap variasi balik ke nombor asal yg dipaste
+      const variantToOriginal = {};
+      const allVariants = [];
+      chunk.forEach(orig => {
+        phoneVariants(orig).forEach(v => { variantToOriginal[v] = orig; allVariants.push(v); });
+      });
+      const snap = await db.collection('contacts').where('phone', 'in', allVariants).get();
       if (snap.empty) continue;
       const batch = db.batch();
       snap.forEach(d => {
         batch.update(d.ref, { status: 'buyer' });
         const data = d.data();
         matched.push({ id: d.id, ...data, status: 'buyer' });
-        foundPhones.add(data.phone);
+        const orig = variantToOriginal[data.phone];
+        if (orig) foundOriginals.add(orig);
       });
       await batch.commit();
     }
-    const notFound = phones.filter(p => !foundPhones.has(p));
+    const notFound = phones.filter(p => !foundOriginals.has(p));
 
     // Terus papar hasil kat table Filter Database bawah (macam lepas tekan Cari)
     segLastResults = matched;
