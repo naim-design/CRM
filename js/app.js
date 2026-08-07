@@ -410,6 +410,7 @@ function renderTemplateReport() {
 function updateTopupVisibility() {
   const kategori = document.getElementById('filter-kategori').value;
   document.getElementById('topup-section').style.display = kategori ? 'none' : 'block';
+  document.getElementById('stat-roi-topup-wrap').style.display = kategori ? 'none' : 'block';
   document.getElementById('kategori-susu-extra').style.display = kategori === 'Projek Susu' ? 'block' : 'none';
   document.getElementById('kategori-naimfani-extra').style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
 }
@@ -1631,6 +1632,70 @@ document.getElementById('seg-search-btn').addEventListener('click', async () => 
     if (!segLastResults.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada hasil untuk tapisan ni.</td></tr>';
   } catch (err) {
     body.innerHTML = '<tr><td colspan="5" class="empty-state">Ralat: ' + err.message + '</td></tr>';
+  }
+});
+
+// ---- Bulk Tag sebagai Buyer — paste nombor, padan dgn database, tanda status=buyer terus ----
+document.getElementById('seg-buyer-paste').addEventListener('input', () => {
+  const raw = document.getElementById('seg-buyer-paste').value;
+  const count = raw.trim() ? parseBulkRows(raw).length : 0;
+  document.getElementById('seg-buyer-paste-count').textContent = fmt(count) + ' nombor dikesan';
+});
+
+document.getElementById('seg-buyer-tag-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('seg-buyer-tag-btn');
+  const resultBox = document.getElementById('seg-buyer-tag-result');
+  const raw = document.getElementById('seg-buyer-paste').value;
+  const rows = raw.trim() ? parseBulkRows(raw) : [];
+  const phones = [...new Set(rows.map(r => r.phone))];
+  if (!phones.length) { toast('Paste nombor dulu dalam kotak', true); return; }
+
+  btn.disabled = true; btn.textContent = 'Memproses...';
+  resultBox.textContent = 'Mencari & menanda ' + fmt(phones.length) + ' nombor...';
+  try {
+    const matched = [];
+    const foundPhones = new Set();
+    const CHUNK = 10; // had 'in' query Firestore
+    for (let i = 0; i < phones.length; i += CHUNK) {
+      const chunk = phones.slice(i, i + CHUNK);
+      const snap = await db.collection('contacts').where('phone', 'in', chunk).get();
+      if (snap.empty) continue;
+      const batch = db.batch();
+      snap.forEach(d => {
+        batch.update(d.ref, { status: 'buyer' });
+        const data = d.data();
+        matched.push({ id: d.id, ...data, status: 'buyer' });
+        foundPhones.add(data.phone);
+      });
+      await batch.commit();
+    }
+    const notFound = phones.filter(p => !foundPhones.has(p));
+
+    // Terus papar hasil kat table Filter Database bawah (macam lepas tekan Cari)
+    segLastResults = matched;
+    document.getElementById('seg-result-count').textContent = fmt(matched.length);
+    document.getElementById('seg-result-note').textContent = 'Hasil dari Bulk Tag Buyer';
+    const body = document.getElementById('seg-result-body');
+    body.innerHTML = '';
+    matched.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="tname">${c.name}</td>
+        <td style="font-family:'IBM Plex Mono';">${c.phone}</td>
+        <td style="font-size:12px; color:var(--muted);">${c.source || '–'}</td>
+        <td style="max-width:160px;">${renderTagBadges(c.tags)}</td>
+        <td style="text-align:right;"><span class="status-pill ${c.status}">${statusLabel(c.status)}</span></td>`;
+      body.appendChild(tr);
+    });
+    if (!matched.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada nombor yang padan dgn database.</td></tr>';
+
+    resultBox.textContent = `✓ ${fmt(matched.length)} nombor dijumpai & ditanda sebagai Buyer.` +
+      (notFound.length ? `\n⚠️ ${fmt(notFound.length)} nombor TIDAK dijumpai dalam database:\n${notFound.join(', ')}` : '');
+    toast(fmt(matched.length) + ' kontak ditanda sebagai Buyer ✓');
+  } catch (err) {
+    resultBox.textContent = 'Ralat: ' + err.message;
+    toast('Gagal proses: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = '🏷️ Tag sebagai Buyer & Papar Hasil';
   }
 });
 
