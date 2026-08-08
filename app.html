@@ -702,11 +702,11 @@ Ahmad	60112223344"></textarea>
       </div>
       <div class="form-card">
         <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Campaign Tracking</h2><span class="hint-chip" id="campaign-count">0 campaign</span></div>
-        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Mapping</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Buyer</th><th>Sales</th><th>Conversion Rate</th><th>ROAS</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="15" class="empty-state">Belum ada campaign metadata / padanan CRM.</td></tr></tbody></table></div>
+        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Mapping / Confidence</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Buyer</th><th>Sales</th><th>Conversion Rate</th><th>ROAS</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="15" class="empty-state">Belum ada campaign metadata / padanan CRM.</td></tr></tbody></table></div>
       </div>
       <div class="form-card" style="margin-top:20px;">
         <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Struktur Nama Disyorkan</h2></div>
-        <div class="wabot-notes"><div><b>Contoh:</b> <code>SCH_A_D1</code> = Susu Coklat Hazelnut, Script A, Day 1.</div><div><b>Contoh:</b> <code>JUS_MERDEKA_D3</code> = Jus Mamariam, kempen Merdeka, follow-up Day 3.</div><div><b>Nota:</b> Jika Wabot tidak menghantar nama campaign, sistem sekarang cuba auto-map kepada entri CRM berdasarkan tarikh, akaun Wabot dan masa blasting. Lajur “Mapping” tunjuk sama ada nama datang daripada Webhook atau Auto CRM.</div></div>
+        <div class="wabot-notes"><div><b>Contoh:</b> <code>SCH_A_D1</code> = Susu Coklat Hazelnut, Script A, Day 1.</div><div><b>Contoh:</b> <code>JUS_MERDEKA_D3</code> = Jus Mamariam, kempen Merdeka, follow-up Day 3.</div><div><b>Nota:</b> Jika Wabot tidak menghantar nama campaign, sistem guna Smart Matching berdasarkan tarikh, akaun Wabot, masa blasting dan petunjuk teks/template. Lajur “Mapping / Confidence” tunjuk sumber padanan. Padanan yang tak cukup yakin tidak akan dipaksa.</div></div>
       </div>
     </div>
 
