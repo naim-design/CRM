@@ -1942,92 +1942,167 @@ function wabotCounts() {
   return c;
 }
 function renderWabotModules(){ renderWabotLive(); renderAnalyticsPro(); renderCampaignManager(); renderAIInsight(); }
-function renderWabotLive() {
-  const c = wabotCounts();
+function wabotLiveFilteredEvents() {
+  const rangeEl = document.getElementById('wabot-range');
+  const instanceEl = document.getElementById('wabot-instance-filter');
+  const eventEl = document.getElementById('wabot-event-filter');
 
-  [
-    ['wl-sent', c.sent],
-    ['wl-delivered', c.delivered],
-    ['wl-read', c.read],
-    ['wl-reply', c.reply],
-    ['wl-failed', c.failed]
-  ].forEach(([id, v]) => {
-    const x = document.getElementById(id);
-    if (x) x.textContent = fmt(v);
-  });
+  const start = aproRangeStart(rangeEl ? rangeEl.value : 'today');
+  const instance = instanceEl ? instanceEl.value : '';
+  const eventKind = eventEl ? eventEl.value : '';
 
-  const badge = document.getElementById('wabot-live-status');
-  if (badge) {
-    const usefulCount = allWabotEvents.filter(isUsefulWabotEvent).length;
-    badge.textContent = usefulCount
-      ? `${fmt(usefulCount)} event berguna diterima`
-      : 'Menunggu webhook';
-  }
+  return allWabotEvents.filter(e => {
+    if (!isUsefulWabotEvent(e)) return false;
 
-  const dir =
-    (document.getElementById('wl-filter-direction') || {}).value || '';
-
-  const q =
-    ((document.getElementById('wl-filter-phone') || {}).value || '')
-      .toLowerCase()
-      .trim();
-
-  // Feed utama hanya tunjuk event yang benar-benar berguna.
-  // Event seperti WEBHOOK, NEW SUBSCRIBER dan [object Object] disorok.
-  const filtered = allWabotEvents
-    .filter(isUsefulWabotEvent)
-    .filter(e => {
-      const k = wabotEventKind(e);
-
-      const hay = `
-        ${e.phone || ''}
-        ${e.from || ''}
-        ${e.to || ''}
-        ${typeof e.message === 'string' ? e.message : ''}
-        ${typeof e.text === 'string' ? e.text : ''}
-        ${typeof e.status === 'string' ? e.status : ''}
-      `.toLowerCase();
-
-      return (!dir || k === dir) && (!q || hay.includes(q));
-    })
-    .slice(0, 150);
-
-  const feed = document.getElementById('wl-feed');
-  if (!feed) return;
-
-  if (!filtered.length) {
-    feed.innerHTML =
-      '<div class="empty-state">Belum ada event yang sepadan.</div>';
-    return;
-  }
-
-  feed.innerHTML = filtered.map(e => {
-    const k = wabotEventKind(e);
     const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    if (!d || d < start) return false;
 
-    const message =
-      typeof e.message === 'string'
-        ? e.message
-        : typeof e.text === 'string'
-          ? e.text
-          : typeof e.status === 'string'
-            ? e.status
-            : typeof e.event === 'string'
-              ? e.event
-              : '-';
+    const acc = String(e.instanceName || e.instance || e.instance_id || '');
+    if (instance && acc !== instance) return false;
 
-    return `
-      <div class="live-event ${wabotEsc(k)}">
-        <span class="ev-type">${wabotEsc(k)}</span>
-        <span class="ev-phone">${wabotEsc(e.phone || e.from || e.to || '-')}</span>
-        <span class="ev-message">${wabotEsc(message)}</span>
-        <span class="ev-time">${d ? d.toLocaleString('ms-MY') : '-'}</span>
-      </div>
-    `;
-  }).join('');
+    const k = wabotEventKind(e);
+    if (eventKind && k !== eventKind) return false;
+
+    return true;
+  });
 }
-['wl-filter-direction','wl-filter-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener(id.includes('phone')?'input':'change',renderWabotLive)});
-const wlRefresh=document.getElementById('wl-refresh'); if(wlRefresh) wlRefresh.onclick=renderWabotModules;
+
+function populateWabotInstanceFilter() {
+  const sel = document.getElementById('wabot-instance-filter');
+  if (!sel) return;
+
+  const current = sel.value;
+  const vals = [...new Set(
+    allWabotEvents
+      .map(e => String(e.instanceName || e.instance || e.instance_id || '').trim())
+      .filter(Boolean)
+  )].sort();
+
+  sel.innerHTML = '<option value="">Semua Instance</option>' +
+    vals.map(v => `<option value="${wabotEsc(v)}">${wabotEsc(v)}</option>`).join('');
+
+  if (vals.includes(current)) sel.value = current;
+}
+
+function renderWabotLive() {
+  populateWabotInstanceFilter();
+
+  const events = wabotLiveFilteredEvents();
+  const c = wabotCountsFor(events);
+
+  const setAny = (ids, value) => {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    });
+  };
+
+  setAny(['wstat-sent','wl-sent'], fmt(c.sent));
+  setAny(['wstat-delivered','wl-delivered'], fmt(c.delivered));
+  setAny(['wstat-read','wl-read'], fmt(c.read));
+  setAny(['wstat-reply','wl-reply'], fmt(c.reply));
+  setAny(['wstat-failed','wl-failed'], fmt(c.failed));
+
+  const deliveryRate = c.sent ? c.delivered / c.sent * 100 : 0;
+  const readRate = c.sent ? c.read / c.sent * 100 : 0;
+  const replyRate = c.sent ? c.reply / c.sent * 100 : 0;
+  const failedRate = c.sent ? c.failed / c.sent * 100 : 0;
+
+  setAny(['wstat-delivery-rate'], deliveryRate.toFixed(1) + '% delivery');
+  setAny(['wstat-read-rate'], readRate.toFixed(1) + '% read');
+  setAny(['wstat-reply-rate'], replyRate.toFixed(1) + '% reply');
+  setAny(['wstat-failed-rate'], failedRate.toFixed(1) + '% failed');
+
+  const lastEvent = events
+    .map(e => wabotDate(e.eventAt) || wabotDate(e.receivedAt))
+    .filter(Boolean)
+    .sort((a,b) => b-a)[0];
+
+  setAny(
+    ['wabot-live-last','wabot-live-status'],
+    lastEvent ? `Update ${lastEvent.toLocaleString('ms-MY')}` : 'Menunggu webhook'
+  );
+
+  setAny(['wabot-event-count'], `${fmt(events.length)} event`);
+
+  const body = document.getElementById('wabot-events-body');
+  if (body) {
+    if (!events.length) {
+      body.innerHTML = '<tr><td colspan="6" class="empty-state">Belum ada event webhook yang sepadan.</td></tr>';
+    } else {
+      body.innerHTML = events.slice(0,150).map(e => {
+        const k = wabotEventKind(e);
+        const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+        const msg =
+          typeof e.message === 'string' ? e.message :
+          typeof e.text === 'string' ? e.text :
+          typeof e.status === 'string' ? e.status :
+          typeof e.event === 'string' ? e.event : '-';
+
+        return `<tr>
+          <td style="font-size:11px;white-space:nowrap;">${d ? d.toLocaleString('ms-MY') : '-'}</td>
+          <td><span class="status-pill ${wabotEsc(k)}">${wabotEsc(k)}</span></td>
+          <td>${wabotEsc(e.direction || k)}</td>
+          <td class="tname">${wabotEsc(e.phone || e.from || e.to || '-')}</td>
+          <td>${wabotEsc(msg)}</td>
+          <td style="font-size:11px;">${wabotEsc(e.instanceName || e.instance || e.instance_id || '-')}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // Backward compatibility untuk layout Wabot Live lama.
+  const feed = document.getElementById('wl-feed');
+  if (feed) {
+    feed.innerHTML = events.length
+      ? events.slice(0,150).map(e => {
+          const k = wabotEventKind(e);
+          const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+          const message =
+            typeof e.message === 'string' ? e.message :
+            typeof e.text === 'string' ? e.text :
+            typeof e.status === 'string' ? e.status :
+            typeof e.event === 'string' ? e.event : '-';
+
+          return `<div class="live-event ${wabotEsc(k)}">
+            <span class="ev-type">${wabotEsc(k)}</span>
+            <span class="ev-phone">${wabotEsc(e.phone || e.from || e.to || '-')}</span>
+            <span class="ev-message">${wabotEsc(message)}</span>
+            <span class="ev-time">${d ? d.toLocaleString('ms-MY') : '-'}</span>
+          </div>`;
+        }).join('')
+      : '<div class="empty-state">Belum ada event yang sepadan.</div>';
+  }
+}
+['wl-filter-direction','wl-filter-phone','wabot-range','wabot-instance-filter','wabot-event-filter'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener(id.includes('phone') ? 'input' : 'change', renderWabotLive);
+});
+['wl-refresh','wabot-refresh-btn'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.onclick=renderWabotModules;
+});
+
+const wabotHealthBtn = document.getElementById('wabot-health-btn');
+if (wabotHealthBtn) {
+  wabotHealthBtn.addEventListener('click', async () => {
+    const chip = document.getElementById('wabot-live-api');
+    wabotHealthBtn.disabled = true;
+    if (chip) chip.textContent = 'API: semak...';
+    try {
+      const res = await fetch('/api/wabot/health', { cache:'no-store' });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.message || 'API tidak OK');
+      if (chip) chip.textContent = 'API: Aktif ✓';
+      toast('Wabot API aktif ✓');
+    } catch (err) {
+      if (chip) chip.textContent = 'API: Ralat';
+      toast('Wabot API gagal: ' + err.message, true);
+    } finally {
+      wabotHealthBtn.disabled = false;
+    }
+  });
+}
 
 function renderBars(id, rows, valueKey='value'){
   const el=document.getElementById(id); if(!el)return; if(!rows.length){el.innerHTML='<div class="empty-state">Belum cukup data.</div>';return;}
@@ -2103,6 +2178,7 @@ function normalizeWabotPhone(v) {
 function wabotAudienceStats(events) {
   const contacted = new Set();
   const repliers = new Set();
+  const validRepliers = new Set();
   const replyMessages = new Set();
 
   events
@@ -2126,14 +2202,22 @@ function wabotAudienceStats(events) {
       }
     });
 
+  repliers.forEach(phone => {
+    if (contacted.has(phone)) validRepliers.add(phone);
+  });
+
   const uniqueContacted = contacted.size;
   const uniqueRepliers = repliers.size;
+  const validReplyCustomers = validRepliers.size;
   const replyMessageCount = replyMessages.size;
-  const replyRate = uniqueContacted ? (uniqueRepliers / uniqueContacted * 100) : 0;
+  const replyRate = uniqueContacted
+    ? (validReplyCustomers / uniqueContacted * 100)
+    : 0;
 
   return {
     uniqueContacted,
     uniqueRepliers,
+    validReplyCustomers,
     replyMessages: replyMessageCount,
     replyRate
   };
@@ -2187,7 +2271,7 @@ function renderAnalyticsPro() {
   aproSet('apro-sent', fmt(c.sent));
   aproSet('apro-delivered', fmt(c.delivered));
   aproSet('apro-read', fmt(c.read));
-  aproSet('apro-reply', fmt(audience.uniqueRepliers));
+  aproSet('apro-reply', fmt(audience.validReplyCustomers));
   aproSet('apro-failed', fmt(c.failed));
 
   aproSet('apro-delivery-rate', deliveryRate.toFixed(1) + '% delivery rate');
@@ -2217,7 +2301,7 @@ function renderAnalyticsPro() {
     ['Delivered', c.delivered],
     ['Read', c.read],
     ['Unique Contacted', audience.uniqueContacted],
-    ['Unique Reply', audience.uniqueRepliers],
+    ['Valid Reply', audience.validReplyCustomers],
     ['Buyer (CRM)', buyers]
   ];
 
@@ -2228,13 +2312,13 @@ function renderAnalyticsPro() {
     funnel.innerHTML = stages.map(([label, value]) => {
       let pct = 0;
 
-      if (label === 'Unique Reply') {
+      if (label === 'Valid Reply') {
         pct = audience.uniqueContacted
           ? value / audience.uniqueContacted * 100
           : 0;
       } else if (label === 'Buyer (CRM)') {
-        pct = audience.uniqueRepliers
-          ? value / audience.uniqueRepliers * 100
+        pct = audience.validReplyCustomers
+          ? value / audience.validReplyCustomers * 100
           : 0;
       } else {
         pct = c.sent ? value / c.sent * 100 : 0;
@@ -2338,7 +2422,7 @@ function renderAnalyticsPro() {
     events,
     e => e.instanceName || e.instance || e.instance_id || 'Tidak Diketahui'
   ).sort((a,b) =>
-    b.audience.uniqueRepliers - a.audience.uniqueRepliers ||
+    b.audience.validReplyCustomers - a.audience.validReplyCustomers ||
     b.counts.sent - a.counts.sent
   );
 
@@ -2353,7 +2437,7 @@ function renderAnalyticsPro() {
             <td class="tname">${wabotEsc(a.label)}</td>
             <td class="num">${fmt(a.counts.sent)}</td>
             <td class="num">${fmt(a.audience.uniqueContacted)}</td>
-            <td class="num">${fmt(a.audience.uniqueRepliers)}</td>
+            <td class="num">${fmt(a.audience.validReplyCustomers)}</td>
             <td class="num">${rr.toFixed(1)}%</td>
             <td class="num">${fmt(a.counts.read)}</td>
             <td class="num">${fmt(a.counts.failed)}</td>
@@ -2368,7 +2452,7 @@ function renderAnalyticsPro() {
     e => e.script || e.template || e.templateName || 'Tidak Diketahui'
   ).sort((a,b) =>
     b.audience.replyRate - a.audience.replyRate ||
-    b.audience.uniqueRepliers - a.audience.uniqueRepliers
+    b.audience.validReplyCustomers - a.audience.validReplyCustomers
   );
 
   const scriptBody = document.getElementById('apro-script-body');
@@ -2380,7 +2464,7 @@ function renderAnalyticsPro() {
             <td class="tname">${wabotEsc(s.label)}</td>
             <td class="num">${fmt(s.counts.sent)}</td>
             <td class="num">${fmt(s.audience.uniqueContacted)}</td>
-            <td class="num">${fmt(s.audience.uniqueRepliers)}</td>
+            <td class="num">${fmt(s.audience.validReplyCustomers)}</td>
             <td class="num">${s.audience.replyRate.toFixed(1)}%</td>
             <td class="num">${fmt(s.counts.read)}</td>
           </tr>`;
@@ -2452,8 +2536,6 @@ function normalizeCampaignKey(v) {
 function campaignCRMStats(campaignName) {
   const key = normalizeCampaignKey(campaignName);
 
-  // Match nama campaign Wabot dengan data CRM sedia ada.
-  // Prioriti: template -> source -> kategori.
   const rows = (allEntries || []).filter(e => {
     const candidates = [e.template, e.source, e.kategori]
       .map(normalizeCampaignKey)
@@ -2528,7 +2610,6 @@ function renderCampaignManager(){
       read: c.read,
       uniqueContacted: audience.uniqueContacted,
       validReply: audience.validReplyCustomers,
-      totalUniqueRepliers: audience.uniqueRepliers,
       replyMessages: audience.replyMessages,
       replyRate: audience.replyRate,
       failed: c.failed,
@@ -2583,14 +2664,92 @@ const campaignRange = document.getElementById('campaign-range');
 if (campaignRange) campaignRange.addEventListener('change', renderCampaignManager);
 
 function renderAIInsight(){
-  const c=wabotCounts(), audience=wabotAudienceStats(allWabotEvents), rr=audience.replyRate;
-  const hours=groupEvents(e=>{const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt);return d?String(d.getHours()).padStart(2,'0')+':00':null},e=>wabotEventKind(e)==='incoming'); const bestHour=hours[0];
-  const scripts=groupEvents(e=>e.script||e.template||e.templateName||null,e=>wabotEventKind(e)==='incoming' && !!(e.script||e.template||e.templateName)); const bestScript=scripts[0];
-  const accounts=groupEvents(e=>e.instanceName||e.instance||e.instance_id||null,e=>wabotEventKind(e)==='incoming'); const bestAcc=accounts[0];
-  const cards=[
-    ['Reply Rate',rr.toFixed(1)+'%', audience.uniqueContacted?`${fmt(audience.uniqueRepliers)} customer unik reply daripada ${fmt(audience.uniqueContacted)} customer dihubungi (${fmt(audience.replyMessages)} mesej reply).`:'Belum ada customer outgoing untuk dikira.'],
-    ['Waktu Reply',bestHour?bestHour.label:'-',bestHour?`${fmt(bestHour.value)} reply diterima pada slot ini.`:'Belum cukup data masa reply.'],
-    ['Script Teratas',bestScript?bestScript.label:'-',bestScript?`${fmt(bestScript.value)} reply dikaitkan dengan script/template ini.`:'Webhook belum membawa metadata script/template.'],
-    ['Akaun Teratas',bestAcc?bestAcc.label:'-',bestAcc?`${fmt(bestAcc.value)} incoming event diterima.`:'Belum cukup data akaun Wabot.']
-  ]; const el=document.getElementById('ai-insight-list'); if(el)el.innerHTML=cards.map(c=>`<div class="insight-card"><div class="insight-kicker">${wabotEsc(c[0])}</div><div class="insight-main">${wabotEsc(c[1])}</div><div class="insight-copy">${wabotEsc(c[2])}</div></div>`).join('');
+  const rangeEl = document.getElementById('insight-range');
+  const start = aproRangeStart(rangeEl ? rangeEl.value : 'today');
+
+  const events = allWabotEvents.filter(e => {
+    if (!isUsefulWabotEvent(e)) return false;
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    return d && d >= start;
+  });
+
+  const audience = wabotAudienceStats(events);
+  const rr = audience.replyRate;
+
+  const hours = {};
+  events.filter(e => wabotEventKind(e) === 'incoming').forEach(e => {
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    if (!d) return;
+    const h = String(d.getHours()).padStart(2,'0') + ':00';
+    hours[h] = (hours[h] || 0) + 1;
+  });
+  const bestHour = Object.entries(hours).sort((a,b)=>b[1]-a[1])[0] || null;
+
+  const campaignGroups = {};
+  const scriptGroups = {};
+
+  events.forEach(e => {
+    const campaign = e.campaign || e.campaignName || e.broadcast || e.broadcastName;
+    const script = e.script || e.template || e.templateName;
+
+    if (campaign) {
+      if (!campaignGroups[campaign]) campaignGroups[campaign] = [];
+      campaignGroups[campaign].push(e);
+    }
+    if (script) {
+      if (!scriptGroups[script]) scriptGroups[script] = [];
+      scriptGroups[script].push(e);
+    }
+  });
+
+  const bestCampaign = Object.entries(campaignGroups)
+    .map(([label, rows]) => ({label, stats:wabotAudienceStats(rows)}))
+    .sort((a,b) => b.stats.replyRate - a.stats.replyRate || b.stats.validReplyCustomers - a.stats.validReplyCustomers)[0] || null;
+
+  const bestScript = Object.entries(scriptGroups)
+    .map(([label, rows]) => ({label, stats:wabotAudienceStats(rows)}))
+    .sort((a,b) => b.stats.replyRate - a.stats.replyRate || b.stats.validReplyCustomers - a.stats.validReplyCustomers)[0] || null;
+
+  aproSet('insight-reply-rate', rr.toFixed(1) + '%');
+  aproSet('insight-best-hour', bestHour ? bestHour[0] : '–');
+  aproSet('insight-best-campaign', bestCampaign ? bestCampaign.label : '–');
+  aproSet('insight-best-script', bestScript ? bestScript.label : '–');
+
+  const insights = [];
+
+  if (audience.uniqueContacted) {
+    insights.push(
+      `${fmt(audience.validReplyCustomers)} daripada ${fmt(audience.uniqueContacted)} customer yang dihubungi telah reply (${rr.toFixed(1)}%).`
+    );
+  } else {
+    insights.push('Belum cukup outgoing customer untuk kira CRM Reply Rate.');
+  }
+
+  if (bestHour) {
+    insights.push(`Waktu reply tertinggi setakat tempoh dipilih ialah ${bestHour[0]} dengan ${fmt(bestHour[1])} mesej reply.`);
+  } else {
+    insights.push('Belum cukup data untuk tentukan waktu reply terbaik.');
+  }
+
+  if (bestCampaign) {
+    insights.push(`Campaign terbaik berdasarkan Valid Reply Rate: ${bestCampaign.label} (${bestCampaign.stats.replyRate.toFixed(1)}%).`);
+  } else {
+    insights.push('Nama campaign belum tersedia dalam payload Wabot, jadi perbandingan campaign belum boleh dibuat.');
+  }
+
+  if (bestScript) {
+    insights.push(`Script/template terbaik: ${bestScript.label} (${bestScript.stats.replyRate.toFixed(1)}% Valid Reply Rate).`);
+  } else {
+    insights.push('Metadata script/template belum tersedia dalam payload Wabot.');
+  }
+
+  const list = document.getElementById('insight-list') || document.getElementById('ai-insight-list');
+  if (list) {
+    list.innerHTML = insights
+      .map(t => `<div class="insight-item">${wabotEsc(t)}</div>`)
+      .join('');
+  }
 }
+
+const insightRange = document.getElementById('insight-range');
+if (insightRange) insightRange.addEventListener('change', renderAIInsight);
