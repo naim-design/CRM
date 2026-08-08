@@ -1850,38 +1850,28 @@ function wabotDate(v) {
 function wabotEventKind(e) {
   const raw = `${e.direction || ''} ${e.event || ''} ${e.type || ''} ${e.status || ''}`.toLowerCase();
 
-  // 1. Status mesej mesti diperiksa dahulu
-  if (raw.includes('fail') || raw.includes('error')) {
-    return 'failed';
-  }
+  // Status mesej diperiksa dahulu supaya delivered/read/failed
+  // tidak tersalah dikira sebagai outgoing.
+  if (raw.includes('fail') || raw.includes('error')) return 'failed';
+  if (raw.includes('read')) return 'read';
+  if (raw.includes('delivered')) return 'delivered';
 
-  if (raw.includes('read')) {
-    return 'read';
-  }
-
-  if (raw.includes('delivered')) {
-    return 'delivered';
-  }
-
-  // 2. Incoming = customer reply
-  if (
-    raw.includes('incoming') ||
-    raw.includes('received') ||
-    e.fromMe === false
-  ) {
+  // Incoming = customer reply
+  if (raw.includes('incoming') || raw.includes('received') || e.fromMe === false) {
     return 'incoming';
   }
 
-  // 3. Sent / outgoing
-  if (
-    raw.includes('outgoing') ||
-    raw.includes('sent') ||
-    e.fromMe === true
-  ) {
+  // Sent / outgoing
+  if (raw.includes('outgoing') || raw.includes('sent') || e.fromMe === true) {
     return 'outgoing';
   }
 
   return (e.direction || e.status || e.event || e.type || 'event').toLowerCase();
+}
+
+function isUsefulWabotEvent(e) {
+  const k = wabotEventKind(e);
+  return ['incoming', 'outgoing', 'delivered', 'read', 'failed'].includes(k);
 }
 function startWabotListener() {
   if (unsubWabotEvents) return;
@@ -1898,21 +1888,143 @@ const _originalStartListeners = startListeners;
 startListeners = function(){ _originalStartListeners(); startWabotListener(); };
 
 function wabotCounts() {
-  const c={sent:0,delivered:0,read:0,reply:0,failed:0};
-  allWabotEvents.forEach(e=>{ const k=wabotEventKind(e); if(k==='outgoing')c.sent++; else if(k==='incoming')c.reply++; else if(k==='delivered')c.delivered++; else if(k==='read')c.read++; else if(k==='failed')c.failed++; });
+  const c = {
+    sent: 0,
+    delivered: 0,
+    read: 0,
+    reply: 0,
+    failed: 0
+  };
+
+  // Elak event yang sama dikira berulang kali.
+  const seen = {
+    sent: new Set(),
+    delivered: new Set(),
+    read: new Set(),
+    reply: new Set(),
+    failed: new Set()
+  };
+
+  allWabotEvents.forEach(e => {
+    const k = wabotEventKind(e);
+
+    if (!['outgoing', 'incoming', 'delivered', 'read', 'failed'].includes(k)) {
+      return;
+    }
+
+    const eventTime = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    const timeKey = eventTime ? eventTime.getTime() : '';
+
+    // messageId ialah key terbaik. Jika tiada, guna gabungan data event.
+    const key =
+      e.messageId ||
+      e.message_id ||
+      `${e.phone || e.from || e.to || '-'}_${timeKey}_${k}_${typeof e.message === 'string' ? e.message : ''}`;
+
+    if (k === 'outgoing' && !seen.sent.has(key)) {
+      seen.sent.add(key);
+      c.sent++;
+    } else if (k === 'delivered' && !seen.delivered.has(key)) {
+      seen.delivered.add(key);
+      c.delivered++;
+    } else if (k === 'read' && !seen.read.has(key)) {
+      seen.read.add(key);
+      c.read++;
+    } else if (k === 'incoming' && !seen.reply.has(key)) {
+      seen.reply.add(key);
+      c.reply++;
+    } else if (k === 'failed' && !seen.failed.has(key)) {
+      seen.failed.add(key);
+      c.failed++;
+    }
+  });
+
   return c;
 }
 function renderWabotModules(){ renderWabotLive(); renderAnalyticsPro(); renderCampaignManager(); renderAIInsight(); }
-function renderWabotLive(){
-  const c=wabotCounts();
-  [['wl-sent',c.sent],['wl-delivered',c.delivered],['wl-read',c.read],['wl-reply',c.reply],['wl-failed',c.failed]].forEach(([id,v])=>{const x=document.getElementById(id);if(x)x.textContent=fmt(v)});
-  const badge=document.getElementById('wabot-live-status'); if(badge) badge.textContent=allWabotEvents.length?`${fmt(allWabotEvents.length)} event diterima`:'Menunggu webhook';
-  const dir=(document.getElementById('wl-filter-direction')||{}).value||'';
-  const q=((document.getElementById('wl-filter-phone')||{}).value||'').toLowerCase().trim();
-  const filtered=allWabotEvents.filter(e=>{const k=wabotEventKind(e); const hay=`${e.phone||''} ${e.from||''} ${e.to||''} ${e.message||e.text||''}`.toLowerCase(); return (!dir||k===dir)&&(!q||hay.includes(q));}).slice(0,150);
-  const feed=document.getElementById('wl-feed'); if(!feed)return;
-  if(!filtered.length){feed.innerHTML='<div class="empty-state">Belum ada event yang sepadan.</div>';return;}
-  feed.innerHTML=filtered.map(e=>{const k=wabotEventKind(e), d=wabotDate(e.eventAt)||wabotDate(e.receivedAt); return `<div class="live-event ${wabotEsc(k)}"><span class="ev-type">${wabotEsc(k)}</span><span class="ev-phone">${wabotEsc(e.phone||e.from||e.to||'-')}</span><span class="ev-message">${wabotEsc(e.message||e.text||e.status||e.event||'-')}</span><span class="ev-time">${d?d.toLocaleString('ms-MY'):'-'}</span></div>`}).join('');
+function renderWabotLive() {
+  const c = wabotCounts();
+
+  [
+    ['wl-sent', c.sent],
+    ['wl-delivered', c.delivered],
+    ['wl-read', c.read],
+    ['wl-reply', c.reply],
+    ['wl-failed', c.failed]
+  ].forEach(([id, v]) => {
+    const x = document.getElementById(id);
+    if (x) x.textContent = fmt(v);
+  });
+
+  const badge = document.getElementById('wabot-live-status');
+  if (badge) {
+    const usefulCount = allWabotEvents.filter(isUsefulWabotEvent).length;
+    badge.textContent = usefulCount
+      ? `${fmt(usefulCount)} event berguna diterima`
+      : 'Menunggu webhook';
+  }
+
+  const dir =
+    (document.getElementById('wl-filter-direction') || {}).value || '';
+
+  const q =
+    ((document.getElementById('wl-filter-phone') || {}).value || '')
+      .toLowerCase()
+      .trim();
+
+  // Feed utama hanya tunjuk event yang benar-benar berguna.
+  // Event seperti WEBHOOK, NEW SUBSCRIBER dan [object Object] disorok.
+  const filtered = allWabotEvents
+    .filter(isUsefulWabotEvent)
+    .filter(e => {
+      const k = wabotEventKind(e);
+
+      const hay = `
+        ${e.phone || ''}
+        ${e.from || ''}
+        ${e.to || ''}
+        ${typeof e.message === 'string' ? e.message : ''}
+        ${typeof e.text === 'string' ? e.text : ''}
+        ${typeof e.status === 'string' ? e.status : ''}
+      `.toLowerCase();
+
+      return (!dir || k === dir) && (!q || hay.includes(q));
+    })
+    .slice(0, 150);
+
+  const feed = document.getElementById('wl-feed');
+  if (!feed) return;
+
+  if (!filtered.length) {
+    feed.innerHTML =
+      '<div class="empty-state">Belum ada event yang sepadan.</div>';
+    return;
+  }
+
+  feed.innerHTML = filtered.map(e => {
+    const k = wabotEventKind(e);
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+
+    const message =
+      typeof e.message === 'string'
+        ? e.message
+        : typeof e.text === 'string'
+          ? e.text
+          : typeof e.status === 'string'
+            ? e.status
+            : typeof e.event === 'string'
+              ? e.event
+              : '-';
+
+    return `
+      <div class="live-event ${wabotEsc(k)}">
+        <span class="ev-type">${wabotEsc(k)}</span>
+        <span class="ev-phone">${wabotEsc(e.phone || e.from || e.to || '-')}</span>
+        <span class="ev-message">${wabotEsc(message)}</span>
+        <span class="ev-time">${d ? d.toLocaleString('ms-MY') : '-'}</span>
+      </div>
+    `;
+  }).join('');
 }
 ['wl-filter-direction','wl-filter-phone'].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener(id.includes('phone')?'input':'change',renderWabotLive)});
 const wlRefresh=document.getElementById('wl-refresh'); if(wlRefresh) wlRefresh.onclick=renderWabotModules;
