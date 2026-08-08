@@ -1870,23 +1870,7 @@ function wabotEventKind(e) {
 }
 
 function isUsefulWabotEvent(e) {
-  const eventName = String(e.event || e.type || '').toLowerCase().trim();
-
-  // Buang event housekeeping/noise yang bukan lifecycle mesej.
-  if (
-    eventName === 'webhook' ||
-    eventName === 'new subscriber' ||
-    eventName === 'subscriber' ||
-    eventName === 'connection' ||
-    eventName === 'connected' ||
-    eventName === 'disconnected'
-  ) {
-    return false;
-  }
-
   const k = wabotEventKind(e);
-
-  // Pastikan hanya lifecycle mesej sebenar dipaparkan.
   return ['incoming', 'outgoing', 'delivered', 'read', 'failed'].includes(k);
 }
 function startWabotListener() {
@@ -1957,91 +1941,9 @@ function wabotCounts() {
 
   return c;
 }
-
-function wabotMessageJourneys() {
-  const journeys = new Map();
-
-  allWabotEvents
-    .filter(isUsefulWabotEvent)
-    .forEach(e => {
-      const k = wabotEventKind(e);
-      const messageId = e.messageId || e.message_id || null;
-      const phone = e.phone || e.from || e.to || '-';
-      const eventTime = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
-      const timeKey = eventTime ? eventTime.getTime() : '';
-
-      // Untuk outgoing lifecycle, messageId akan gabungkan sent/delivered/read
-      // kepada journey mesej yang sama.
-      const baseKey = messageId || `${phone}_${timeKey}_${k}`;
-
-      if (!journeys.has(baseKey)) {
-        journeys.set(baseKey, {
-          key: baseKey,
-          messageId,
-          phone,
-          sent: false,
-          delivered: false,
-          read: false,
-          failed: false,
-          incoming: false,
-          firstAt: eventTime || null,
-          lastAt: eventTime || null
-        });
-      }
-
-      const j = journeys.get(baseKey);
-
-      if (k === 'outgoing') j.sent = true;
-      if (k === 'delivered') j.delivered = true;
-      if (k === 'read') j.read = true;
-      if (k === 'failed') j.failed = true;
-      if (k === 'incoming') j.incoming = true;
-
-      if (eventTime) {
-        if (!j.firstAt || eventTime < j.firstAt) j.firstAt = eventTime;
-        if (!j.lastAt || eventTime > j.lastAt) j.lastAt = eventTime;
-      }
-    });
-
-  return [...journeys.values()];
-}
-
-function wabotJourneyStats() {
-  const journeys = wabotMessageJourneys();
-
-  // Journey outgoing sahaja untuk delivery/read rate.
-  const outgoing = journeys.filter(j => j.sent || j.delivered || j.read || j.failed);
-
-  const sent = outgoing.filter(j => j.sent).length;
-  const delivered = outgoing.filter(j => j.delivered).length;
-  const read = outgoing.filter(j => j.read).length;
-  const failed = outgoing.filter(j => j.failed).length;
-
-  // Incoming masih dikira sebagai mesej reply unik.
-  const replyIds = new Set();
-  allWabotEvents
-    .filter(e => isUsefulWabotEvent(e) && wabotEventKind(e) === 'incoming')
-    .forEach(e => {
-      const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
-      replyIds.add(
-        e.messageId ||
-        e.message_id ||
-        `${e.phone || e.from || '-'}_${d ? d.getTime() : ''}_${typeof e.message === 'string' ? e.message : ''}`
-      );
-    });
-
-  return {
-    sent,
-    delivered,
-    read,
-    failed,
-    reply: replyIds.size
-  };
-}
-
 function renderWabotModules(){ renderWabotLive(); renderAnalyticsPro(); renderCampaignManager(); renderAIInsight(); }
 function renderWabotLive() {
-  const c = wabotJourneyStats();
+  const c = wabotCounts();
 
   [
     ['wl-sent', c.sent],
@@ -2058,7 +1960,7 @@ function renderWabotLive() {
   if (badge) {
     const usefulCount = allWabotEvents.filter(isUsefulWabotEvent).length;
     badge.textContent = usefulCount
-      ? `${fmt(usefulCount)} event mesej diterima`
+      ? `${fmt(usefulCount)} event berguna diterima`
       : 'Menunggu webhook';
   }
 
@@ -2073,7 +1975,7 @@ function renderWabotLive() {
   // Feed utama hanya tunjuk event yang benar-benar berguna.
   // Event seperti WEBHOOK, NEW SUBSCRIBER dan [object Object] disorok.
   const filtered = allWabotEvents
-    .filter(e => isUsefulWabotEvent(e))
+    .filter(isUsefulWabotEvent)
     .filter(e => {
       const k = wabotEventKind(e);
 
@@ -2133,25 +2035,229 @@ function renderBars(id, rows, valueKey='value'){
   el.innerHTML=rows.slice(0,10).map(r=>`<div class="bar-row"><span>${wabotEsc(r.label)}</span><span class="bar-track"><span class="bar-fill" style="display:block;width:${Math.max(2,Number(r[valueKey]||0)/max*100)}%"></span></span><span class="bar-value">${wabotEsc(r.display ?? fmt(r[valueKey]))}</span></div>`).join('');
 }
 function groupEvents(fieldFn, filterFn=()=>true){ const m={}; allWabotEvents.filter(filterFn).forEach(e=>{const k=fieldFn(e)||'Tidak Diketahui';m[k]=(m[k]||0)+1}); return Object.entries(m).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value); }
-function renderAnalyticsPro(){
-  const c=wabotJourneyStats();
-  const sent=Math.max(c.sent,1);
-  const rr=c.sent?c.reply/c.sent*100:0, dr=c.sent?c.delivered/c.sent*100:0, readr=c.sent?c.read/c.sent*100:0;
-  const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
-  set('ap-reply-rate',rr.toFixed(1)+'%'); set('ap-delivery-rate',dr.toFixed(1)+'%'); set('ap-read-rate',readr.toFixed(1)+'%');
-  const buyers=(allEntries||[]).reduce((s,e)=>s+Number(e.buyer||0),0), sales=(allEntries||[]).reduce((s,e)=>s+Number(e.sales||0),0); set('ap-buyers',fmt(buyers)); set('ap-sales','RM '+fmt(sales));
-  const funnel=[['Sent',c.sent],['Delivered',c.delivered],['Read',c.read],['Reply',c.reply],['Buyer (CRM)',buyers]]; const max=Math.max(...funnel.map(x=>x[1]),1); const fe=document.getElementById('ap-funnel'); if(fe)fe.innerHTML=funnel.map(([l,v])=>`<div class="funnel-row"><span>${l}</span><span class="funnel-track"><span class="funnel-fill" style="display:block;width:${Math.max(v?2:0,v/max*100)}%"></span></span><span class="funnel-value">${fmt(v)}</span></div>`).join('');
-  const hours=groupEvents(e=>{const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt); return d?String(d.getHours()).padStart(2,'0')+':00':null},e=>wabotEventKind(e)==='incoming'); renderBars('ap-hours',hours);
-  renderBars('ap-accounts',groupEvents(e=>e.instanceName||e.instance||e.instance_id||'Tidak Diketahui'));
-  renderBars('ap-scripts',groupEvents(e=>e.script||e.template||e.templateName||'Tidak Diketahui',e=>wabotEventKind(e)==='incoming'));
-  const staff={}; (allEntries||[]).forEach(e=>{const n=e.staffName||'Tidak Diketahui';if(!staff[n])staff[n]={sent:0,reply:0,buyer:0,sales:0};staff[n].sent+=Number(e.sent||0);staff[n].reply+=Number(e.reply||0);staff[n].buyer+=Number(e.buyer||0);staff[n].sales+=Number(e.sales||0)}); renderBars('ap-staff',Object.entries(staff).map(([label,v])=>({label,value:v.buyer,display:`${fmt(v.buyer)} buyer · RM ${fmt(v.sales)}`})).sort((a,b)=>b.value-a.value));
+// ============================================================
+// ANALYTICS PRO — live Wabot analytics dengan range filter
+// ============================================================
+function aproRangeStart(value) {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  if (value === '7') {
+    start.setDate(start.getDate() - 6);
+  } else if (value === '30') {
+    start.setDate(start.getDate() - 29);
+  }
+  return start;
 }
+
+function aproFilteredEvents() {
+  const rangeEl = document.getElementById('apro-range');
+  const range = rangeEl ? rangeEl.value : 'today';
+  const start = aproRangeStart(range);
+
+  return allWabotEvents.filter(e => {
+    if (!isUsefulWabotEvent(e)) return false;
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    return d && d >= start;
+  });
+}
+
+function aproFilteredEntries() {
+  const rangeEl = document.getElementById('apro-range');
+  const range = rangeEl ? rangeEl.value : 'today';
+  const start = aproRangeStart(range);
+  const startStr = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+
+  return (allEntries || []).filter(e => !e.tarikh || e.tarikh >= startStr);
+}
+
+function wabotCountsFor(events) {
+  const c = { sent:0, delivered:0, read:0, reply:0, failed:0 };
+  const seen = {
+    sent:new Set(), delivered:new Set(), read:new Set(), reply:new Set(), failed:new Set()
+  };
+
+  events.forEach(e => {
+    const k = wabotEventKind(e);
+    if (!['outgoing','incoming','delivered','read','failed'].includes(k)) return;
+
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    const key = e.messageId || e.message_id ||
+      `${e.phone || e.from || e.to || '-'}_${d ? d.getTime() : ''}_${k}_${typeof e.message === 'string' ? e.message : ''}`;
+
+    if (k === 'outgoing' && !seen.sent.has(key)) { seen.sent.add(key); c.sent++; }
+    else if (k === 'delivered' && !seen.delivered.has(key)) { seen.delivered.add(key); c.delivered++; }
+    else if (k === 'read' && !seen.read.has(key)) { seen.read.add(key); c.read++; }
+    else if (k === 'incoming' && !seen.reply.has(key)) { seen.reply.add(key); c.reply++; }
+    else if (k === 'failed' && !seen.failed.has(key)) { seen.failed.add(key); c.failed++; }
+  });
+  return c;
+}
+
+function aproSet(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function aproGroupLifecycle(events, fieldFn) {
+  const groups = {};
+  events.forEach(e => {
+    const label = fieldFn(e) || 'Tidak Diketahui';
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(e);
+  });
+  return Object.entries(groups).map(([label, rows]) => ({
+    label,
+    ...wabotCountsFor(rows)
+  }));
+}
+
+function renderAnalyticsPro() {
+  const events = aproFilteredEvents();
+  const c = wabotCountsFor(events);
+  const entries = aproFilteredEntries();
+
+  const deliveryRate = c.sent ? c.delivered / c.sent * 100 : 0;
+  const readRate = c.sent ? c.read / c.sent * 100 : 0;
+  const replyRate = c.sent ? c.reply / c.sent * 100 : 0;
+  const failedRate = c.sent ? c.failed / c.sent * 100 : 0;
+
+  aproSet('apro-sent', fmt(c.sent));
+  aproSet('apro-delivered', fmt(c.delivered));
+  aproSet('apro-read', fmt(c.read));
+  aproSet('apro-reply', fmt(c.reply));
+  aproSet('apro-failed', fmt(c.failed));
+  aproSet('apro-delivery-rate', deliveryRate.toFixed(1) + '% delivery rate');
+  aproSet('apro-read-rate', readRate.toFixed(1) + '% read rate');
+  aproSet('apro-reply-rate', replyRate.toFixed(1) + '% reply rate');
+  aproSet('apro-failed-rate', failedRate.toFixed(1) + '% failed rate');
+
+  const lastEvent = events
+    .map(e => wabotDate(e.eventAt) || wabotDate(e.receivedAt))
+    .filter(Boolean)
+    .sort((a,b) => b-a)[0];
+  aproSet('apro-last', lastEvent ? `Update ${lastEvent.toLocaleString('ms-MY')}` : 'Belum ada data');
+
+  // Funnel: buyer CRM kekal dari entries/manual tracking.
+  const buyers = entries.reduce((s,e) => s + Number(e.buyer || 0), 0);
+  const stages = [
+    ['Sent', c.sent],
+    ['Delivered', c.delivered],
+    ['Read', c.read],
+    ['Reply', c.reply],
+    ['Buyer (CRM)', buyers]
+  ];
+  const funnel = document.getElementById('apro-funnel');
+  if (funnel) {
+    const max = Math.max(...stages.map(x => x[1]), 1);
+    funnel.innerHTML = stages.map(([label, value]) => {
+      const pctSent = c.sent ? value / c.sent * 100 : 0;
+      const width = Math.max(value ? 3 : 0, value / max * 100);
+      return `<div class="apro-funnel-row">
+        <span>${wabotEsc(label)}</span>
+        <span class="apro-funnel-track"><span class="apro-funnel-fill" style="display:block;width:${width}%"></span></span>
+        <span class="num">${fmt(value)} <small>${label === 'Sent' ? '100%' : pctSent.toFixed(1)+'%'}</small></span>
+      </div>`;
+    }).join('');
+  }
+
+  // Heatmap reply 24 jam.
+  const byHour = Array.from({length:24}, (_,hour) => ({hour, count:0}));
+  events.filter(e => wabotEventKind(e) === 'incoming').forEach(e => {
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    if (d) byHour[d.getHours()].count++;
+  });
+  const heatmap = document.getElementById('apro-heatmap');
+  if (heatmap) {
+    const maxHour = Math.max(...byHour.map(h => h.count), 1);
+    heatmap.innerHTML = byHour.map(h => {
+      const w = h.count ? Math.max(6, h.count/maxHour*100) : 0;
+      return `<div class="apro-hour"><span>${String(h.hour).padStart(2,'0')}</span><span class="apro-hour-bar"><i style="width:${w}%"></i></span><b>${fmt(h.count)}</b></div>`;
+    }).join('');
+  }
+
+  // Live Reply.
+  const replies = events
+    .filter(e => wabotEventKind(e) === 'incoming')
+    .sort((a,b) => {
+      const da = wabotDate(a.eventAt) || wabotDate(a.receivedAt) || new Date(0);
+      const dbb = wabotDate(b.eventAt) || wabotDate(b.receivedAt) || new Date(0);
+      return dbb - da;
+    });
+  aproSet('apro-live-reply-count', `${fmt(replies.length)} reply`);
+  const replyBody = document.getElementById('apro-live-replies');
+  if (replyBody) {
+    if (!replies.length) {
+      replyBody.innerHTML = '<tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr>';
+    } else {
+      replyBody.innerHTML = replies.slice(0,30).map(e => {
+        const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+        const msg = typeof e.message === 'string' ? e.message : (typeof e.text === 'string' ? e.text : '-');
+        const campaign = e.campaign || e.campaignName || e.broadcast || e.broadcastName || '-';
+        const account = e.instanceName || e.instance || e.instance_id || '-';
+        return `<tr>
+          <td style="font-size:11px;white-space:nowrap;">${d ? d.toLocaleString('ms-MY') : '-'}</td>
+          <td class="tname">${wabotEsc(e.phone || e.from || e.to || '-')}</td>
+          <td>${wabotEsc(msg)}</td>
+          <td>${wabotEsc(campaign)}</td>
+          <td style="font-size:11px;">${wabotEsc(account)}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // Performance Akaun Wabot.
+  const accounts = aproGroupLifecycle(events, e => e.instanceName || e.instance || e.instance_id || 'Tidak Diketahui')
+    .sort((a,b) => b.sent - a.sent || b.reply - a.reply);
+  const accountBody = document.getElementById('apro-account-body');
+  if (accountBody) {
+    accountBody.innerHTML = accounts.length ? accounts.map(a => {
+      const rr = a.sent ? a.reply/a.sent*100 : 0;
+      return `<tr><td class="tname">${wabotEsc(a.label)}</td><td class="num">${fmt(a.sent)}</td><td class="num">${fmt(a.reply)}</td><td class="num">${rr.toFixed(1)}%</td><td class="num">${fmt(a.read)}</td><td class="num">${fmt(a.failed)}</td></tr>`;
+    }).join('') : '<tr><td colspan="6" class="empty-state">Belum ada data akaun.</td></tr>';
+  }
+
+  // Performance Script / Template.
+  const scripts = aproGroupLifecycle(events, e => e.script || e.template || e.templateName || 'Tidak Diketahui')
+    .sort((a,b) => b.reply - a.reply || b.sent - a.sent);
+  const scriptBody = document.getElementById('apro-script-body');
+  if (scriptBody) {
+    scriptBody.innerHTML = scripts.length ? scripts.map(s => {
+      const rr = s.sent ? s.reply/s.sent*100 : 0;
+      return `<tr><td class="tname">${wabotEsc(s.label)}</td><td class="num">${fmt(s.sent)}</td><td class="num">${fmt(s.reply)}</td><td class="num">${rr.toFixed(1)}%</td><td class="num">${fmt(s.read)}</td></tr>`;
+    }).join('') : '<tr><td colspan="5" class="empty-state">Webhook belum membawa metadata script/template.</td></tr>';
+  }
+
+  // Performance Staff masih guna data entries CRM sedia ada.
+  const staff = {};
+  entries.forEach(e => {
+    const name = e.staffName || 'Tidak Diketahui';
+    if (!staff[name]) staff[name] = {sent:0, reply:0};
+    staff[name].sent += Number(e.sent || 0);
+    staff[name].reply += Number(e.reply || 0);
+  });
+  const staffRows = Object.entries(staff)
+    .map(([label,v]) => ({label, ...v}))
+    .sort((a,b) => b.reply - a.reply || b.sent - a.sent);
+  const staffBody = document.getElementById('apro-staff-body');
+  if (staffBody) {
+    staffBody.innerHTML = staffRows.length ? staffRows.map(s => {
+      const rr = s.sent ? s.reply/s.sent*100 : 0;
+      return `<tr><td class="tname">${wabotEsc(s.label)}</td><td class="num">${fmt(s.sent)}</td><td class="num">${fmt(s.reply)}</td><td class="num">${rr.toFixed(1)}%</td></tr>`;
+    }).join('') : '<tr><td colspan="4" class="empty-state">Belum ada data staff dalam entries CRM.</td></tr>';
+  }
+}
+
+const aproRange = document.getElementById('apro-range');
+if (aproRange) aproRange.addEventListener('change', renderAnalyticsPro);
+
 function renderCampaignManager(){
   const map={}; allWabotEvents.forEach(e=>{const campaign=e.campaign||e.campaignName||e.broadcast||e.broadcastName||'Tanpa Campaign', script=e.script||e.template||e.templateName||'-', account=e.instanceName||e.instance||e.instance_id||'-', k=wabotEventKind(e); const key=[campaign,script,account].join('||'); if(!map[key])map[key]={campaign,script,account,sent:0,reply:0,hours:{}}; if(k==='outgoing')map[key].sent++; if(k==='incoming'){map[key].reply++;const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt);if(d){const h=String(d.getHours()).padStart(2,'0')+':00';map[key].hours[h]=(map[key].hours[h]||0)+1}} });
   const rows=Object.values(map).sort((a,b)=>b.sent-a.sent); const body=document.getElementById('cm-body'), count=document.getElementById('cm-count'); if(count)count.textContent=`${rows.length} campaign`; if(!body)return; if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty-state">Belum ada data campaign.</td></tr>';return;} body.innerHTML=rows.map(r=>{const best=Object.entries(r.hours).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-', rate=r.sent?r.reply/r.sent*100:0; return `<tr><td class="tname">${wabotEsc(r.campaign)}</td><td>${wabotEsc(r.script)}</td><td>${wabotEsc(r.account)}</td><td class="num">${fmt(r.sent)}</td><td class="num">${fmt(r.reply)}</td><td class="num">${rate.toFixed(1)}%</td><td>${best}</td></tr>`}).join('');
 }
 function renderAIInsight(){
-  const c=wabotJourneyStats(), rr=c.sent?c.reply/c.sent*100:0;
+  const c=wabotCounts(), rr=c.sent?c.reply/c.sent*100:0;
   const hours=groupEvents(e=>{const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt);return d?String(d.getHours()).padStart(2,'0')+':00':null},e=>wabotEventKind(e)==='incoming'); const bestHour=hours[0];
   const scripts=groupEvents(e=>e.script||e.template||e.templateName||null,e=>wabotEventKind(e)==='incoming' && !!(e.script||e.template||e.templateName)); const bestScript=scripts[0];
   const accounts=groupEvents(e=>e.instanceName||e.instance||e.instance_id||null,e=>wabotEventKind(e)==='incoming'); const bestAcc=accounts[0];
