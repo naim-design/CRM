@@ -2095,6 +2095,66 @@ function wabotCountsFor(events) {
   return c;
 }
 
+
+function normalizeWabotPhone(v) {
+  return String(v || '').replace(/\D/g, '');
+}
+
+function wabotAudienceStats(events) {
+  const contacted = new Set();
+  const repliers = new Set();
+  const replyMessages = new Set();
+
+  events
+    .filter(isUsefulWabotEvent)
+    .forEach(e => {
+      const k = wabotEventKind(e);
+      const phone = normalizeWabotPhone(e.phone || e.to || e.from);
+      const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+
+      if (k === 'outgoing' && phone) {
+        contacted.add(phone);
+      }
+
+      if (k === 'incoming') {
+        if (phone) repliers.add(phone);
+        replyMessages.add(
+          e.messageId ||
+          e.message_id ||
+          `${phone || '-'}_${d ? d.getTime() : ''}_${typeof e.message === 'string' ? e.message : ''}`
+        );
+      }
+    });
+
+  const uniqueContacted = contacted.size;
+  const uniqueRepliers = repliers.size;
+  const replyMessageCount = replyMessages.size;
+  const replyRate = uniqueContacted ? (uniqueRepliers / uniqueContacted * 100) : 0;
+
+  return {
+    uniqueContacted,
+    uniqueRepliers,
+    replyMessages: replyMessageCount,
+    replyRate
+  };
+}
+
+function aproGroupAudience(events, fieldFn) {
+  const groups = {};
+
+  events.forEach(e => {
+    const label = fieldFn(e) || 'Tidak Diketahui';
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(e);
+  });
+
+  return Object.entries(groups).map(([label, rows]) => ({
+    label,
+    counts: wabotCountsFor(rows),
+    audience: wabotAudienceStats(rows)
+  }));
+}
+
 function aproSet(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;
@@ -2116,64 +2176,104 @@ function aproGroupLifecycle(events, fieldFn) {
 function renderAnalyticsPro() {
   const events = aproFilteredEvents();
   const c = wabotCountsFor(events);
+  const audience = wabotAudienceStats(events);
   const entries = aproFilteredEntries();
 
   const deliveryRate = c.sent ? c.delivered / c.sent * 100 : 0;
   const readRate = c.sent ? c.read / c.sent * 100 : 0;
-  const replyRate = c.sent ? c.reply / c.sent * 100 : 0;
+  const replyRate = audience.replyRate;
   const failedRate = c.sent ? c.failed / c.sent * 100 : 0;
 
   aproSet('apro-sent', fmt(c.sent));
   aproSet('apro-delivered', fmt(c.delivered));
   aproSet('apro-read', fmt(c.read));
-  aproSet('apro-reply', fmt(c.reply));
+  aproSet('apro-reply', fmt(audience.uniqueRepliers));
   aproSet('apro-failed', fmt(c.failed));
+
   aproSet('apro-delivery-rate', deliveryRate.toFixed(1) + '% delivery rate');
   aproSet('apro-read-rate', readRate.toFixed(1) + '% read rate');
-  aproSet('apro-reply-rate', replyRate.toFixed(1) + '% reply rate');
+  aproSet('apro-reply-rate', replyRate.toFixed(1) + '% unique reply rate');
   aproSet('apro-failed-rate', failedRate.toFixed(1) + '% failed rate');
+
+  aproSet('apro-unique-contacted', fmt(audience.uniqueContacted));
+  aproSet('apro-reply-messages', fmt(audience.replyMessages));
+  aproSet('apro-unique-repliers', fmt(audience.uniqueRepliers));
 
   const lastEvent = events
     .map(e => wabotDate(e.eventAt) || wabotDate(e.receivedAt))
     .filter(Boolean)
     .sort((a,b) => b-a)[0];
-  aproSet('apro-last', lastEvent ? `Update ${lastEvent.toLocaleString('ms-MY')}` : 'Belum ada data');
 
-  // Funnel: buyer CRM kekal dari entries/manual tracking.
+  aproSet(
+    'apro-last',
+    lastEvent ? `Update ${lastEvent.toLocaleString('ms-MY')}` : 'Belum ada data'
+  );
+
+  // Funnel utama guna unique customer supaya Reply Rate tak melebihi 100%.
   const buyers = entries.reduce((s,e) => s + Number(e.buyer || 0), 0);
+
   const stages = [
-    ['Sent', c.sent],
+    ['Sent Msg', c.sent],
     ['Delivered', c.delivered],
     ['Read', c.read],
-    ['Reply', c.reply],
+    ['Unique Contacted', audience.uniqueContacted],
+    ['Unique Reply', audience.uniqueRepliers],
     ['Buyer (CRM)', buyers]
   ];
+
   const funnel = document.getElementById('apro-funnel');
   if (funnel) {
     const max = Math.max(...stages.map(x => x[1]), 1);
+
     funnel.innerHTML = stages.map(([label, value]) => {
-      const pctSent = c.sent ? value / c.sent * 100 : 0;
+      let pct = 0;
+
+      if (label === 'Unique Reply') {
+        pct = audience.uniqueContacted
+          ? value / audience.uniqueContacted * 100
+          : 0;
+      } else if (label === 'Buyer (CRM)') {
+        pct = audience.uniqueRepliers
+          ? value / audience.uniqueRepliers * 100
+          : 0;
+      } else {
+        pct = c.sent ? value / c.sent * 100 : 0;
+      }
+
       const width = Math.max(value ? 3 : 0, value / max * 100);
+
       return `<div class="apro-funnel-row">
         <span>${wabotEsc(label)}</span>
-        <span class="apro-funnel-track"><span class="apro-funnel-fill" style="display:block;width:${width}%"></span></span>
-        <span class="num">${fmt(value)} <small>${label === 'Sent' ? '100%' : pctSent.toFixed(1)+'%'}</small></span>
+        <span class="apro-funnel-track">
+          <span class="apro-funnel-fill" style="display:block;width:${Math.min(width,100)}%"></span>
+        </span>
+        <span class="num">${fmt(value)} <small>${pct.toFixed(1)}%</small></span>
       </div>`;
     }).join('');
   }
 
-  // Heatmap reply 24 jam.
+  // Heatmap reply 24 jam — semua mesej reply.
   const byHour = Array.from({length:24}, (_,hour) => ({hour, count:0}));
-  events.filter(e => wabotEventKind(e) === 'incoming').forEach(e => {
-    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
-    if (d) byHour[d.getHours()].count++;
-  });
+
+  events
+    .filter(e => wabotEventKind(e) === 'incoming')
+    .forEach(e => {
+      const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+      if (d) byHour[d.getHours()].count++;
+    });
+
   const heatmap = document.getElementById('apro-heatmap');
   if (heatmap) {
     const maxHour = Math.max(...byHour.map(h => h.count), 1);
+
     heatmap.innerHTML = byHour.map(h => {
       const w = h.count ? Math.max(6, h.count/maxHour*100) : 0;
-      return `<div class="apro-hour"><span>${String(h.hour).padStart(2,'0')}</span><span class="apro-hour-bar"><i style="width:${w}%"></i></span><b>${fmt(h.count)}</b></div>`;
+
+      return `<div class="apro-hour">
+        <span>${String(h.hour).padStart(2,'0')}</span>
+        <span class="apro-hour-bar"><i style="width:${w}%"></i></span>
+        <b>${fmt(h.count)}</b>
+      </div>`;
     }).join('');
   }
 
@@ -2185,19 +2285,45 @@ function renderAnalyticsPro() {
       const dbb = wabotDate(b.eventAt) || wabotDate(b.receivedAt) || new Date(0);
       return dbb - da;
     });
-  aproSet('apro-live-reply-count', `${fmt(replies.length)} reply`);
+
+  aproSet(
+    'apro-live-reply-count',
+    `${fmt(audience.uniqueRepliers)} customer · ${fmt(audience.replyMessages)} mesej`
+  );
+
   const replyBody = document.getElementById('apro-live-replies');
+
   if (replyBody) {
     if (!replies.length) {
-      replyBody.innerHTML = '<tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr>';
+      replyBody.innerHTML =
+        '<tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr>';
     } else {
       replyBody.innerHTML = replies.slice(0,30).map(e => {
         const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
-        const msg = typeof e.message === 'string' ? e.message : (typeof e.text === 'string' ? e.text : '-');
-        const campaign = e.campaign || e.campaignName || e.broadcast || e.broadcastName || '-';
-        const account = e.instanceName || e.instance || e.instance_id || '-';
+        const msg =
+          typeof e.message === 'string'
+            ? e.message
+            : typeof e.text === 'string'
+              ? e.text
+              : '-';
+
+        const campaign =
+          e.campaign ||
+          e.campaignName ||
+          e.broadcast ||
+          e.broadcastName ||
+          '-';
+
+        const account =
+          e.instanceName ||
+          e.instance ||
+          e.instance_id ||
+          '-';
+
         return `<tr>
-          <td style="font-size:11px;white-space:nowrap;">${d ? d.toLocaleString('ms-MY') : '-'}</td>
+          <td style="font-size:11px;white-space:nowrap;">
+            ${d ? d.toLocaleString('ms-MY') : '-'}
+          </td>
           <td class="tname">${wabotEsc(e.phone || e.from || e.to || '-')}</td>
           <td>${wabotEsc(msg)}</td>
           <td>${wabotEsc(campaign)}</td>
@@ -2207,62 +2333,218 @@ function renderAnalyticsPro() {
     }
   }
 
-  // Performance Akaun Wabot.
-  const accounts = aproGroupLifecycle(events, e => e.instanceName || e.instance || e.instance_id || 'Tidak Diketahui')
-    .sort((a,b) => b.sent - a.sent || b.reply - a.reply);
+  // Performance Akaun Wabot — guna unique customer reply.
+  const accounts = aproGroupAudience(
+    events,
+    e => e.instanceName || e.instance || e.instance_id || 'Tidak Diketahui'
+  ).sort((a,b) =>
+    b.audience.uniqueRepliers - a.audience.uniqueRepliers ||
+    b.counts.sent - a.counts.sent
+  );
+
   const accountBody = document.getElementById('apro-account-body');
+
   if (accountBody) {
-    accountBody.innerHTML = accounts.length ? accounts.map(a => {
-      const rr = a.sent ? a.reply/a.sent*100 : 0;
-      return `<tr><td class="tname">${wabotEsc(a.label)}</td><td class="num">${fmt(a.sent)}</td><td class="num">${fmt(a.reply)}</td><td class="num">${rr.toFixed(1)}%</td><td class="num">${fmt(a.read)}</td><td class="num">${fmt(a.failed)}</td></tr>`;
-    }).join('') : '<tr><td colspan="6" class="empty-state">Belum ada data akaun.</td></tr>';
+    accountBody.innerHTML = accounts.length
+      ? accounts.map(a => {
+          const rr = a.audience.replyRate;
+
+          return `<tr>
+            <td class="tname">${wabotEsc(a.label)}</td>
+            <td class="num">${fmt(a.counts.sent)}</td>
+            <td class="num">${fmt(a.audience.uniqueContacted)}</td>
+            <td class="num">${fmt(a.audience.uniqueRepliers)}</td>
+            <td class="num">${rr.toFixed(1)}%</td>
+            <td class="num">${fmt(a.counts.read)}</td>
+            <td class="num">${fmt(a.counts.failed)}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="7" class="empty-state">Belum ada data akaun.</td></tr>';
   }
 
-  // Performance Script / Template.
-  const scripts = aproGroupLifecycle(events, e => e.script || e.template || e.templateName || 'Tidak Diketahui')
-    .sort((a,b) => b.reply - a.reply || b.sent - a.sent);
+  // Performance Script / Template A/B/C.
+  const scripts = aproGroupAudience(
+    events,
+    e => e.script || e.template || e.templateName || 'Tidak Diketahui'
+  ).sort((a,b) =>
+    b.audience.replyRate - a.audience.replyRate ||
+    b.audience.uniqueRepliers - a.audience.uniqueRepliers
+  );
+
   const scriptBody = document.getElementById('apro-script-body');
+
   if (scriptBody) {
-    scriptBody.innerHTML = scripts.length ? scripts.map(s => {
-      const rr = s.sent ? s.reply/s.sent*100 : 0;
-      return `<tr><td class="tname">${wabotEsc(s.label)}</td><td class="num">${fmt(s.sent)}</td><td class="num">${fmt(s.reply)}</td><td class="num">${rr.toFixed(1)}%</td><td class="num">${fmt(s.read)}</td></tr>`;
-    }).join('') : '<tr><td colspan="5" class="empty-state">Webhook belum membawa metadata script/template.</td></tr>';
+    scriptBody.innerHTML = scripts.length
+      ? scripts.map(s => {
+          return `<tr>
+            <td class="tname">${wabotEsc(s.label)}</td>
+            <td class="num">${fmt(s.counts.sent)}</td>
+            <td class="num">${fmt(s.audience.uniqueContacted)}</td>
+            <td class="num">${fmt(s.audience.uniqueRepliers)}</td>
+            <td class="num">${s.audience.replyRate.toFixed(1)}%</td>
+            <td class="num">${fmt(s.counts.read)}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="6" class="empty-state">Webhook belum membawa metadata script/template.</td></tr>';
   }
 
   // Performance Staff masih guna data entries CRM sedia ada.
   const staff = {};
+
   entries.forEach(e => {
     const name = e.staffName || 'Tidak Diketahui';
-    if (!staff[name]) staff[name] = {sent:0, reply:0};
+
+    if (!staff[name]) {
+      staff[name] = {sent:0, reply:0, buyer:0, sales:0};
+    }
+
     staff[name].sent += Number(e.sent || 0);
     staff[name].reply += Number(e.reply || 0);
+    staff[name].buyer += Number(e.buyer || 0);
+    staff[name].sales += Number(e.sales || 0);
   });
+
   const staffRows = Object.entries(staff)
     .map(([label,v]) => ({label, ...v}))
-    .sort((a,b) => b.reply - a.reply || b.sent - a.sent);
+    .sort((a,b) => b.buyer - a.buyer || b.reply - a.reply);
+
   const staffBody = document.getElementById('apro-staff-body');
+
   if (staffBody) {
-    staffBody.innerHTML = staffRows.length ? staffRows.map(s => {
-      const rr = s.sent ? s.reply/s.sent*100 : 0;
-      return `<tr><td class="tname">${wabotEsc(s.label)}</td><td class="num">${fmt(s.sent)}</td><td class="num">${fmt(s.reply)}</td><td class="num">${rr.toFixed(1)}%</td></tr>`;
-    }).join('') : '<tr><td colspan="4" class="empty-state">Belum ada data staff dalam entries CRM.</td></tr>';
+    staffBody.innerHTML = staffRows.length
+      ? staffRows.map(s => {
+          const rr = s.sent ? s.reply/s.sent*100 : 0;
+
+          return `<tr>
+            <td class="tname">${wabotEsc(s.label)}</td>
+            <td class="num">${fmt(s.sent)}</td>
+            <td class="num">${fmt(s.reply)}</td>
+            <td class="num">${rr.toFixed(1)}%</td>
+            <td class="num">${fmt(s.buyer)}</td>
+            <td class="num">${s.sales ? 'RM '+fmt(s.sales) : '-'}</td>
+          </tr>`;
+        }).join('')
+      : '<tr><td colspan="6" class="empty-state">Belum ada data staff dalam entries CRM.</td></tr>';
   }
 }
-
 const aproRange = document.getElementById('apro-range');
 if (aproRange) aproRange.addEventListener('change', renderAnalyticsPro);
 
-function renderCampaignManager(){
-  const map={}; allWabotEvents.forEach(e=>{const campaign=e.campaign||e.campaignName||e.broadcast||e.broadcastName||'Tanpa Campaign', script=e.script||e.template||e.templateName||'-', account=e.instanceName||e.instance||e.instance_id||'-', k=wabotEventKind(e); const key=[campaign,script,account].join('||'); if(!map[key])map[key]={campaign,script,account,sent:0,reply:0,hours:{}}; if(k==='outgoing')map[key].sent++; if(k==='incoming'){map[key].reply++;const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt);if(d){const h=String(d.getHours()).padStart(2,'0')+':00';map[key].hours[h]=(map[key].hours[h]||0)+1}} });
-  const rows=Object.values(map).sort((a,b)=>b.sent-a.sent); const body=document.getElementById('cm-body'), count=document.getElementById('cm-count'); if(count)count.textContent=`${rows.length} campaign`; if(!body)return; if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty-state">Belum ada data campaign.</td></tr>';return;} body.innerHTML=rows.map(r=>{const best=Object.entries(r.hours).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-', rate=r.sent?r.reply/r.sent*100:0; return `<tr><td class="tname">${wabotEsc(r.campaign)}</td><td>${wabotEsc(r.script)}</td><td>${wabotEsc(r.account)}</td><td class="num">${fmt(r.sent)}</td><td class="num">${fmt(r.reply)}</td><td class="num">${rate.toFixed(1)}%</td><td>${best}</td></tr>`}).join('');
+function campaignRangeStart(range) {
+  const now = new Date();
+  const d = new Date(now);
+
+  if (range === 'today') {
+    d.setHours(0,0,0,0);
+    return d;
+  }
+
+  const days = Number(range || 7);
+  d.setDate(d.getDate() - Math.max(days - 1, 0));
+  d.setHours(0,0,0,0);
+  return d;
 }
+
+function renderCampaignManager(){
+  const rangeEl = document.getElementById('campaign-range');
+  const start = campaignRangeStart(rangeEl ? rangeEl.value : 'today');
+
+  const events = allWabotEvents.filter(e => {
+    if (!isUsefulWabotEvent(e)) return false;
+    const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+    return d && d >= start;
+  });
+
+  const groups = {};
+
+  events.forEach(e => {
+    const campaign =
+      e.campaign ||
+      e.campaignName ||
+      e.broadcast ||
+      e.broadcastName ||
+      'Tanpa Campaign';
+
+    if (!groups[campaign]) groups[campaign] = [];
+    groups[campaign].push(e);
+  });
+
+  const rows = Object.entries(groups).map(([campaign, rows]) => {
+    const c = wabotCountsFor(rows);
+    const audience = wabotAudienceStats(rows);
+
+    const hours = {};
+    rows
+      .filter(e => wabotEventKind(e) === 'incoming')
+      .forEach(e => {
+        const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+        if (!d) return;
+        const h = String(d.getHours()).padStart(2,'0') + ':00';
+        hours[h] = (hours[h] || 0) + 1;
+      });
+
+    const bestHour =
+      Object.entries(hours).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
+
+    return {
+      campaign,
+      sent: c.sent,
+      delivered: c.delivered,
+      read: c.read,
+      replyMessages: audience.replyMessages,
+      uniqueContacted: audience.uniqueContacted,
+      uniqueReply: audience.uniqueRepliers,
+      replyRate: audience.replyRate,
+      failed: c.failed,
+      bestHour
+    };
+  }).sort((a,b) =>
+    b.replyRate - a.replyRate ||
+    b.uniqueReply - a.uniqueReply ||
+    b.sent - a.sent
+  );
+
+  const count = document.getElementById('campaign-count');
+  if (count) count.textContent = `${rows.length} campaign`;
+
+  const body = document.getElementById('campaign-body');
+  if (!body) return;
+
+  if (!rows.length) {
+    body.innerHTML =
+      '<tr><td colspan="10" class="empty-state">Belum ada campaign metadata.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = rows.map(r => {
+    const deliveryRate = r.sent ? r.delivered/r.sent*100 : 0;
+    const readRate = r.sent ? r.read/r.sent*100 : 0;
+
+    return `<tr>
+      <td class="tname">${wabotEsc(r.campaign)}</td>
+      <td class="num">${fmt(r.sent)}</td>
+      <td class="num">${deliveryRate.toFixed(1)}%</td>
+      <td class="num">${readRate.toFixed(1)}%</td>
+      <td class="num">${fmt(r.uniqueContacted)}</td>
+      <td class="num">${fmt(r.uniqueReply)}</td>
+      <td class="num">${r.replyRate.toFixed(1)}%</td>
+      <td class="num">${fmt(r.replyMessages)}</td>
+      <td class="num">${fmt(r.failed)}</td>
+      <td>${r.bestHour}</td>
+    </tr>`;
+  }).join('');
+}
+
+const campaignRange = document.getElementById('campaign-range');
+if (campaignRange) campaignRange.addEventListener('change', renderCampaignManager);
+
 function renderAIInsight(){
-  const c=wabotCounts(), rr=c.sent?c.reply/c.sent*100:0;
+  const c=wabotCounts(), audience=wabotAudienceStats(allWabotEvents), rr=audience.replyRate;
   const hours=groupEvents(e=>{const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt);return d?String(d.getHours()).padStart(2,'0')+':00':null},e=>wabotEventKind(e)==='incoming'); const bestHour=hours[0];
   const scripts=groupEvents(e=>e.script||e.template||e.templateName||null,e=>wabotEventKind(e)==='incoming' && !!(e.script||e.template||e.templateName)); const bestScript=scripts[0];
   const accounts=groupEvents(e=>e.instanceName||e.instance||e.instance_id||null,e=>wabotEventKind(e)==='incoming'); const bestAcc=accounts[0];
   const cards=[
-    ['Reply Rate',rr.toFixed(1)+'%', c.sent?`${fmt(c.reply)} reply daripada ${fmt(c.sent)} outgoing event.`:'Belum ada outgoing event untuk dikira.'],
+    ['Reply Rate',rr.toFixed(1)+'%', audience.uniqueContacted?`${fmt(audience.uniqueRepliers)} customer unik reply daripada ${fmt(audience.uniqueContacted)} customer dihubungi (${fmt(audience.replyMessages)} mesej reply).`:'Belum ada customer outgoing untuk dikira.'],
     ['Waktu Reply',bestHour?bestHour.label:'-',bestHour?`${fmt(bestHour.value)} reply diterima pada slot ini.`:'Belum cukup data masa reply.'],
     ['Script Teratas',bestScript?bestScript.label:'-',bestScript?`${fmt(bestScript.value)} reply dikaitkan dengan script/template ini.`:'Webhook belum membawa metadata script/template.'],
     ['Akaun Teratas',bestAcc?bestAcc.label:'-',bestAcc?`${fmt(bestAcc.value)} incoming event diterima.`:'Belum cukup data akaun Wabot.']
