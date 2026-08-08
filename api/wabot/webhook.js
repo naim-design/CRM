@@ -32,25 +32,193 @@ function inferDirection(body) {
   return null;
 }
 function normalize(body) {
-  const direction=inferDirection(body);
-  const from=cleanPhone(pick(body,['from','sender','phone','data.from','data.sender','data.phone','message.from','key.remoteJid','data.key.remoteJid']));
-  const to=cleanPhone(pick(body,['to','recipient','data.to','data.recipient','message.to']));
-  const phone=direction==='incoming' ? (from||to) : (to||from);
+  // Payload WhatsApp Business / Wabot sebenar
+  const change = body?.entry?.[0]?.changes?.[0];
+  const value = change?.value || {};
+  const msg = value?.messages?.[0] || null;
+  const statusObj = value?.statuses?.[0] || null;
+  const contact = value?.contacts?.[0] || null;
+
+  // Incoming message
+  if (msg) {
+    const from = cleanPhone(msg.from || contact?.wa_id);
+    const message =
+      msg?.text?.body ||
+      msg?.button?.text ||
+      msg?.interactive?.button_reply?.title ||
+      msg?.interactive?.list_reply?.title ||
+      `[${msg.type || 'message'}]`;
+
+    return {
+      event: 'message',
+      status: 'received',
+      direction: 'incoming',
+      from,
+      to: cleanPhone(value?.metadata?.display_phone_number),
+      phone: from,
+      fromMe: false,
+      message,
+      messageId: msg.id || null,
+      instance: null,
+      instanceName: null,
+      instance_id:
+        body.instance_id ||
+        value.instance_id ||
+        null,
+      campaign: null,
+      template: null,
+      script: null,
+      eventAt: msg.timestamp || null
+    };
+  }
+
+  // Delivery / read / failed status
+  if (statusObj) {
+    const status = String(statusObj.status || '').toLowerCase();
+
+    return {
+      event: 'message_status',
+      status,
+      direction: null,
+      from: null,
+      to: cleanPhone(statusObj.recipient_id),
+      phone: cleanPhone(statusObj.recipient_id),
+      fromMe: true,
+      message: null,
+      messageId: statusObj.id || null,
+      instance: null,
+      instanceName: null,
+      instance_id:
+        body.instance_id ||
+        value.instance_id ||
+        null,
+      campaign: null,
+      template: null,
+      script: null,
+      eventAt: statusObj.timestamp || null
+    };
+  }
+
+  // Fallback untuk event Wabot lain seperti new subscriber
+  const direction = inferDirection(body);
+
+  const from = cleanPhone(
+    pick(body, [
+      'from',
+      'sender',
+      'phone',
+      'data.from',
+      'data.sender',
+      'data.phone',
+      'message.from',
+      'key.remoteJid',
+      'data.key.remoteJid'
+    ])
+  );
+
+  const to = cleanPhone(
+    pick(body, [
+      'to',
+      'recipient',
+      'data.to',
+      'data.recipient',
+      'message.to'
+    ])
+  );
+
+  const phone = direction === 'incoming'
+    ? (from || to)
+    : (to || from);
+
   return {
-    event: String(pick(body,['event','type','event_type','data.event','data.type']) || 'webhook'),
-    status: pick(body,['status','data.status','message.status']),
+    event: String(
+      pick(body, [
+        'event',
+        'type',
+        'event_type',
+        'data.event',
+        'data.type'
+      ]) || 'webhook'
+    ),
+    status: pick(body, ['status', 'data.status', 'message.status']),
     direction,
-    from, to, phone,
-    fromMe: pick(body,['fromMe','data.fromMe','key.fromMe','data.key.fromMe','message.key.fromMe']),
-    message: pick(body,['message.text','data.message.text','text','body','data.body','message','data.message.body','data.text']),
-    messageId: pick(body,['messageId','message_id','id','data.id','key.id','data.key.id','message.id']),
-    instance: pick(body,['instance','instanceName','data.instance','data.instanceName']),
-    instanceName: pick(body,['instanceName','instance_name','data.instanceName','data.instance_name']),
-    instance_id: pick(body,['instance_id','instanceId','data.instance_id','data.instanceId']),
-    campaign: pick(body,['campaign','campaignName','campaign_name','broadcast','broadcastName','data.campaign','data.campaignName']),
-    template: pick(body,['template','templateName','template_name','data.template','data.templateName']),
-    script: pick(body,['script','scriptName','data.script','data.scriptName']),
-    eventAt: pick(body,['timestamp','time','createdAt','data.timestamp','data.time','message.timestamp']),
+    from,
+    to,
+    phone,
+    fromMe: pick(body, [
+      'fromMe',
+      'data.fromMe',
+      'key.fromMe',
+      'data.key.fromMe',
+      'message.key.fromMe'
+    ]),
+    message: pick(body, [
+      'message.text',
+      'data.message.text',
+      'text',
+      'body',
+      'data.body',
+      'message',
+      'data.message.body',
+      'data.text'
+    ]),
+    messageId: pick(body, [
+      'messageId',
+      'message_id',
+      'id',
+      'data.id',
+      'key.id',
+      'data.key.id',
+      'message.id'
+    ]),
+    instance: pick(body, [
+      'instance',
+      'instanceName',
+      'data.instance',
+      'data.instanceName'
+    ]),
+    instanceName: pick(body, [
+      'instanceName',
+      'instance_name',
+      'data.instanceName',
+      'data.instance_name'
+    ]),
+    instance_id: pick(body, [
+      'instance_id',
+      'instanceId',
+      'data.instance_id',
+      'data.instanceId'
+    ]),
+    campaign: pick(body, [
+      'campaign',
+      'campaignName',
+      'campaign_name',
+      'broadcast',
+      'broadcastName',
+      'data.campaign',
+      'data.campaignName'
+    ]),
+    template: pick(body, [
+      'template',
+      'templateName',
+      'template_name',
+      'data.template',
+      'data.templateName'
+    ]),
+    script: pick(body, [
+      'script',
+      'scriptName',
+      'data.script',
+      'data.scriptName'
+    ]),
+    eventAt: pick(body, [
+      'timestamp',
+      'time',
+      'createdAt',
+      'data.timestamp',
+      'data.time',
+      'message.timestamp'
+    ])
   };
 }
 function safeEqual(a,b){ if(!a||!b)return false; const A=Buffer.from(String(a)),B=Buffer.from(String(b)); return A.length===B.length && crypto.timingSafeEqual(A,B); }
