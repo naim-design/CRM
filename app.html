@@ -34,14 +34,14 @@
         <button data-view="poster">Poster</button>
         <button data-view="feedback">Feedback</button>
         <button data-view="laporan">Laporan</button>
+        <button data-view="wabotlive">Wabot Live</button>
+        <button data-view="analyticspro">Analytics Pro</button>
+        <button data-view="campaignmanager">Campaign Manager</button>
+        <button data-view="aiinsight">AI Insight</button>
         <button data-view="contacts">Database</button>
         <button data-view="filter">Filter</button>
         <button data-view="todo">To-Do</button>
         <button data-view="recap">Recap Julai</button>
-        <button data-view="wabot-live">Wabot Live</button>
-        <button data-view="analytics-pro">Analytics Pro</button>
-        <button data-view="campaign-manager">Campaign Manager</button>
-        <button data-view="ai-insight">AI Insight</button>
       </nav>
       <div class="user-badge">
         <button class="theme-toggle" id="theme-toggle" title="Tukar tema">🌙</button>
@@ -561,65 +561,165 @@ Ahmad	60112223344"></textarea>
       </table>
     </div>
 
+    <!-- ================= WABOT LIVE (AUTO WEBHOOK) ================= -->
+    <div id="view-wabotlive" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h2>Wabot Live</h2>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:760px;">Data automatik daripada webhook Wabot. Tab sedia ada dan data manual tidak diubah. Event mentah disimpan berasingan untuk audit.</p>
+        </div>
+        <div style="display:flex; gap:8px; margin-left:auto; flex-wrap:wrap;">
+          <span class="hint-chip" id="wabot-live-api">API: semak...</span>
+          <span class="hint-chip" id="wabot-live-last">Belum ada event</span>
+        </div>
+      </div>
 
-    <!-- ================= WABOT LIVE (NEW / isolated from legacy tabs) ================= -->
-    <div id="view-wabot-live" class="view">
-      <div class="section-head" style="padding-top:36px;">
-        <h2>Wabot Live</h2>
-        <span class="hint-chip" id="wabot-live-status">Menunggu webhook</span>
+      <div class="form-card wabot-setup-card" style="margin-bottom:20px;">
+        <div class="wabot-setup-grid">
+          <div>
+            <div class="wabot-kicker">WEBHOOK URL</div>
+            <code id="wabot-webhook-url" class="wabot-url">/api/wabot/webhook?key=••••••</code>
+            <div class="wabot-help">Masukkan URL penuh deployment Vercel + secret key dalam Wabot → REST API → Set Receiving Webhook.</div>
+          </div>
+          <div class="wabot-setup-actions">
+            <button type="button" class="btn btn-ghost" id="wabot-health-btn" style="width:auto;">Semak API</button>
+            <button type="button" class="btn btn-ghost" id="wabot-refresh-btn" style="width:auto;">↻ Refresh</button>
+          </div>
+        </div>
       </div>
-      <p class="module-note">Modul baharu. Data tab lama tidak diubah. Event diambil daripada collection <code>wabotEvents</code>.</p>
-      <div class="stat-row wabot-stat-row">
-        <div class="stat-card accent-mint"><div class="label">Sent / Outgoing</div><div class="value" id="wl-sent">0</div></div>
-        <div class="stat-card"><div class="label">Delivered</div><div class="value" id="wl-delivered">0</div></div>
-        <div class="stat-card"><div class="label">Read</div><div class="value" id="wl-read">0</div></div>
-        <div class="stat-card accent-mint"><div class="label">Reply / Incoming</div><div class="value" id="wl-reply">0</div></div>
-        <div class="stat-card"><div class="label">Failed</div><div class="value" id="wl-failed">0</div></div>
+
+      <div class="table-controls" style="margin-bottom:16px;">
+        <div class="field" style="margin:0;"><label>Tempoh</label>
+          <select id="wabot-range"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+        </div>
+        <div class="field" style="margin:0; min-width:220px;"><label>Instance</label>
+          <select id="wabot-instance-filter"><option value="">Semua Instance</option></select>
+        </div>
+        <div class="field" style="margin:0; min-width:220px;"><label>Jenis Event</label>
+          <select id="wabot-event-filter"><option value="">Semua Event</option><option value="incoming">Incoming / Reply</option><option value="outgoing">Outgoing / Sent</option><option value="delivered">Delivered</option><option value="read">Read</option><option value="failed">Failed</option><option value="connection">Connection</option><option value="other">Lain-lain</option></select>
+        </div>
       </div>
-      <div class="table-controls" style="margin-top:18px;">
-        <select id="wl-filter-direction" class="filter-box"><option value="">Semua Arah</option><option value="incoming">Incoming</option><option value="outgoing">Outgoing</option></select>
-        <input id="wl-filter-phone" class="search-box" placeholder="Cari nombor / mesej..." style="max-width:280px;">
-        <button class="btn btn-ghost" id="wl-refresh" style="width:auto;padding:9px 16px;">Refresh</button>
+
+      <div class="stat-row wabot-live-stats">
+        <div class="stat-card accent-mint"><div class="label">Outgoing / Sent</div><div class="value" id="wstat-sent">0</div><div class="foot">Event mesej keluar</div></div>
+        <div class="stat-card"><div class="label">Delivered</div><div class="value" id="wstat-delivered">0</div><div class="foot" id="wstat-delivery-rate">0.0% delivery</div></div>
+        <div class="stat-card"><div class="label">Read</div><div class="value" id="wstat-read">0</div><div class="foot" id="wstat-read-rate">0.0% read</div></div>
+        <div class="stat-card"><div class="label">Reply</div><div class="value" id="wstat-reply">0</div><div class="foot" id="wstat-reply-rate">0.0% reply</div></div>
+        <div class="stat-card"><div class="label">Failed</div><div class="value" id="wstat-failed">0</div><div class="foot" id="wstat-failed-rate">0.0% failed</div></div>
       </div>
-      <div class="live-feed" id="wl-feed"><div class="empty-state">Belum ada event Wabot.</div></div>
+
+      <div class="form-card" style="margin-top:20px;">
+        <div class="section-head" style="margin-bottom:12px;">
+          <h2><span class="idx">01</span>Event Terkini</h2>
+          <span class="hint-chip" id="wabot-event-count">0 event</span>
+        </div>
+        <div class="wabot-table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Masa</th><th>Event</th><th>Direction</th><th>Nombor</th><th>Mesej / Status</th><th>Instance</th></tr></thead>
+            <tbody id="wabot-events-body"><tr><td colspan="6" class="empty-state">Belum ada event webhook.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-top:20px;">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Nota Integrasi</h2></div>
+        <div class="wabot-notes">
+          <div><b>Data lama kekal.</b> Modul ini menggunakan koleksi baru <code>wabotEvents</code>, <code>wabotDaily</code> dan <code>wabotContacts</code>.</div>
+          <div><b>Database sedia ada tidak disentuh secara default.</b> Jika mahu status kontak auto bertukar ke Dah Blast / Dah Reply, aktifkan environment variable <code>WABOT_UPDATE_EXISTING_CONTACTS=true</code>.</div>
+          <div><b>Buyer & sales masih kekal manual</b> sehingga kita ada sumber transaksi/order yang boleh dipadankan dengan nombor WhatsApp.</div>
+        </div>
+      </div>
     </div>
 
+
     <!-- ================= ANALYTICS PRO ================= -->
-    <div id="view-analytics-pro" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>Analytics Pro</h2><span class="hint-chip">Wabot + Data CRM</span></div>
-      <div class="stat-row wabot-stat-row">
-        <div class="stat-card"><div class="label">Reply Rate</div><div class="value" id="ap-reply-rate">0.0%</div></div>
-        <div class="stat-card"><div class="label">Delivery Rate</div><div class="value" id="ap-delivery-rate">0.0%</div></div>
-        <div class="stat-card"><div class="label">Read Rate</div><div class="value" id="ap-read-rate">0.0%</div></div>
-        <div class="stat-card accent-mint"><div class="label">Buyer (CRM)</div><div class="value" id="ap-buyers">0</div></div>
-        <div class="stat-card accent-mint"><div class="label">Sales (CRM)</div><div class="value" id="ap-sales">RM 0</div></div>
+    <div id="view-analyticspro" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h2>Analytics Pro</h2>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:820px;">Analitik tambahan daripada event Wabot. Tab dan data lama kekal. Campaign, script, staff dan account akan muncul automatik apabila metadata tersebut wujud dalam payload webhook.</p>
+        </div>
+        <div style="display:flex; gap:8px; margin-left:auto; flex-wrap:wrap;">
+          <select id="apro-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+          <span class="hint-chip" id="apro-last">Belum ada data</span>
+        </div>
       </div>
-      <div class="analytics-grid">
-        <div class="form-card"><div class="mini-title">Conversion Funnel</div><div id="ap-funnel" class="funnel-list"></div></div>
-        <div class="form-card"><div class="mini-title">Waktu Reply Tertinggi</div><div id="ap-hours" class="bar-list"></div></div>
+
+      <div class="stat-row">
+        <div class="stat-card accent-mint"><div class="label">Sent</div><div class="value" id="apro-sent">0</div><div class="foot">Outgoing message</div></div>
+        <div class="stat-card"><div class="label">Delivered</div><div class="value" id="apro-delivered">0</div><div class="foot" id="apro-delivery-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Read</div><div class="value" id="apro-read">0</div><div class="foot" id="apro-read-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Reply</div><div class="value" id="apro-reply">0</div><div class="foot" id="apro-reply-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Failed</div><div class="value" id="apro-failed">0</div><div class="foot" id="apro-failed-rate">0.0%</div></div>
       </div>
-      <div class="analytics-grid">
-        <div class="form-card"><div class="mini-title">Performance Akaun Wabot</div><div id="ap-accounts" class="bar-list"></div></div>
-        <div class="form-card"><div class="mini-title">Performance Script / Template</div><div id="ap-scripts" class="bar-list"></div></div>
+
+      <div class="analytics-pro-grid" style="margin-top:20px;">
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Conversion Funnel Wabot</h2></div>
+          <div id="apro-funnel" class="apro-funnel"></div>
+          <div class="wabot-help" style="margin-top:12px;">Buyer & Sales kekal daripada data CRM manual sehingga sumber order boleh dipadankan dengan nombor WhatsApp.</div>
+        </div>
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Heatmap Masa Reply</h2></div>
+          <div id="apro-heatmap" class="apro-heatmap"></div>
+        </div>
       </div>
-      <div class="form-card" style="margin-top:18px;"><div class="mini-title">Performance Staff (Data CRM Sedia Ada)</div><div id="ap-staff" class="bar-list"></div></div>
+
+      <div class="analytics-pro-grid" style="margin-top:20px;">
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">03</span>Live Reply</h2><span class="hint-chip" id="apro-live-reply-count">0 reply</span></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Masa</th><th>Nombor</th><th>Mesej</th><th>Campaign</th><th>Instance</th></tr></thead><tbody id="apro-live-replies"><tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr></tbody></table></div>
+        </div>
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">04</span>Performance Akaun Wabot</h2></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Akaun / Instance</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Read</th><th>Failed</th></tr></thead><tbody id="apro-account-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="analytics-pro-grid" style="margin-top:20px;">
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">05</span>Performance Script A/B/C</h2></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Script / Template</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Read</th></tr></thead><tbody id="apro-script-body"></tbody></table></div>
+        </div>
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">06</span>Performance Staff</h2></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Staff</th><th>Sent</th><th>Reply</th><th>Reply Rate</th></tr></thead><tbody id="apro-staff-body"></tbody></table></div>
+        </div>
+      </div>
     </div>
 
     <!-- ================= CAMPAIGN MANAGER ================= -->
-    <div id="view-campaign-manager" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>Campaign Manager</h2><span class="hint-chip" id="cm-count">0 campaign</span></div>
-      <p class="module-note">Campaign dibaca daripada metadata webhook jika Wabot menghantarnya. Jika tiada, event diletakkan bawah “Tanpa Campaign”.</p>
-      <table class="tbl">
-        <thead><tr><th>Campaign</th><th>Script / Template</th><th>Akaun</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Best Hour</th></tr></thead>
-        <tbody id="cm-body"><tr><td colspan="7" class="empty-state">Belum ada data campaign.</td></tr></tbody>
-      </table>
+    <div id="view-campaignmanager" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div><h2>Campaign Manager</h2><p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:820px;">Track campaign yang dikesan daripada payload Wabot. Gunakan nama konsisten seperti <code>SCH_A_D1</code>, <code>SCH_B_D2</code> supaya perbandingan script dan hari follow-up lebih jelas.</p></div>
+        <select id="campaign-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+      </div>
+      <div class="form-card">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Campaign Tracking</h2><span class="hint-chip" id="campaign-count">0 campaign</span></div>
+        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Sent</th><th>Delivered</th><th>Read</th><th>Reply</th><th>Reply Rate</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="8" class="empty-state">Belum ada campaign metadata.</td></tr></tbody></table></div>
+      </div>
+      <div class="form-card" style="margin-top:20px;">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Struktur Nama Disyorkan</h2></div>
+        <div class="wabot-notes"><div><b>Contoh:</b> <code>SCH_A_D1</code> = Susu Coklat Hazelnut, Script A, Day 1.</div><div><b>Contoh:</b> <code>JUS_MERDEKA_D3</code> = Jus Mamariam, kempen Merdeka, follow-up Day 3.</div><div><b>Nota:</b> Jika Wabot tidak menghantar nama campaign dalam webhook, event tetap masuk tetapi akan berada bawah “Tanpa Campaign”. Selepas kita nampak payload sebenar, mapper boleh dilaras tepat.</div></div>
+      </div>
     </div>
 
     <!-- ================= AI INSIGHT ================= -->
-    <div id="view-ai-insight" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>AI Insight</h2><span class="hint-chip">Auto Insight</span></div>
-      <p class="module-note">Insight ini dikira secara automatik daripada event Wabot + rekod CRM. Ia tidak menghantar data keluar ke model AI.</p>
-      <div id="ai-insight-list" class="insight-grid"></div>
+    <div id="view-aiinsight" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div><h2>AI Insight</h2><p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:820px;">Insight automatik berasaskan data Wabot semasa. Modul ini tidak menghantar data pelanggan ke AI luar; ia menggunakan analisis rule-based dalam dashboard.</p></div>
+        <select id="insight-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+      </div>
+      <div class="stat-row" style="margin-bottom:20px;">
+        <div class="stat-card accent-mint"><div class="label">Reply Rate</div><div class="value" id="insight-reply-rate">0.0%</div><div class="foot">Reply ÷ Sent</div></div>
+        <div class="stat-card"><div class="label">Best Hour</div><div class="value" id="insight-best-hour">–</div><div class="foot">Jam reply tertinggi</div></div>
+        <div class="stat-card"><div class="label">Best Campaign</div><div class="value" id="insight-best-campaign" style="font-size:19px;">–</div><div class="foot">Reply rate tertinggi</div></div>
+        <div class="stat-card"><div class="label">Best Script</div><div class="value" id="insight-best-script" style="font-size:19px;">–</div><div class="foot">Jika metadata tersedia</div></div>
+      </div>
+      <div class="form-card">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Cadangan & Pemerhatian</h2></div>
+        <div id="insight-list" class="insight-list"><div class="insight-item">Belum cukup data untuk analisis.</div></div>
+      </div>
     </div>
 
     <!-- ================= TO-DO HARIAN ================= -->
