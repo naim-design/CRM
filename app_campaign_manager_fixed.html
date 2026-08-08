@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blasting Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base-extracted.css">
+<link rel="stylesheet" href="css/app-extra.css">
+<script>
+  (function() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  })();
+</script>
+</head>
+<body>
+
+<div id="loading-screen" class="loading-screen"><span class="spinner"></span> Memuatkan...</div>
+
+<div id="app-shell" style="display:none;">
+  <header class="top">
+    <div class="wrap">
+      <div class="brand">
+        <img src="assets/logo-white.png" alt="Mamariam" class="brand-logo brand-logo-dark">
+        <img src="assets/logo-black.png" alt="Mamariam" class="brand-logo brand-logo-light">
+        <div class="brand-name">MAMARIAM — DASHBOARD TEAM CRM</div>
+      </div>
+      <nav class="app-nav">
+        <button data-view="input" class="active">Input Data</button>
+        <button data-view="dashboard">Dashboard</button>
+        <button data-view="poster">Poster</button>
+        <button data-view="feedback">Feedback</button>
+        <button data-view="laporan">Laporan</button>
+        <button data-view="wabotlive">Wabot Live</button>
+        <button data-view="analyticspro">Analytics Pro</button>
+        <button data-view="campaignmanager">Campaign Manager</button>
+        <button data-view="aiinsight">AI Insight</button>
+        <button data-view="contacts">Database</button>
+        <button data-view="filter">Filter</button>
+        <button data-view="todo">To-Do</button>
+        <button data-view="recap">Recap Julai</button>
+      </nav>
+      <div class="user-badge">
+        <button class="theme-toggle" id="theme-toggle" title="Tukar tema">🌙</button>
+        <span class="role-badge" id="user-role">Staff</span>
+        <span id="user-name" style="font-size:13px;"></span>
+        <div class="avatar" id="user-avatar">U</div>
+        <button class="btn btn-ghost" id="logout-btn" style="width:auto; padding:7px 14px; font-size:12px;">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ================= INPUT DATA ================= -->
+    <div id="view-input" class="view active" style="padding-top:36px;">
+      <div class="section-head"><h2 id="entry-form-title">Input Entri Blast Harian</h2></div>
+      <div class="form-card">
+        <form id="entry-form">
+          <div class="form-grid">
+            <div class="field"><label>Tarikh</label><input type="date" id="entry-tarikh" required></div>
+            <div class="field"><label>Masa Blasting</label><input type="time" id="entry-masa"></div>
+            <div class="field"><label>Sumber / Source</label><input type="text" id="entry-source" placeholder="cth: Ads FB, Organic"></div>
+            <div class="field"><label>Nama Template</label><input type="text" id="entry-template" placeholder="cth: Promo Susu V2"></div>
+          </div>
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field"><label>Kategori Laporan</label>
+              <select id="entry-kategori">
+                <option>Projek Susu</option>
+                <option>Promo Jus</option>
+                <option>Database WS/Lead</option>
+                <option>Projek Leads Ikhtiar (NaimFani)</option>
+              </select>
+            </div>
+            <div class="field"><label>Akaun WABOT digunakan</label>
+              <select id="entry-wabot">
+                <option>MAMARIAM SDN BHD 5 (01111920528)</option>
+                <option>MAMARIAM OFFICIAL (01111920587)</option>
+                <option>MAMARIAM SDN BHD 8 (01111920523)</option>
+                <option>Mamariam Sdn Bhd 3 (60148769013)</option>
+                <option>Fatihah Bizz (601121001339)</option>
+                <option>Fatihah Bizz (6014-2881728)</option>
+              </select>
+            </div>
+            <div class="field"><label>Poster digunakan</label>
+              <select id="entry-poster"><option value="">- Tiada / Tak Berkaitan -</option></select>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field"><label>Sent</label><input type="number" id="entry-sent" min="0" value="0" required>
+              <div id="entry-cost-preview" style="font-size:12px; color:var(--mint); margin-top:6px; font-family:'IBM Plex Mono';">Kos: RM 0.00 (€0.00)</div>
+            </div>
+            <div class="field"><label>Delivered</label><input type="number" id="entry-delivered" min="0" value="0"></div>
+            <div class="field"><label>Read</label><input type="number" id="entry-read" min="0" value="0"></div>
+          </div>
+          <div class="form-grid" style="margin-top:16px;">
+            <div class="field"><label>Reply</label><input type="number" id="entry-reply" min="0" value="0"></div>
+            <div class="field"><label>Failed</label><input type="number" id="entry-failed" min="0" value="0"></div>
+            <div class="field"><label>Jadi Buyer</label><input type="number" id="entry-buyer" min="0" value="0"></div>
+          </div>
+          <div class="form-grid two" style="margin-top:16px;">
+            <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:6px;">💡 Kos blasting dikira automatik dari jumlah Sent (€0.0116/mesej) — tak perlu masukkan manual. Laporan Keseluruhan & Laporan Harian automatik terima semua entri, tak kira kategori.</p>
+
+          <div id="entry-live-stats" class="stat-row" style="margin-top:16px;">
+            <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="live-respon-rate" style="font-size:22px;">0.0%</div></div>
+            <div class="stat-card"><div class="label">Reply Rate<br><small style="font-weight:400;">(Reply/Sent)</small></div><div class="value" id="live-reply-rate" style="font-size:22px;">0.0%</div></div>
+            <div class="stat-card"><div class="label">Conversion Rate<br><small style="font-weight:400;">(Buyer/Sent)</small></div><div class="value" id="live-conv-rate" style="font-size:22px;">0.00%</div></div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="entry-submit-btn" style="width:auto; padding:11px 26px;">Simpan Entri</button>
+            <button type="button" class="btn btn-ghost" id="entry-cancel-edit-btn" style="width:auto; padding:11px 26px; display:none;">Batal Edit</button>
+          </div>
+        </form>
+      </div>
+
+      <section style="margin-top:36px;">
+        <div class="section-head">
+          <h2><span class="idx">•</span>Senarai Entri (Edit / Padam)</h2>
+          <span class="hint-chip" id="entries-list-count">0 entri</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Tarikh</th><th>Kategori</th><th>Staff</th><th>Sumber</th><th>Template</th><th>Wabot</th><th>Sent</th><th>Sales</th><th style="text-align:right;">Tindakan</th></tr></thead>
+          <tbody id="entries-list-body"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- ================= DASHBOARD ================= -->
+    <div id="view-dashboard" class="view">
+      <div class="hero" style="padding-top:36px;">
+        <div class="eyebrow">Live Dashboard</div>
+        <h1>Prestasi Blasting</h1>
+        <div class="table-controls" style="margin-top:18px;">
+          <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="filter-from"></div>
+          <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="filter-to"></div>
+          <div class="field" style="margin:0;"><label>Staff</label>
+            <select id="filter-staff" class="filter-box"><option value="">Semua Staff</option></select>
+          </div>
+          <div class="field" style="margin:0;"><label>Kategori Laporan</label>
+            <select id="filter-kategori" class="filter-box">
+              <option value="">Semua (Keseluruhan)</option>
+              <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card accent-mint"><div class="label">Total Sent</div><div class="value" id="stat-sent">0</div><div class="foot" id="stat-sessions">0 entri</div></div>
+          <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="stat-buyer">0</div><div class="foot" id="stat-conv">0.00% conversion</div></div>
+          <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
+          <div class="stat-card"><div class="label">Kos Blasting</div><div class="value" id="stat-cost-rm">RM 0</div><div class="foot" id="stat-cost-eur">€0.00</div></div>
+          <div class="stat-card accent-mint"><div class="label">ROAS</div><div class="value" id="stat-roi">0.00x</div><div class="foot">Sales ÷ Kos</div></div>
+          <div class="stat-card accent-amber" id="stat-roi-topup-wrap" style="display:none;"><div class="label">ROI (dengan Topup)</div><div class="value" id="topup-roi">0.00x</div><div class="foot">Sales ÷ (Kos Blasting + Kos Topup)</div></div>
+        </div>
+        <div class="stat-row" style="margin-top:14px;">
+          <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="stat-respon-rate">0.0%</div></div>
+          <div class="stat-card"><div class="label">Reply Rate<br><small style="font-weight:400;">(Reply/Sent)</small></div><div class="value" id="stat-reply-rate">0.0%</div></div>
+          <div class="stat-card"><div class="label">Conversion Rate<br><small style="font-weight:400;">(Buyer/Sent)</small></div><div class="value" id="stat-conv-rate">0.00%</div></div>
+        </div>
+      </div>
+
+      <section id="topup-section" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Topup Blasting <small style="font-weight:400; color:var(--muted); font-size:11px;">(Keseluruhan sahaja)</small></h2></div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="label">Jumlah Topup (€)</div><div class="value" id="topup-total-eur">€0.00</div></div>
+          <div class="stat-card accent-mint"><div class="label">Kos Topup (RM)</div><div class="value" id="topup-total-rm">RM 0.00</div></div>
+        </div>
+        <div class="form-card" style="margin-top:16px;">
+          <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="field" style="margin:0; flex:1; min-width:160px;"><label>Amaun Topup (€)</label><input type="number" id="topup-amount" min="0" step="0.01" placeholder="cth: 90" required></div>
+            <div class="field" style="margin:0; flex:2; min-width:200px;"><label>Nota (pilihan)</label><input type="text" id="topup-note" placeholder="cth: Topup Wabot Ogos"></div>
+            <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah Topup</button>
+          </form>
+        </div>
+        <table class="tbl" style="margin-top:14px;">
+          <thead><tr><th>Tarikh</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
+          <tbody id="topup-history-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">01</span>Funnel</h2></div>
+        <div class="funnel-card"><div id="funnel"></div></div>
+      </section>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">02</span>Sumber / Source</h2></div>
+        <div class="source-grid" id="source-grid"></div>
+      </section>
+
+      <section id="template-section">
+        <div class="section-head">
+          <h2><span class="idx">03</span>Laporan Template</h2>
+          <span class="hint-chip" id="tmpl-count">0 template</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
+          <tbody id="tmpl-body"></tbody>
+        </table>
+      </section>
+
+      <!-- Kandungan tambahan khas ikut kategori (report/gambar rujukan) -->
+      <section id="kategori-susu-extra" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Dashboard Rujukan — Projek Susu</h2></div>
+        <div class="report-embed-grid">
+          <div class="report-embed-card">
+            <div class="report-embed-title">Flow Follow Up Susu (3 Hari, 3 Set)</div>
+            <div class="report-embed-preview" onclick="openReportModal('reports/susu-followup-3set.html','Flow Follow Up Susu (3 Hari, 3 Set)')">
+              <iframe src="reports/susu-followup-3set.html" loading="lazy"></iframe>
+              <div class="report-embed-overlay">Klik untuk lihat penuh</div>
+            </div>
+          </div>
+          <div class="report-embed-card">
+            <div class="report-embed-title">Data Dashboard Susu — Jun 2026</div>
+            <div class="report-embed-preview" onclick="openReportModal('reports/susu-jun-2026.html','Data Dashboard Susu — Jun 2026')">
+              <iframe src="reports/susu-jun-2026.html" loading="lazy"></iframe>
+              <div class="report-embed-overlay">Klik untuk lihat penuh</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="kategori-naimfani-extra" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Rujukan — Projek Leads Ikhtiar (NaimFani)</h2></div>
+        <div class="poster-grid">
+          <div class="poster-card"><img src="assets/leads-ikhtiar-jus.jpg" alt="Database WhatsApp Leads Ikhtiar Follow Up 4 Hari" onclick="openImageModal(this.src)" style="cursor:zoom-in;"></div>
+          <div class="poster-card"><img src="assets/leads-ikhtiar-susu.jpg" alt="Database WhatsApp Leads Ikhtiar Follow Up 6 Hari" onclick="openImageModal(this.src)" style="cursor:zoom-in;"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= RECAP JUN ================= -->
+    <div id="view-recap" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Recap Julai — Dashboard Keseluruhan</h2></div>
+      <div class="recap-frame-wrap">
+        <iframe src="reports/recap-keseluruhan.html" id="recap-iframe"></iframe>
+      </div>
+    </div>
+
+    <!-- ================= POSTER ================= -->
+    <div id="view-poster" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Poster Blasting</h2></div>
+      <div class="form-card" style="margin-bottom:24px;">
+        <form id="poster-form" class="form-grid two">
+          <div class="field"><label>Nama Poster</label><input type="text" id="poster-name" placeholder="cth: Promo Susu Hazelnut V2" required></div>
+          <div class="field"><label>Pilih Gambar</label><input type="file" id="poster-file" accept="image/*" required></div>
+          <div class="form-actions"><button type="submit" class="btn btn-primary" id="poster-submit-btn">Upload Poster</button></div>
+        </form>
+      </div>
+      <div class="table-controls"><span class="hint-chip" id="poster-count">0 poster</span></div>
+      <div id="poster-grid" class="poster-grid"></div>
+    </div>
+
+    <!-- ================= FEEDBACK ================= -->
+    <div id="view-feedback" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Feedback Pelanggan</h2></div>
+      <div class="form-card" style="margin-bottom:24px;">
+        <form id="feedback-form">
+          <div class="form-grid two">
+            <div class="field"><label>Kategori Produk</label>
+              <select id="feedback-kategori">
+                <option>Jus Mamariam</option>
+                <option>Susu</option>
+                <option>Koko Zuriat</option>
+                <option>Minyak Ibu Damai</option>
+                <option>Roll Cool Mama</option>
+              </select>
+            </div>
+            <div class="field"><label>Gambar Feedback</label><input type="file" id="feedback-file" accept="image/*" required></div>
+          </div>
+          <div class="field" style="margin-top:16px;"><label>Ayat Feedback</label><textarea id="feedback-text" rows="3" placeholder="Taip feedback pelanggan di sini..." required></textarea></div>
+          <div class="form-actions" style="margin-top:12px;"><button type="submit" class="btn btn-primary" id="feedback-submit-btn">Simpan Feedback</button></div>
+        </form>
+      </div>
+
+      <div class="table-controls">
+        <select class="filter-box" id="feedback-filter-kategori">
+          <option value="">Semua Kategori</option>
+          <option>Jus Mamariam</option>
+          <option>Susu</option>
+          <option>Koko Zuriat</option>
+          <option>Minyak Ibu Damai</option>
+          <option>Roll Cool Mama</option>
+        </select>
+        <span class="hint-chip" id="feedback-count">0 feedback</span>
+      </div>
+      <div id="feedback-grid" class="feedback-grid" style="margin-top:14px;"></div>
+    </div>
+
+    <!-- ================= LAPORAN ================= -->
+    <div id="view-laporan" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Laporan</h2></div>
+      <div class="table-controls">
+        <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="lap-filter-from"></div>
+        <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="lap-filter-to"></div>
+        <div class="field" style="margin:0;"><label>Kategori Laporan</label>
+          <select id="lap-filter-kategori" class="filter-box">
+            <option value="">Semua (Keseluruhan)</option>
+            <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+          </select>
+        </div>
+      </div>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">01</span>Laporan Harian</h2></div>
+        <table class="tbl">
+          <thead><tr><th>Tarikh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
+          <tbody id="daily-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">02</span>Prestasi Poster</h2>
+          <span class="hint-chip" id="poster-perf-count">0 poster</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
+          <tbody id="poster-perf-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">03</span>Prestasi Akaun WABOT</h2>
+          <span class="hint-chip" id="wabot-perf-count">0 akaun</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>#</th><th>Akaun WABOT</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
+          <tbody id="wabot-perf-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">04</span>Prestasi Ikut Hari</h2></div>
+        <table class="tbl">
+          <thead><tr><th>Hari</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
+          <tbody id="dayofweek-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">05</span>Prestasi Ikut Waktu</h2>
+          <span class="hint-chip">Berdasarkan entri yang ada Masa Blasting diisi</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Waktu</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
+          <tbody id="hourofday-body"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- ================= CONTACTS ================= -->
+    <div id="view-contacts" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Database</h2></div>
+
+      <!-- Stats -->
+      <div class="stat-row" style="margin-bottom:10px;">
+        <div class="stat-card accent-mint"><div class="label">Total Database</div><div class="value" id="cstat-total">–</div></div>
+        <div class="stat-card"><div class="label">Belum Blast</div><div class="value" id="cstat-pending">–</div></div>
+        <div class="stat-card"><div class="label">Dah Blast</div><div class="value" id="cstat-blasted">–</div></div>
+        <div class="stat-card"><div class="label">Dah Reply</div><div class="value" id="cstat-replied">–</div></div>
+        <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="cstat-buyer">–</div></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:8px;">
+        <p id="cstat-note" style="font-size:12px; color:var(--muted); margin:0;"></p>
+        <button class="btn btn-ghost" id="cstat-edit-btn" style="width:auto; padding:6px 14px; font-size:12px;">✏️ Edit Manual</button>
+      </div>
+      <div class="form-card" id="cstat-edit-form-wrap" style="display:none; margin-bottom:24px;">
+        <div class="form-grid two">
+          <div class="field"><label>Dah Blast</label><input type="number" id="cstat-input-blasted" min="0"></div>
+          <div class="field"><label>Belum Blast</label><input type="number" id="cstat-input-pending" min="0"></div>
+        </div>
+        <div class="form-grid two" style="margin-top:16px;">
+          <div class="field"><label>Dah Reply</label><input type="number" id="cstat-input-replied" min="0"></div>
+          <div class="field"><label>Jadi Buyer</label><input type="number" id="cstat-input-buyer" min="0"></div>
+        </div>
+        <div class="field" style="margin-top:16px;"><label>Nota (contoh: pecahan database TikTok, dll)</label><textarea id="cstat-input-note" rows="2" placeholder="cth: Database TikTok — 20,000 rekod, import Ogos 2026"></textarea></div>
+        <div class="form-actions" style="margin-top:12px;"><button class="btn btn-primary" id="cstat-save-btn" style="width:auto; padding:10px 22px;">Simpan</button></div>
+        <p style="font-size:11px; color:var(--muted-2); margin-top:10px;">💡 Nombor ni dikemaskini manual (bukan auto-kira) — sebab isu extract/quota. "Total Database" akan dikira automatik dari Dah Blast + Belum Blast.</p>
+      </div>
+
+      <section>
+        <div class="section-head"><h2><span class="idx">01</span>Ikut Sumber</h2></div>
+        <table class="tbl">
+          <thead><tr><th>Sumber</th><th>Total</th><th>Dah Blast</th><th>Belum Blast</th></tr></thead>
+          <tbody id="source-stat-body"></tbody>
+        </table>
+      </section>
+
+      <!-- Import CSV / Bulk Paste -->
+      <section>
+        <div class="section-head"><h2><span class="idx">02</span>Import Database</h2></div>
+        <div class="form-card" style="margin-bottom:10px;">
+          <div class="import-tabs">
+            <button type="button" class="import-tab active" data-mode="paste">Bulk Paste</button>
+            <button type="button" class="import-tab" data-mode="file">Upload Fail CSV</button>
+          </div>
+
+          <div id="import-mode-paste" class="import-mode active">
+            <div class="field">
+              <label>Paste terus dari Excel / Google Sheets (nama & nombor, mana-mana susunan lajur)</label>
+              <textarea id="paste-data" rows="8" placeholder="Ali	60123456789
+Siti	60198765432
+Ahmad	60112223344"></textarea>
+              <div id="paste-count" style="font-size:12px; color:var(--mint); margin-top:6px; font-family:'IBM Plex Mono';">0 rekod dikesan</div>
+            </div>
+          </div>
+
+          <div id="import-mode-file" class="import-mode">
+            <div class="field"><label>Fail CSV (nama & nombor, mana-mana susunan lajur)</label><input type="file" id="csv-file" accept=".csv"></div>
+          </div>
+
+          <div class="form-grid" style="grid-template-columns:1fr 1fr; margin-top:14px;">
+            <div class="field"><label>Sumber untuk batch ni</label>
+              <input type="text" id="csv-source" placeholder="cth: TikTok, WhatsApp, FB Ads..." list="source-suggestions">
+              <datalist id="source-suggestions"></datalist>
+            </div>
+            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="button" id="csv-import-btn" class="btn btn-primary">Import Database</button></div>
+          </div>
+          <div id="csv-progress-wrap" style="display:none; margin-top:14px;">
+            <div style="background:var(--surface-raised); border-radius:8px; height:8px; overflow:hidden;">
+              <div id="csv-progress-bar" style="background:var(--mint); height:100%; width:0%; transition:width 0.2s;"></div>
+            </div>
+            <div id="csv-progress-text" style="font-size:12px; color:var(--muted); margin-top:6px; font-family:'IBM Plex Mono';"></div>
+          </div>
+          <p style="font-size:11.5px; color:var(--muted-2); margin-top:12px;">Sistem auto-kesan nombor telefon dalam mana-mana lajur (tak kisah susunan nama/nombor). Baris header automatik dikesan & diabaikan.</p>
+        </div>
+      </section>
+
+      <!-- Import history -->
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">•</span>Sejarah Import</h2>
+          <span class="hint-chip" id="batch-count">0 batch</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Tarikh & Masa</th><th>Sumber</th><th>Bilangan</th><th>Oleh</th><th style="text-align:right;">Tindakan</th></tr></thead>
+          <tbody id="batch-body"></tbody>
+        </table>
+      </section>
+
+      <!-- Add single -->
+      <section>
+        <div class="section-head"><h2><span class="idx">03</span>Tambah Satu Rekod</h2></div>
+        <div class="form-card" style="margin-bottom:20px;">
+          <form id="contact-form" class="form-grid">
+            <div class="field"><label>Nama</label><input type="text" id="contact-name" required></div>
+            <div class="field"><label>No. Telefon</label><input type="text" id="contact-phone" required></div>
+            <div class="field"><label>Sumber</label>
+              <input type="text" id="contact-source" placeholder="cth: TikTok, WhatsApp..." list="source-suggestions">
+            </div>
+            <div class="form-actions" style="align-items:flex-end; display:flex;"><button type="submit" class="btn btn-primary">+ Tambah</button></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Quick lookup -->
+      <section>
+        <div class="section-head"><h2><span class="idx">04</span>Semak Nombor</h2></div>
+        <div style="display:flex; gap:10px; margin-bottom:10px;">
+          <input type="text" class="search-box" id="lookup-phone" placeholder="Taip nombor penuh untuk semak status..." style="flex:1;">
+          <button class="btn btn-primary" id="lookup-btn" style="width:auto; padding:11px 22px;">Semak</button>
+        </div>
+        <div id="lookup-result"></div>
+      </section>
+
+      <!-- Browse / filter list -->
+      <section>
+        <div class="section-head"><h2><span class="idx">05</span>Senarai Database</h2></div>
+        <div class="table-controls">
+          <select class="filter-box" id="filter-contact-status">
+            <option value="">Semua Status</option>
+            <option value="pending">Belum Blast</option>
+            <option value="blasted">Dah Blast</option>
+            <option value="replied">Dah Reply</option>
+            <option value="buyer">Jadi Buyer</option>
+          </select>
+          <input type="text" class="search-box" id="filter-contact-source" placeholder="Tapis ikut sumber (cth: TikTok)..." list="source-suggestions" style="max-width:220px;">
+          <button class="btn btn-ghost" id="contact-refresh-btn" style="width:auto; padding:9px 16px;">↻ Refresh</button>
+          <span class="hint-chip" id="contact-count">0 dipapar</span>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="bulk-blast-btn" style="width:auto; padding:8px 16px; font-size:12px;" disabled>Tandakan dipilih (page ni): Dah Blast</button>
+          <button class="btn btn-primary" id="bulk-blast-all-btn" style="width:auto; padding:8px 16px; font-size:12px;">Tandakan SEMUA hasil tapisan: Dah Blast</button>
+          <button class="btn btn-danger" id="bulk-delete-all-btn" style="width:auto; padding:8px 16px; font-size:12px;">🗑️ Padam SEMUA hasil tapisan</button>
+        </div>
+        <div id="bulk-all-progress" style="display:none; font-size:12px; color:var(--mint); margin-top:8px; font-family:'IBM Plex Mono';"></div>
+        <table class="tbl" style="margin-top:10px;">
+          <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th>Status</th><th style="text-align:right;">Tindakan</th></tr></thead>
+          <tbody id="contact-body"></tbody>
+        </table>
+        <div class="pagination">
+          <span id="page-info"></span>
+          <div style="display:flex; gap:8px;">
+            <button id="prev-page">← Prev</button>
+            <button id="next-page">Next →</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ================= FILTER / SEGMENTASI DATABASE ================= -->
+    <div id="view-filter" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Filter Database</h2></div>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:18px;">Cari & senaraikan kontak ikut status (Buyer, Dah Reply, dll) dan sumber — sesuai untuk buat senarai follow-up atau kempen susulan.</p>
+
+      <div class="form-card" style="margin-bottom:18px;">
+        <div class="field">
+          <label>🏷️ Tag Bulk sebagai Buyer — Paste Nombor (satu nombor / baris, boleh sekali dengan nama)</label>
+          <textarea id="seg-buyer-paste" rows="6" placeholder="60123456789
+60198765432
+Ahmad	60112223344"></textarea>
+          <div id="seg-buyer-paste-count" style="font-size:12px; color:var(--mint); margin-top:6px; font-family:'IBM Plex Mono';">0 nombor dikesan</div>
+        </div>
+        <div class="form-actions" style="margin-top:10px;">
+          <button type="button" id="seg-buyer-tag-btn" class="btn btn-primary" style="width:auto; padding:10px 20px;">🏷️ Tag sebagai Buyer & Papar Hasil</button>
+        </div>
+        <div id="seg-buyer-tag-result" style="font-size:12.5px; color:var(--muted); margin-top:12px; white-space:pre-line;"></div>
+      </div>
+
+      <div class="table-controls">
+        <select class="filter-box" id="seg-filter-status">
+          <option value="">Semua Status</option>
+          <option value="pending">Belum Blast</option>
+          <option value="blasted">Dah Blast</option>
+          <option value="replied">Dah Reply</option>
+          <option value="buyer">Jadi Buyer</option>
+        </select>
+        <input type="text" class="search-box" id="seg-filter-source" placeholder="Tapis ikut sumber (cth: TikTok)..." list="source-suggestions" style="max-width:220px;">
+        <select class="filter-box" id="seg-filter-batch" style="max-width:280px;">
+          <option value="">Semua Batch Import</option>
+        </select>
+        <button class="btn btn-primary" id="seg-search-btn" style="width:auto; padding:9px 20px;">Cari</button>
+      </div>
+      <p style="font-size:11px; color:var(--muted-2); margin-top:6px;">💡 Pilih "Batch Import" untuk filter terus dari satu sesi import tertentu (contoh: senarai yang awak masukkan semalam je).</p>
+
+      <div class="tag-check-row" id="seg-filter-tags"></div>
+
+      <div style="margin-top:10px;">
+        <input type="text" class="search-box" id="seg-filter-phone" placeholder="Atau taip terus nombor untuk cari 1 kontak..." style="max-width:320px;">
+      </div>
+
+      <div class="stat-row" style="margin-top:18px;">
+        <div class="stat-card accent-mint"><div class="label">Hasil Dijumpai</div><div class="value" id="seg-result-count">–</div><div class="foot" id="seg-result-note">Papar sehingga 500 rekod pertama</div></div>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; margin:14px 0;">
+        <button class="btn btn-ghost" id="seg-copy-btn" style="width:auto; padding:9px 18px; font-size:12.5px;">📋 Salin Semua Nombor (hasil carian)</button>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th style="text-align:right;">Status</th></tr></thead>
+        <tbody id="seg-result-body"><tr><td colspan="5" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- ================= WABOT LIVE (AUTO WEBHOOK) ================= -->
+    <div id="view-wabotlive" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h2>Wabot Live</h2>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:760px;">Data automatik daripada webhook Wabot. Tab sedia ada dan data manual tidak diubah. Event mentah disimpan berasingan untuk audit.</p>
+        </div>
+        <div style="display:flex; gap:8px; margin-left:auto; flex-wrap:wrap;">
+          <span class="hint-chip" id="wabot-live-api">API: semak...</span>
+          <span class="hint-chip" id="wabot-live-last">Belum ada event</span>
+        </div>
+      </div>
+
+      <div class="form-card wabot-setup-card" style="margin-bottom:20px;">
+        <div class="wabot-setup-grid">
+          <div>
+            <div class="wabot-kicker">WEBHOOK URL</div>
+            <code id="wabot-webhook-url" class="wabot-url">/api/wabot/webhook?key=••••••</code>
+            <div class="wabot-help">Masukkan URL penuh deployment Vercel + secret key dalam Wabot → REST API → Set Receiving Webhook.</div>
+          </div>
+          <div class="wabot-setup-actions">
+            <button type="button" class="btn btn-ghost" id="wabot-health-btn" style="width:auto;">Semak API</button>
+            <button type="button" class="btn btn-ghost" id="wabot-refresh-btn" style="width:auto;">↻ Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-controls" style="margin-bottom:16px;">
+        <div class="field" style="margin:0;"><label>Tempoh</label>
+          <select id="wabot-range"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+        </div>
+        <div class="field" style="margin:0; min-width:220px;"><label>Instance</label>
+          <select id="wabot-instance-filter"><option value="">Semua Instance</option></select>
+        </div>
+        <div class="field" style="margin:0; min-width:220px;"><label>Jenis Event</label>
+          <select id="wabot-event-filter"><option value="">Semua Event</option><option value="incoming">Incoming / Reply</option><option value="outgoing">Outgoing / Sent</option><option value="delivered">Delivered</option><option value="read">Read</option><option value="failed">Failed</option><option value="connection">Connection</option><option value="other">Lain-lain</option></select>
+        </div>
+      </div>
+
+      <div class="stat-row wabot-live-stats">
+        <div class="stat-card accent-mint"><div class="label">Outgoing / Sent</div><div class="value" id="wstat-sent">0</div><div class="foot">Event mesej keluar</div></div>
+        <div class="stat-card"><div class="label">Delivered</div><div class="value" id="wstat-delivered">0</div><div class="foot" id="wstat-delivery-rate">0.0% delivery</div></div>
+        <div class="stat-card"><div class="label">Read</div><div class="value" id="wstat-read">0</div><div class="foot" id="wstat-read-rate">0.0% read</div></div>
+        <div class="stat-card"><div class="label">Reply</div><div class="value" id="wstat-reply">0</div><div class="foot" id="wstat-reply-rate">0.0% reply</div></div>
+        <div class="stat-card"><div class="label">Failed</div><div class="value" id="wstat-failed">0</div><div class="foot" id="wstat-failed-rate">0.0% failed</div></div>
+      </div>
+
+      <div class="form-card" style="margin-top:20px;">
+        <div class="section-head" style="margin-bottom:12px;">
+          <h2><span class="idx">01</span>Event Terkini</h2>
+          <span class="hint-chip" id="wabot-event-count">0 event</span>
+        </div>
+        <div class="wabot-table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Masa</th><th>Event</th><th>Direction</th><th>Nombor</th><th>Mesej / Status</th><th>Instance</th></tr></thead>
+            <tbody id="wabot-events-body"><tr><td colspan="6" class="empty-state">Belum ada event webhook.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-top:20px;">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Nota Integrasi</h2></div>
+        <div class="wabot-notes">
+          <div><b>Data lama kekal.</b> Modul ini menggunakan koleksi baru <code>wabotEvents</code>, <code>wabotDaily</code> dan <code>wabotContacts</code>.</div>
+          <div><b>Database sedia ada tidak disentuh secara default.</b> Jika mahu status kontak auto bertukar ke Dah Blast / Dah Reply, aktifkan environment variable <code>WABOT_UPDATE_EXISTING_CONTACTS=true</code>.</div>
+          <div><b>Buyer & sales masih kekal manual</b> sehingga kita ada sumber transaksi/order yang boleh dipadankan dengan nombor WhatsApp.</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ================= ANALYTICS PRO ================= -->
+    <div id="view-analyticspro" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h2>Analytics Pro</h2>
+          <p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:820px;">Analitik tambahan daripada event Wabot. Tab dan data lama kekal. Campaign, script, staff dan account akan muncul automatik apabila metadata tersebut wujud dalam payload webhook.</p>
+        </div>
+        <div style="display:flex; gap:8px; margin-left:auto; flex-wrap:wrap;">
+          <select id="apro-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+          <span class="hint-chip" id="apro-last">Belum ada data</span>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card accent-mint"><div class="label">Sent</div><div class="value" id="apro-sent">0</div><div class="foot">Outgoing message</div></div>
+        <div class="stat-card"><div class="label">Delivered</div><div class="value" id="apro-delivered">0</div><div class="foot" id="apro-delivery-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Read</div><div class="value" id="apro-read">0</div><div class="foot" id="apro-read-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Unique Reply</div><div class="value" id="apro-reply">0</div><div class="foot" id="apro-reply-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Failed</div><div class="value" id="apro-failed">0</div><div class="foot" id="apro-failed-rate">0.0%</div></div>
+      </div>
+
+      <div class="stat-row analytics-pro-mini-row" style="margin-top:12px;">
+        <div class="stat-card"><div class="label">Unique Contacted</div><div class="value" id="apro-unique-contacted">0</div><div class="foot">Customer unik dihantar mesej</div></div>
+        <div class="stat-card"><div class="label">Unique Repliers</div><div class="value" id="apro-unique-repliers">0</div><div class="foot">Customer unik yang reply</div></div>
+        <div class="stat-card"><div class="label">Reply Messages</div><div class="value" id="apro-reply-messages">0</div><div class="foot">Jumlah mesej reply diterima</div></div>
+      </div>
+
+      <div class="analytics-pro-grid" style="margin-top:20px;">
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Conversion Funnel Wabot</h2></div>
+          <div id="apro-funnel" class="apro-funnel"></div>
+          <div class="wabot-help" style="margin-top:12px;">Buyer & Sales kekal daripada data CRM manual sehingga sumber order boleh dipadankan dengan nombor WhatsApp.</div>
+        </div>
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Heatmap Masa Reply</h2></div>
+          <div id="apro-heatmap" class="apro-heatmap"></div>
+        </div>
+      </div>
+
+      <div class="analytics-pro-grid" style="margin-top:20px;">
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">03</span>Live Reply</h2><span class="hint-chip" id="apro-live-reply-count">0 reply</span></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Masa</th><th>Nombor</th><th>Mesej</th><th>Campaign</th><th>Instance</th></tr></thead><tbody id="apro-live-replies"><tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr></tbody></table></div>
+        </div>
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">04</span>Performance Akaun Wabot</h2></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Akaun / Instance</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Read</th><th>Failed</th></tr></thead><tbody id="apro-account-body"></tbody></table></div>
+        </div>
+      </div>
+
+      <div class="analytics-pro-grid" style="margin-top:20px;">
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">05</span>Performance Script A/B/C</h2></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Script / Template</th><th>Sent</th><th>Unique Contacted</th><th>Unique Reply</th><th>Reply Rate</th><th>Read</th></tr></thead><tbody id="apro-script-body"></tbody></table></div>
+        </div>
+        <div class="form-card">
+          <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">06</span>Performance Staff</h2></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Staff</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Sales</th></tr></thead><tbody id="apro-staff-body"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= CAMPAIGN MANAGER ================= -->
+    <div id="view-campaignmanager" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div><h2>Campaign Manager</h2><p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:820px;">Track campaign yang dikesan daripada payload Wabot. Gunakan nama konsisten seperti <code>SCH_A_D1</code>, <code>SCH_B_D2</code> supaya perbandingan script dan hari follow-up lebih jelas.</p></div>
+        <select id="campaign-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+      </div>
+      <div class="form-card">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Campaign Tracking</h2><span class="hint-chip" id="campaign-count">0 campaign</span></div>
+        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Buyer</th><th>Sales</th><th>Conversion Rate</th><th>ROAS</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="14" class="empty-state">Belum ada campaign metadata.</td></tr></tbody></table></div>
+      </div>
+      <div class="form-card" style="margin-top:20px;">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Struktur Nama Disyorkan</h2></div>
+        <div class="wabot-notes"><div><b>Contoh:</b> <code>SCH_A_D1</code> = Susu Coklat Hazelnut, Script A, Day 1.</div><div><b>Contoh:</b> <code>JUS_MERDEKA_D3</code> = Jus Mamariam, kempen Merdeka, follow-up Day 3.</div><div><b>Nota:</b> Jika Wabot tidak menghantar nama campaign dalam webhook, event tetap masuk tetapi akan berada bawah “Tanpa Campaign”. Selepas kita nampak payload sebenar, mapper boleh dilaras tepat.</div></div>
+      </div>
+    </div>
+
+    <!-- ================= AI INSIGHT ================= -->
+    <div id="view-aiinsight" class="view">
+      <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+        <div><h2>AI Insight</h2><p style="font-size:12.5px; color:var(--muted); margin-top:6px; max-width:820px;">Insight automatik berasaskan data Wabot semasa. Modul ini tidak menghantar data pelanggan ke AI luar; ia menggunakan analisis rule-based dalam dashboard.</p></div>
+        <select id="insight-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
+      </div>
+      <div class="stat-row" style="margin-bottom:20px;">
+        <div class="stat-card accent-mint"><div class="label">Reply Rate</div><div class="value" id="insight-reply-rate">0.0%</div><div class="foot">Reply ÷ Sent</div></div>
+        <div class="stat-card"><div class="label">Best Hour</div><div class="value" id="insight-best-hour">–</div><div class="foot">Jam reply tertinggi</div></div>
+        <div class="stat-card"><div class="label">Best Campaign</div><div class="value" id="insight-best-campaign" style="font-size:19px;">–</div><div class="foot">Reply rate tertinggi</div></div>
+        <div class="stat-card"><div class="label">Best Script</div><div class="value" id="insight-best-script" style="font-size:19px;">–</div><div class="foot">Jika metadata tersedia</div></div>
+      </div>
+      <div class="form-card">
+        <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Cadangan & Pemerhatian</h2></div>
+        <div id="insight-list" class="insight-list"><div class="insight-item">Belum cukup data untuk analisis.</div></div>
+      </div>
+    </div>
+
+    <!-- ================= TO-DO HARIAN ================= -->
+    <div id="view-todo" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>To-Do Harian</h2></div>
+      <div class="form-card" style="margin-bottom:20px;">
+        <form id="todo-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+          <div class="field" style="flex:2; min-width:200px; margin:0;"><label>Tugasan</label><input type="text" id="todo-text" placeholder="cth: Follow up 20 rekod baru" required></div>
+          <div class="field" style="margin:0;"><label>Tarikh</label><input type="date" id="todo-date" required></div>
+          <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah</button>
+        </form>
+      </div>
+      <div class="table-controls">
+        <div class="field" style="margin:0;"><label>Papar tarikh</label><input type="date" id="todo-filter-date"></div>
+        <button class="btn btn-ghost" id="todo-view-all-btn" style="width:auto; padding:9px 16px;">📅 Papar Semua Hari</button>
+        <span class="hint-chip" id="todo-count">0 tugasan</span>
+      </div>
+      <div id="todo-list" style="margin-top:16px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Contact Modal -->
+<div class="modal-backdrop" id="edit-contact-modal">
+  <div class="modal-box">
+    <h3>Edit Rekod</h3>
+    <div class="field"><label>Nama</label><input type="text" id="edit-contact-name"></div>
+    <div class="field"><label>No. Telefon</label><input type="text" id="edit-contact-phone"></div>
+    <div class="field"><label>Sumber</label><input type="text" id="edit-contact-source" list="source-suggestions"></div>
+    <div class="field"><label>Tag Pelanggan</label>
+      <div class="tag-check-row" id="edit-contact-tags"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="edit-contact-cancel">Batal</button>
+      <button class="btn btn-primary" id="edit-contact-save">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Full-View Modal -->
+<div class="modal-backdrop" id="report-modal">
+  <div class="report-modal-box">
+    <div class="report-modal-head">
+      <span id="report-modal-title">Dashboard</span>
+      <button id="report-modal-close">✕</button>
+    </div>
+    <iframe id="report-modal-iframe" src=""></iframe>
+  </div>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div class="modal-backdrop" id="image-modal">
+  <div class="image-modal-box">
+    <button id="image-modal-close">✕</button>
+    <img id="image-modal-img" src="" alt="preview">
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
