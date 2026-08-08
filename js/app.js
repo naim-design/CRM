@@ -2535,6 +2535,33 @@ function normalizeLoose(v) {
   return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+function entryMinutes(en) {
+  if (!/^\d{1,2}:\d{2}$/.test(en.masa || '')) return null;
+  const [hh, mm] = en.masa.split(':').map(Number);
+  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+  return hh * 60 + mm;
+}
+
+function eventMinutes(d) {
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function textSimilarityScore(a, b) {
+  const aa = normalizeCampaignKey(a);
+  const bb = normalizeCampaignKey(b);
+  if (!aa || !bb) return 0;
+  if (aa === bb) return 100;
+  if (aa.includes(bb) || bb.includes(aa)) return 60;
+
+  const at = new Set(aa.split(/[\s_\-\/]+/).filter(Boolean));
+  const bt = new Set(bb.split(/[\s_\-\/]+/).filter(Boolean));
+  if (!at.size || !bt.size) return 0;
+
+  let common = 0;
+  at.forEach(t => { if (bt.has(t)) common++; });
+  return Math.round((common / Math.max(at.size, bt.size)) * 50);
+}
+
 function wabotEventCampaignInfo(e) {
   const explicit =
     e.campaign ||
@@ -2544,69 +2571,148 @@ function wabotEventCampaignInfo(e) {
     '';
 
   if (explicit) {
-    return { name: String(explicit), source: 'Webhook', entry: null };
+    return { name: String(explicit), source: 'Webhook', entry: null, confidence: 100 };
   }
 
   const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
-  if (!d) return { name: 'Tanpa Campaign', source: 'Tiada metadata', entry: null };
+  if (!d) {
+    return { name: 'Tanpa Campaign', source: 'Tiada metadata', entry: null, confidence: 0 };
+  }
 
   const dateStr =
     `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 
   let candidates = (allEntries || []).filter(en => en.tarikh === dateStr);
+
   if (!candidates.length) {
-    return { name: 'Tanpa Campaign', source: 'Tiada padanan CRM', entry: null };
+    // fallback ±1 hari untuk event yang boleh tersasar timezone / waktu tengah malam.
+    const prev = new Date(d); prev.setDate(prev.getDate() - 1);
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+
+    const prevStr =
+      `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}-${String(prev.getDate()).padStart(2,'0')}`;
+    const nextStr =
+      `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}-${String(next.getDate()).padStart(2,'0')}`;
+
+    candidates = (allEntries || []).filter(en =>
+      en.tarikh === prevStr || en.tarikh === nextStr
+    );
   }
 
-  const eventAccount = normalizeLoose(
+  if (!candidates.length) {
+    return { name: 'Tanpa Campaign', source: 'Tiada padanan CRM', entry: null, confidence: 0 };
+  }
+
+  const eventAcc = normalizeLoose(
     e.instanceName || e.instance || e.instance_id || ''
   );
 
-  if (eventAccount) {
-    const accountMatches = candidates.filter(en => {
-      const acc = normalizeLoose(en.wabotAccount || '');
-      return acc && (
-        acc.includes(eventAccount) ||
-        eventAccount.includes(acc)
-      );
-    });
+  const eventText = [
+    e.campaign,
+    e.campaignName,
+    e.broadcast,
+    e.broadcastName,
+    e.script,
+    e.template,
+    e.templateName,
+    typeof e.message === 'string' ? e.message : '',
+    typeof e.text === 'string' ? e.text : ''
+  ].filter(Boolean).join(' ');
 
-    if (accountMatches.length) candidates = accountMatches;
-  }
+  const eMin = eventMinutes(d);
 
-  // Kalau hanya satu entry pada hari/account tersebut, itu padanan paling selamat.
-  if (candidates.length === 1) {
-    const en = candidates[0];
+  const scored = candidates.map(en => {
+    let score = 0;
+    const reasons = [];
+
+    // Date match
+    if (en.tarikh === dateStr) {
+      score += 35;
+      reasons.push('tarikh');
+    } else {
+      score += 10;
+      reasons.push('±1 hari');
+    }
+
+    // Account similarity
+    const entryAcc = normalizeLoose(en.wabotAccount || '');
+    if (eventAcc && entryAcc) {
+      if (entryAcc === eventAcc) {
+        score += 35;
+        reasons.push('akaun tepat');
+      } else if (entryAcc.includes(eventAcc) || eventAcc.includes(entryAcc)) {
+        score += 25;
+        reasons.push('akaun hampir');
+      }
+    }
+
+    // Time similarity
+    const m = entryMinutes(en);
+    if (m != null) {
+      const diff = Math.abs(eMin - m);
+      if (diff <= 30) {
+        score += 30;
+        reasons.push('masa ≤30m');
+      } else if (diff <= 90) {
+        score += 22;
+        reasons.push('masa ≤90m');
+      } else if (diff <= 180) {
+        score += 14;
+        reasons.push('masa ≤3j');
+      } else if (diff <= 360) {
+        score += 6;
+        reasons.push('masa ≤6j');
+      }
+    }
+
+    // Text/template/source similarity if anything useful exists in payload.
+    const textScore = Math.max(
+      textSimilarityScore(eventText, en.template || ''),
+      textSimilarityScore(eventText, en.source || ''),
+      textSimilarityScore(eventText, en.kategori || '')
+    );
+    if (textScore) {
+      score += Math.min(25, textScore);
+      reasons.push('teks');
+    }
+
+    return { en, score, reasons };
+  }).sort((a,b) => b.score - a.score);
+
+  const best = scored[0];
+  const second = scored[1];
+
+  // Conservative confidence rule:
+  // - at least 45 points
+  // - and either unique best or margin >= 10
+  const margin = second ? best.score - second.score : best.score;
+
+  if (best && best.score >= 45 && margin >= 10) {
     return {
-      name: en.template || en.source || en.kategori || 'Tanpa Campaign',
-      source: 'Auto CRM',
-      entry: en
+      name: best.en.template || best.en.source || best.en.kategori || 'Tanpa Campaign',
+      source: `Auto CRM ${best.score}%`,
+      entry: best.en,
+      confidence: best.score
     };
   }
 
-  // Jika ada beberapa entry, pilih masa blasting paling hampir.
-  const eventMinutes = d.getHours() * 60 + d.getMinutes();
-  const timed = candidates
-    .filter(en => /^\d{1,2}:\d{2}$/.test(en.masa || ''))
-    .map(en => {
-      const [hh, mm] = en.masa.split(':').map(Number);
-      const diff = Math.abs(eventMinutes - (hh * 60 + mm));
-      return { en, diff };
-    })
-    .sort((a,b) => a.diff - b.diff);
-
-  if (timed.length && timed[0].diff <= 360) {
-    const en = timed[0].en;
+  // If only one candidate on the day, allow weaker match.
+  if (scored.length === 1 && best.score >= 30) {
     return {
-      name: en.template || en.source || en.kategori || 'Tanpa Campaign',
-      source: 'Auto CRM',
-      entry: en
+      name: best.en.template || best.en.source || best.en.kategori || 'Tanpa Campaign',
+      source: `Auto CRM ${best.score}%`,
+      entry: best.en,
+      confidence: best.score
     };
   }
 
-  return { name: 'Tanpa Campaign', source: 'Padanan tidak pasti', entry: null };
+  return {
+    name: 'Tanpa Campaign',
+    source: 'Padanan tidak pasti',
+    entry: null,
+    confidence: best ? best.score : 0
+  };
 }
-
 function normalizeCampaignKey(v) {
   return String(v || '').trim().toLowerCase();
 }
