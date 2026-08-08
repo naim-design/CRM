@@ -12,6 +12,8 @@ let allTodos = [];
 let allPosters = [];
 let allFeedback = [];
 let unsubFeedback = null;
+let allCampaignMappings = [];
+let unsubCampaignMappings = null;
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -117,6 +119,12 @@ function startListeners() {
     allFeedback = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderFeedback();
   }, err => toast('Ralat baca feedback: ' + err.message, true));
+
+  unsubCampaignMappings = db.collection('campaignMappings').onSnapshot(snap => {
+    allCampaignMappings = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderCampaignManager();
+    populateCampaignLinker();
+  }, err => toast('Ralat baca campaign mapping: ' + err.message, true));
 }
 
 // ============================================================
@@ -2562,7 +2570,154 @@ function textSimilarityScore(a, b) {
   return Math.round((common / Math.max(at.size, bt.size)) * 50);
 }
 
+
+function campaignMapDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function campaignMapInstance(e) {
+  return String(
+    e.instanceName || e.instance || e.instance_id ||
+    e.phoneNumberId || e.phone_number_id || 'default'
+  ).trim();
+}
+
+function campaignMapKey(dateStr, instance) {
+  return `${dateStr}__${String(instance || 'default').trim()}`;
+}
+
+function manualCampaignMappingForEvent(e) {
+  const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+  if (!d) return null;
+  const dateStr = campaignMapDate(d);
+  const instance = campaignMapInstance(e);
+  const key = campaignMapKey(dateStr, instance);
+
+  return (allCampaignMappings || []).find(m =>
+    m.mapKey === key ||
+    (m.date === dateStr && String(m.instance || 'default') === instance)
+  ) || null;
+}
+
+function campaignEntryById(id) {
+  return (allEntries || []).find(e => e.id === id) || null;
+}
+
+function campaignEntryLabel(en) {
+  if (!en) return '';
+  const name = en.template || en.source || en.kategori || 'Campaign CRM';
+  const time = en.masa ? ` ${en.masa}` : '';
+  const staff = en.staffName ? ` • ${en.staffName}` : '';
+  return `${en.tarikh || '-'}${time} • ${name}${staff}`;
+}
+
+function populateCampaignLinker() {
+  const dateEl = document.getElementById('campaign-link-date');
+  const instanceEl = document.getElementById('campaign-link-instance');
+  const entryEl = document.getElementById('campaign-link-entry');
+  const statusEl = document.getElementById('campaign-link-status');
+  if (!dateEl || !instanceEl || !entryEl) return;
+
+  const events = (allWabotEvents || []).filter(isUsefulWabotEvent);
+  const latest = [...events].sort((a,b) => {
+    const ad = wabotDate(a.eventAt) || wabotDate(a.receivedAt) || new Date(0);
+    const bd = wabotDate(b.eventAt) || wabotDate(b.receivedAt) || new Date(0);
+    return bd - ad;
+  })[0];
+
+  if (!dateEl.value) {
+    const d = latest ? (wabotDate(latest.eventAt) || wabotDate(latest.receivedAt)) : new Date();
+    dateEl.value = campaignMapDate(d);
+  }
+
+  const instances = [...new Set(events.map(campaignMapInstance).filter(Boolean))];
+  const oldInstance = instanceEl.value;
+  instanceEl.innerHTML = instances.length
+    ? instances.map(x => `<option value="${wabotEsc(x)}">${wabotEsc(x)}</option>`).join('')
+    : '<option value="default">default</option>';
+  if (instances.includes(oldInstance)) instanceEl.value = oldInstance;
+  else if (latest) instanceEl.value = campaignMapInstance(latest);
+
+  const selectedDate = dateEl.value;
+  const candidates = (allEntries || [])
+    .filter(en => !selectedDate || en.tarikh === selectedDate)
+    .sort((a,b) => String(b.masa||'').localeCompare(String(a.masa||'')));
+
+  const oldEntry = entryEl.value;
+  entryEl.innerHTML = '<option value="">-- Pilih rekod CRM --</option>' +
+    candidates.map(en => `<option value="${en.id}">${wabotEsc(campaignEntryLabel(en))}</option>`).join('');
+  if (candidates.some(en => en.id === oldEntry)) entryEl.value = oldEntry;
+
+  const key = campaignMapKey(dateEl.value, instanceEl.value);
+  const existing = (allCampaignMappings || []).find(m => m.mapKey === key);
+  if (existing) {
+    entryEl.value = existing.entryId || '';
+    if (statusEl) statusEl.textContent = `Linked: ${existing.campaignName || 'CRM Campaign'}`;
+  } else if (statusEl) {
+    statusEl.textContent = 'Belum linked';
+  }
+}
+
+async function saveCampaignLink() {
+  const dateEl = document.getElementById('campaign-link-date');
+  const instanceEl = document.getElementById('campaign-link-instance');
+  const entryEl = document.getElementById('campaign-link-entry');
+  if (!dateEl || !instanceEl || !entryEl) return;
+
+  const date = dateEl.value;
+  const instance = instanceEl.value || 'default';
+  const entry = campaignEntryById(entryEl.value);
+
+  if (!date || !entry) {
+    toast('Pilih tarikh dan rekod CRM dahulu.', true);
+    return;
+  }
+
+  const mapKey = campaignMapKey(date, instance);
+  const campaignName = entry.template || entry.source || entry.kategori || 'Campaign CRM';
+
+  try {
+    await db.collection('campaignMappings').doc(mapKey).set({
+      mapKey,
+      date,
+      instance,
+      entryId: entry.id,
+      campaignName,
+      entryLabel: campaignEntryLabel(entry),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy: currentUser ? currentUser.uid : null
+    }, { merge:true });
+    toast('Campaign berjaya linked.');
+  } catch (err) {
+    toast('Gagal simpan mapping: ' + err.message, true);
+  }
+}
+
+async function deleteCampaignLink() {
+  const dateEl = document.getElementById('campaign-link-date');
+  const instanceEl = document.getElementById('campaign-link-instance');
+  if (!dateEl || !instanceEl) return;
+  const mapKey = campaignMapKey(dateEl.value, instanceEl.value);
+  try {
+    await db.collection('campaignMappings').doc(mapKey).delete();
+    toast('Mapping dibuang.');
+  } catch (err) {
+    toast('Gagal buang mapping: ' + err.message, true);
+  }
+}
+
 function wabotEventCampaignInfo(e) {
+  const manual = manualCampaignMappingForEvent(e);
+  if (manual) {
+    const linkedEntry = campaignEntryById(manual.entryId);
+    return {
+      name: manual.campaignName || (linkedEntry && (linkedEntry.template || linkedEntry.source || linkedEntry.kategori)) || 'Campaign CRM',
+      source: 'Manual Link',
+      entry: linkedEntry,
+      confidence: 100
+    };
+  }
+
   const explicit =
     e.campaign ||
     e.campaignName ||
@@ -2757,6 +2912,7 @@ function campaignCRMStats(campaignName, exactEntries = []) {
 }
 
 function renderCampaignManager(){
+  setTimeout(populateCampaignLinker, 0);
   const rangeEl = document.getElementById('campaign-range');
   const start = campaignRangeStart(rangeEl ? rangeEl.value : 'today');
 
@@ -2872,6 +3028,20 @@ function renderCampaignManager(){
     </tr>`;
   }).join('');
 }
+const campaignLinkDate = document.getElementById('campaign-link-date');
+const campaignLinkInstance = document.getElementById('campaign-link-instance');
+const campaignLinkEntry = document.getElementById('campaign-link-entry');
+const campaignLinkSave = document.getElementById('campaign-link-save');
+const campaignLinkDelete = document.getElementById('campaign-link-delete');
+if (campaignLinkDate) campaignLinkDate.addEventListener('change', populateCampaignLinker);
+if (campaignLinkInstance) campaignLinkInstance.addEventListener('change', populateCampaignLinker);
+if (campaignLinkEntry) campaignLinkEntry.addEventListener('change', () => {
+  const s = document.getElementById('campaign-link-status');
+  if (s && campaignLinkEntry.value) s.textContent = 'Sedia untuk link';
+});
+if (campaignLinkSave) campaignLinkSave.addEventListener('click', saveCampaignLink);
+if (campaignLinkDelete) campaignLinkDelete.addEventListener('click', deleteCampaignLink);
+
 const campaignRange = document.getElementById('campaign-range');
 if (campaignRange) campaignRange.addEventListener('change', renderCampaignManager);
 
