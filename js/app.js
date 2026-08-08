@@ -1848,12 +1848,39 @@ function wabotDate(v) {
   const d = new Date(v); return isNaN(d) ? null : d;
 }
 function wabotEventKind(e) {
-  const raw = `${e.direction||''} ${e.event||''} ${e.type||''} ${e.status||''}`.toLowerCase();
-  if (raw.includes('incoming') || raw.includes('received') || e.fromMe === false) return 'incoming';
-  if (raw.includes('outgoing') || raw.includes('sent') || e.fromMe === true) return 'outgoing';
-  if (raw.includes('delivered')) return 'delivered';
-  if (raw.includes('read')) return 'read';
-  if (raw.includes('fail') || raw.includes('error')) return 'failed';
+  const raw = `${e.direction || ''} ${e.event || ''} ${e.type || ''} ${e.status || ''}`.toLowerCase();
+
+  // 1. Status mesej mesti diperiksa dahulu
+  if (raw.includes('fail') || raw.includes('error')) {
+    return 'failed';
+  }
+
+  if (raw.includes('read')) {
+    return 'read';
+  }
+
+  if (raw.includes('delivered')) {
+    return 'delivered';
+  }
+
+  // 2. Incoming = customer reply
+  if (
+    raw.includes('incoming') ||
+    raw.includes('received') ||
+    e.fromMe === false
+  ) {
+    return 'incoming';
+  }
+
+  // 3. Sent / outgoing
+  if (
+    raw.includes('outgoing') ||
+    raw.includes('sent') ||
+    e.fromMe === true
+  ) {
+    return 'outgoing';
+  }
+
   return (e.direction || e.status || e.event || e.type || 'event').toLowerCase();
 }
 function startWabotListener() {
