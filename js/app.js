@@ -2003,14 +2003,15 @@ function renderWabotLive() {
   setAny(['wstat-reply','wl-reply'], fmt(c.reply));
   setAny(['wstat-failed','wl-failed'], fmt(c.failed));
 
+  const audience = wabotAudienceStats(events);
   const deliveryRate = c.sent ? c.delivered / c.sent * 100 : 0;
   const readRate = c.sent ? c.read / c.sent * 100 : 0;
-  const replyRate = c.sent ? c.reply / c.sent * 100 : 0;
+  const replyRate = audience.replyRate;
   const failedRate = c.sent ? c.failed / c.sent * 100 : 0;
 
   setAny(['wstat-delivery-rate'], deliveryRate.toFixed(1) + '% delivery');
   setAny(['wstat-read-rate'], readRate.toFixed(1) + '% read');
-  setAny(['wstat-reply-rate'], replyRate.toFixed(1) + '% reply');
+  setAny(['wstat-reply-rate'], replyRate.toFixed(1) + '% valid customer reply');
   setAny(['wstat-failed-rate'], failedRate.toFixed(1) + '% failed');
 
   const lastEvent = events
@@ -2529,11 +2530,108 @@ function campaignRangeStart(range) {
   return d;
 }
 
+
+function normalizeLoose(v) {
+  return String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function wabotEventCampaignInfo(e) {
+  const explicit =
+    e.campaign ||
+    e.campaignName ||
+    e.broadcast ||
+    e.broadcastName ||
+    '';
+
+  if (explicit) {
+    return { name: String(explicit), source: 'Webhook', entry: null };
+  }
+
+  const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+  if (!d) return { name: 'Tanpa Campaign', source: 'Tiada metadata', entry: null };
+
+  const dateStr =
+    `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  let candidates = (allEntries || []).filter(en => en.tarikh === dateStr);
+  if (!candidates.length) {
+    return { name: 'Tanpa Campaign', source: 'Tiada padanan CRM', entry: null };
+  }
+
+  const eventAccount = normalizeLoose(
+    e.instanceName || e.instance || e.instance_id || ''
+  );
+
+  if (eventAccount) {
+    const accountMatches = candidates.filter(en => {
+      const acc = normalizeLoose(en.wabotAccount || '');
+      return acc && (
+        acc.includes(eventAccount) ||
+        eventAccount.includes(acc)
+      );
+    });
+
+    if (accountMatches.length) candidates = accountMatches;
+  }
+
+  // Kalau hanya satu entry pada hari/account tersebut, itu padanan paling selamat.
+  if (candidates.length === 1) {
+    const en = candidates[0];
+    return {
+      name: en.template || en.source || en.kategori || 'Tanpa Campaign',
+      source: 'Auto CRM',
+      entry: en
+    };
+  }
+
+  // Jika ada beberapa entry, pilih masa blasting paling hampir.
+  const eventMinutes = d.getHours() * 60 + d.getMinutes();
+  const timed = candidates
+    .filter(en => /^\d{1,2}:\d{2}$/.test(en.masa || ''))
+    .map(en => {
+      const [hh, mm] = en.masa.split(':').map(Number);
+      const diff = Math.abs(eventMinutes - (hh * 60 + mm));
+      return { en, diff };
+    })
+    .sort((a,b) => a.diff - b.diff);
+
+  if (timed.length && timed[0].diff <= 360) {
+    const en = timed[0].en;
+    return {
+      name: en.template || en.source || en.kategori || 'Tanpa Campaign',
+      source: 'Auto CRM',
+      entry: en
+    };
+  }
+
+  return { name: 'Tanpa Campaign', source: 'Padanan tidak pasti', entry: null };
+}
+
 function normalizeCampaignKey(v) {
   return String(v || '').trim().toLowerCase();
 }
 
-function campaignCRMStats(campaignName) {
+function campaignCRMStats(campaignName, exactEntries = []) {
+  if (exactEntries && exactEntries.length) {
+    const unique = [];
+    const seen = new Set();
+
+    exactEntries.forEach(e => {
+      const key = e.id || `${e.tarikh || ''}_${e.masa || ''}_${e.template || ''}_${e.staffName || ''}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(e);
+      }
+    });
+
+    return unique.reduce((a, e) => {
+      a.sessions += 1;
+      a.buyer += Number(e.buyer || 0);
+      a.sales += Number(e.sales || 0);
+      return a;
+    }, { sessions:0, buyer:0, sales:0 });
+  }
+
   const key = normalizeCampaignKey(campaignName);
 
   const rows = (allEntries || []).filter(e => {
@@ -2565,21 +2663,27 @@ function renderCampaignManager(){
   const groups = {};
 
   events.forEach(e => {
-    const campaign =
-      e.campaign ||
-      e.campaignName ||
-      e.broadcast ||
-      e.broadcastName ||
-      'Tanpa Campaign';
+    const info = wabotEventCampaignInfo(e);
+    const campaign = info.name || 'Tanpa Campaign';
 
-    if (!groups[campaign]) groups[campaign] = [];
-    groups[campaign].push(e);
+    if (!groups[campaign]) {
+      groups[campaign] = {
+        events: [],
+        sources: new Set(),
+        entries: []
+      };
+    }
+
+    groups[campaign].events.push(e);
+    groups[campaign].sources.add(info.source || 'Tidak Diketahui');
+    if (info.entry) groups[campaign].entries.push(info.entry);
   });
 
-  const rows = Object.entries(groups).map(([campaign, campaignEvents]) => {
+  const rows = Object.entries(groups).map(([campaign, group]) => {
+    const campaignEvents = group.events;
     const c = wabotCountsFor(campaignEvents);
     const audience = wabotAudienceStats(campaignEvents);
-    const crm = campaignCRMStats(campaign);
+    const crm = campaignCRMStats(campaign, group.entries);
 
     const hours = {};
     campaignEvents
@@ -2605,6 +2709,7 @@ function renderCampaignManager(){
 
     return {
       campaign,
+      mapping: [...group.sources].join(' + '),
       sent: c.sent,
       delivered: c.delivered,
       read: c.read,
@@ -2634,7 +2739,7 @@ function renderCampaignManager(){
 
   if (!rows.length) {
     body.innerHTML =
-      '<tr><td colspan="14" class="empty-state">Belum ada campaign metadata.</td></tr>';
+      '<tr><td colspan="15" class="empty-state">Belum ada campaign metadata / padanan CRM.</td></tr>';
     return;
   }
 
@@ -2644,6 +2749,7 @@ function renderCampaignManager(){
 
     return `<tr>
       <td class="tname">${wabotEsc(r.campaign)}</td>
+      <td style="font-size:11px;">${wabotEsc(r.mapping)}</td>
       <td class="num">${fmt(r.sent)}</td>
       <td class="num">${deliveryRate.toFixed(1)}%</td>
       <td class="num">${readRate.toFixed(1)}%</td>
@@ -2689,8 +2795,15 @@ function renderAIInsight(){
   const scriptGroups = {};
 
   events.forEach(e => {
-    const campaign = e.campaign || e.campaignName || e.broadcast || e.broadcastName;
-    const script = e.script || e.template || e.templateName;
+    const campaignInfo = wabotEventCampaignInfo(e);
+    const campaign = campaignInfo.name && campaignInfo.name !== 'Tanpa Campaign'
+      ? campaignInfo.name
+      : null;
+    const script =
+      e.script ||
+      e.template ||
+      e.templateName ||
+      (campaignInfo.entry ? campaignInfo.entry.template : null);
 
     if (campaign) {
       if (!campaignGroups[campaign]) campaignGroups[campaign] = [];
