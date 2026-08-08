@@ -649,7 +649,7 @@ Ahmad	60112223344"></textarea>
         <div class="stat-card accent-mint"><div class="label">Sent</div><div class="value" id="apro-sent">0</div><div class="foot">Outgoing message</div></div>
         <div class="stat-card"><div class="label">Delivered</div><div class="value" id="apro-delivered">0</div><div class="foot" id="apro-delivery-rate">0.0%</div></div>
         <div class="stat-card"><div class="label">Read</div><div class="value" id="apro-read">0</div><div class="foot" id="apro-read-rate">0.0%</div></div>
-        <div class="stat-card"><div class="label">Unique Reply</div><div class="value" id="apro-reply">0</div><div class="foot" id="apro-reply-rate">0.0%</div></div>
+        <div class="stat-card"><div class="label">Valid Reply</div><div class="value" id="apro-reply">0</div><div class="foot" id="apro-reply-rate">0.0%</div></div>
         <div class="stat-card"><div class="label">Failed</div><div class="value" id="apro-failed">0</div><div class="foot" id="apro-failed-rate">0.0%</div></div>
       </div>
 
@@ -678,7 +678,7 @@ Ahmad	60112223344"></textarea>
         </div>
         <div class="form-card">
           <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">04</span>Performance Akaun Wabot</h2></div>
-          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Akaun / Instance</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Read</th><th>Failed</th></tr></thead><tbody id="apro-account-body"></tbody></table></div>
+          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Akaun / Instance</th><th>Sent</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Read</th><th>Failed</th></tr></thead><tbody id="apro-account-body"></tbody></table></div>
         </div>
       </div>
 
@@ -702,7 +702,7 @@ Ahmad	60112223344"></textarea>
       </div>
       <div class="form-card">
         <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Campaign Tracking</h2><span class="hint-chip" id="campaign-count">0 campaign</span></div>
-        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Unique Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="8" class="empty-state">Belum ada campaign metadata.</td></tr></tbody></table></div>
+        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Buyer</th><th>Sales</th><th>Conversion Rate</th><th>ROAS</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="14" class="empty-state">Belum ada campaign metadata.</td></tr></tbody></table></div>
       </div>
       <div class="form-card" style="margin-top:20px;">
         <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Struktur Nama Disyorkan</h2></div>
@@ -717,7 +717,7 @@ Ahmad	60112223344"></textarea>
         <select id="insight-range" class="search-box" style="width:auto; min-width:140px;"><option value="today">Hari Ini</option><option value="7">7 Hari</option><option value="30">30 Hari</option></select>
       </div>
       <div class="stat-row" style="margin-bottom:20px;">
-        <div class="stat-card accent-mint"><div class="label">Reply Rate</div><div class="value" id="insight-reply-rate">0.0%</div><div class="foot">Reply ÷ Sent</div></div>
+        <div class="stat-card accent-mint"><div class="label">Reply Rate</div><div class="value" id="insight-reply-rate">0.0%</div><div class="foot">Valid Reply ÷ Unique Contacted</div></div>
         <div class="stat-card"><div class="label">Best Hour</div><div class="value" id="insight-best-hour">–</div><div class="foot">Jam reply tertinggi</div></div>
         <div class="stat-card"><div class="label">Best Campaign</div><div class="value" id="insight-best-campaign" style="font-size:19px;">–</div><div class="foot">Reply rate tertinggi</div></div>
         <div class="stat-card"><div class="label">Best Script</div><div class="value" id="insight-best-script" style="font-size:19px;">–</div><div class="foot">Jika metadata tersedia</div></div>
