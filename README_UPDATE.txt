@@ -1,22 +1,20 @@
-CRM FINAL ONE-SHOT UPDATE
-=========================
+CRM SMART MATCH V5
+==================
 
-Replace dua fail ini di GitHub:
-1. /app.html
-2. /js/app.js
+Replace:
+- app.html
+- js/app.js
 
-Included:
-- Valid Reply logic
-- CRM Reply Rate <= 100% secara semantik
-- Campaign Manager 14 columns
-- Buyer / Sales / Conversion Rate / ROAS
-- Wabot Live compatible dengan HTML baru + layout lama
-- Wabot Live filters: range, instance, event
-- Wabot health check button
-- Analytics Pro account table alignment
-- AI Insight IDs & calculations fixed
-- Backward compatibility untuk beberapa ID Wabot lama
+Smart Matching improvements:
+- same date scoring
+- ±1 day fallback for timezone/near-midnight events
+- Wabot account/instance similarity
+- closest blast time scoring
+- template/source/category text similarity
+- confidence threshold and ambiguity protection
 
-Nota:
-- "Tanpa Campaign" akan kekal selagi payload Wabot tidak menghantar campaign/campaignName/broadcast/broadcastName.
-- Buyer/Sales campaign hanya boleh dipadankan apabila nama campaign sama dengan Template / Source / Kategori dalam entries CRM.
+Result:
+- If a safe CRM match is found, "Tanpa Campaign" becomes the matched template/source/category.
+- Mapping column shows e.g. "Auto CRM 90%".
+- Buyer / Sales / Conversion Rate / ROAS can then use the matched CRM entry.
+- If confidence is weak, system does NOT force a wrong campaign.
