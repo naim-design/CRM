@@ -1870,7 +1870,23 @@ function wabotEventKind(e) {
 }
 
 function isUsefulWabotEvent(e) {
+  const eventName = String(e.event || e.type || '').toLowerCase().trim();
+
+  // Buang event housekeeping/noise yang bukan lifecycle mesej.
+  if (
+    eventName === 'webhook' ||
+    eventName === 'new subscriber' ||
+    eventName === 'subscriber' ||
+    eventName === 'connection' ||
+    eventName === 'connected' ||
+    eventName === 'disconnected'
+  ) {
+    return false;
+  }
+
   const k = wabotEventKind(e);
+
+  // Pastikan hanya lifecycle mesej sebenar dipaparkan.
   return ['incoming', 'outgoing', 'delivered', 'read', 'failed'].includes(k);
 }
 function startWabotListener() {
@@ -1941,9 +1957,91 @@ function wabotCounts() {
 
   return c;
 }
+
+function wabotMessageJourneys() {
+  const journeys = new Map();
+
+  allWabotEvents
+    .filter(isUsefulWabotEvent)
+    .forEach(e => {
+      const k = wabotEventKind(e);
+      const messageId = e.messageId || e.message_id || null;
+      const phone = e.phone || e.from || e.to || '-';
+      const eventTime = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+      const timeKey = eventTime ? eventTime.getTime() : '';
+
+      // Untuk outgoing lifecycle, messageId akan gabungkan sent/delivered/read
+      // kepada journey mesej yang sama.
+      const baseKey = messageId || `${phone}_${timeKey}_${k}`;
+
+      if (!journeys.has(baseKey)) {
+        journeys.set(baseKey, {
+          key: baseKey,
+          messageId,
+          phone,
+          sent: false,
+          delivered: false,
+          read: false,
+          failed: false,
+          incoming: false,
+          firstAt: eventTime || null,
+          lastAt: eventTime || null
+        });
+      }
+
+      const j = journeys.get(baseKey);
+
+      if (k === 'outgoing') j.sent = true;
+      if (k === 'delivered') j.delivered = true;
+      if (k === 'read') j.read = true;
+      if (k === 'failed') j.failed = true;
+      if (k === 'incoming') j.incoming = true;
+
+      if (eventTime) {
+        if (!j.firstAt || eventTime < j.firstAt) j.firstAt = eventTime;
+        if (!j.lastAt || eventTime > j.lastAt) j.lastAt = eventTime;
+      }
+    });
+
+  return [...journeys.values()];
+}
+
+function wabotJourneyStats() {
+  const journeys = wabotMessageJourneys();
+
+  // Journey outgoing sahaja untuk delivery/read rate.
+  const outgoing = journeys.filter(j => j.sent || j.delivered || j.read || j.failed);
+
+  const sent = outgoing.filter(j => j.sent).length;
+  const delivered = outgoing.filter(j => j.delivered).length;
+  const read = outgoing.filter(j => j.read).length;
+  const failed = outgoing.filter(j => j.failed).length;
+
+  // Incoming masih dikira sebagai mesej reply unik.
+  const replyIds = new Set();
+  allWabotEvents
+    .filter(e => isUsefulWabotEvent(e) && wabotEventKind(e) === 'incoming')
+    .forEach(e => {
+      const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
+      replyIds.add(
+        e.messageId ||
+        e.message_id ||
+        `${e.phone || e.from || '-'}_${d ? d.getTime() : ''}_${typeof e.message === 'string' ? e.message : ''}`
+      );
+    });
+
+  return {
+    sent,
+    delivered,
+    read,
+    failed,
+    reply: replyIds.size
+  };
+}
+
 function renderWabotModules(){ renderWabotLive(); renderAnalyticsPro(); renderCampaignManager(); renderAIInsight(); }
 function renderWabotLive() {
-  const c = wabotCounts();
+  const c = wabotJourneyStats();
 
   [
     ['wl-sent', c.sent],
@@ -1960,7 +2058,7 @@ function renderWabotLive() {
   if (badge) {
     const usefulCount = allWabotEvents.filter(isUsefulWabotEvent).length;
     badge.textContent = usefulCount
-      ? `${fmt(usefulCount)} event berguna diterima`
+      ? `${fmt(usefulCount)} event mesej diterima`
       : 'Menunggu webhook';
   }
 
@@ -1975,7 +2073,7 @@ function renderWabotLive() {
   // Feed utama hanya tunjuk event yang benar-benar berguna.
   // Event seperti WEBHOOK, NEW SUBSCRIBER dan [object Object] disorok.
   const filtered = allWabotEvents
-    .filter(isUsefulWabotEvent)
+    .filter(e => isUsefulWabotEvent(e))
     .filter(e => {
       const k = wabotEventKind(e);
 
@@ -2036,7 +2134,7 @@ function renderBars(id, rows, valueKey='value'){
 }
 function groupEvents(fieldFn, filterFn=()=>true){ const m={}; allWabotEvents.filter(filterFn).forEach(e=>{const k=fieldFn(e)||'Tidak Diketahui';m[k]=(m[k]||0)+1}); return Object.entries(m).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value); }
 function renderAnalyticsPro(){
-  const c=wabotCounts();
+  const c=wabotJourneyStats();
   const sent=Math.max(c.sent,1);
   const rr=c.sent?c.reply/c.sent*100:0, dr=c.sent?c.delivered/c.sent*100:0, readr=c.sent?c.read/c.sent*100:0;
   const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
@@ -2053,7 +2151,7 @@ function renderCampaignManager(){
   const rows=Object.values(map).sort((a,b)=>b.sent-a.sent); const body=document.getElementById('cm-body'), count=document.getElementById('cm-count'); if(count)count.textContent=`${rows.length} campaign`; if(!body)return; if(!rows.length){body.innerHTML='<tr><td colspan="7" class="empty-state">Belum ada data campaign.</td></tr>';return;} body.innerHTML=rows.map(r=>{const best=Object.entries(r.hours).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-', rate=r.sent?r.reply/r.sent*100:0; return `<tr><td class="tname">${wabotEsc(r.campaign)}</td><td>${wabotEsc(r.script)}</td><td>${wabotEsc(r.account)}</td><td class="num">${fmt(r.sent)}</td><td class="num">${fmt(r.reply)}</td><td class="num">${rate.toFixed(1)}%</td><td>${best}</td></tr>`}).join('');
 }
 function renderAIInsight(){
-  const c=wabotCounts(), rr=c.sent?c.reply/c.sent*100:0;
+  const c=wabotJourneyStats(), rr=c.sent?c.reply/c.sent*100:0;
   const hours=groupEvents(e=>{const d=wabotDate(e.eventAt)||wabotDate(e.receivedAt);return d?String(d.getHours()).padStart(2,'0')+':00':null},e=>wabotEventKind(e)==='incoming'); const bestHour=hours[0];
   const scripts=groupEvents(e=>e.script||e.template||e.templateName||null,e=>wabotEventKind(e)==='incoming' && !!(e.script||e.template||e.templateName)); const bestScript=scripts[0];
   const accounts=groupEvents(e=>e.instanceName||e.instance||e.instance_id||null,e=>wabotEventKind(e)==='incoming'); const bestAcc=accounts[0];
