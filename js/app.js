@@ -398,24 +398,58 @@ function dashSvgChart(points, activeKeys) {
 function renderProjectTrends() {
   const grid=document.getElementById('project-trend-grid'); if(!grid) return;
   const from=document.getElementById('filter-from').value, to=document.getElementById('filter-to').value;
+  const selectedKategori=document.getElementById('filter-kategori').value;
+  const staff=document.getElementById('filter-staff').value;
   const dates=dashDateList(from,to);
-  const projects=[
-    {key:'susu',label:'Projek Susu',kategori:'Projek Susu'},
-    {key:'ikhtiar',label:'Projek Leads Ikhtiar',kategori:'Projek Leads Ikhtiar (NaimFani)'},
-    {key:'jus',label:'Promo Jus',kategori:'Promo Jus'}
-  ];
+
+  const projectLabelMap = {
+    'Projek Susu':'Projek Susu',
+    'Projek Leads Ikhtiar (NaimFani)':'Projek Leads Ikhtiar',
+    'Promo Jus':'Promo Jus',
+    'Database WS/Lead':'Database WS/Lead'
+  };
+
+  const trendKey = selectedKategori ? normalizeLoose(selectedKategori) || 'selected' : 'semua-projek';
+  const trendLabel = selectedKategori ? (projectLabelMap[selectedKategori] || selectedKategori) : 'Semua Projek';
+
+  const rows = allEntries.filter(en => {
+    if (from && en.tarikh < from) return false;
+    if (to && en.tarikh > to) return false;
+    if (staff && en.staffId !== staff) return false;
+    if (selectedKategori && en.kategori !== selectedKategori) return false;
+    return true;
+  });
+
+  const m=dashMetrics(rows);
+  const daily=dates.map(date=>{
+    const x=dashMetrics(rows.filter(r=>r.tarikh===date));
+    return {date,sales:x.sales,sent:x.sent,reply:x.reply,buyer:x.buyer,cost:+x.cost.toFixed(2)};
+  });
+
   window.__dashTrendActive = window.__dashTrendActive || {};
-  grid.innerHTML=projects.map(pr=>{
-    const rows=dashProjectRows(pr.kategori), m=dashMetrics(rows);
-    const daily=dates.map(date=>{const x=dashMetrics(rows.filter(r=>r.tarikh===date));return {date,sales:x.sales,sent:x.sent,reply:x.reply,buyer:x.buyer,cost:+x.cost.toFixed(2)};});
-    const active=window.__dashTrendActive[pr.key] || ['sales','sent'];
-    const chips=[['sales','Sales'],['sent','Sent'],['reply','Reply'],['buyer','Buyer'],['cost','Kos']].map(([k,l])=>`<button type="button" class="trend-chip ${active.includes(k)?'active':''}" data-project="${pr.key}" data-key="${k}"><span class="trend-dot ${k}"></span>${l}</button>`).join('');
-    return `<article class="project-trend-card">
-      <div class="project-trend-top"><div><div class="project-trend-name">${pr.label}</div><div class="project-trend-summary">Sales <b>RM ${fmt(m.sales)}</b> · Buyer <b>${fmt(m.buyer)}</b> · Reply <b>${m.replyRate.toFixed(1)}%</b></div></div><span class="hint-chip">${rows.length} entri</span></div>
-      <div class="trend-chip-row">${chips}</div>
-      <div class="trend-chart-wrap">${daily.length?dashSvgChart(daily,active):'<div class="empty-state">Pilih julat tarikh untuk lihat trend.</div>'}</div>
-    </article>`;
-  }).join('');
+  const active=window.__dashTrendActive[trendKey] || ['sales','sent'];
+  const chips=[['sales','Sales'],['sent','Sent'],['reply','Reply'],['buyer','Buyer'],['cost','Kos']]
+    .map(([k,l])=>`<button type="button" class="trend-chip ${active.includes(k)?'active':''}" data-project="${trendKey}" data-key="${k}"><span class="trend-dot ${k}"></span>${l}</button>`)
+    .join('');
+
+  const scopeText = selectedKategori
+    ? `Trend berdasarkan ${trendLabel} sahaja`
+    : 'Semua projek digabungkan mengikut hari';
+
+  grid.innerHTML=`<article class="project-trend-card">
+    <div class="project-trend-top">
+      <div>
+        <div class="project-trend-name">${wabotEsc(trendLabel)}</div>
+        <div class="project-trend-summary">
+          ${wabotEsc(scopeText)} · Sales <b>RM ${fmt(m.sales)}</b> · Buyer <b>${fmt(m.buyer)}</b> · Reply <b>${m.replyRate.toFixed(1)}%</b>
+        </div>
+      </div>
+      <span class="hint-chip">${rows.length} entri</span>
+    </div>
+    <div class="trend-chip-row">${chips}</div>
+    <div class="trend-chart-wrap">${daily.length?dashSvgChart(daily,active):'<div class="empty-state">Pilih julat tarikh untuk lihat trend.</div>'}</div>
+  </article>`;
+
   grid.querySelectorAll('.trend-chip').forEach(btn=>btn.onclick=()=>{
     const p=btn.dataset.project,k=btn.dataset.key;
     const arr=window.__dashTrendActive[p] || ['sales','sent'];
