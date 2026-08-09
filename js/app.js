@@ -290,45 +290,192 @@ function filteredEntries() {
   });
 }
 
+const DASH_TARGETS = {
+  sales: 30000,
+  conversion: 1,
+  reply: 50,
+  roas: 10,
+  roi: 10,
+  cost: 1000,
+  buyer: 100
+};
+
+function dashTotals(rows) {
+  return rows.reduce((a, r) => {
+    a.sent += Number(r.sent)||0; a.delivered += Number(r.delivered)||0; a.read += Number(r.read)||0;
+    a.reply += Number(r.reply)||0; a.failed += Number(r.failed)||0; a.buyer += Number(r.buyer)||0; a.sales += Number(r.sales)||0;
+    return a;
+  }, {sent:0,delivered:0,read:0,reply:0,failed:0,buyer:0,sales:0});
+}
+function dashMetrics(rows) {
+  const t = dashTotals(rows);
+  const cost = costRM(t.sent);
+  return {
+    ...t, cost,
+    roas: cost ? t.sales / cost : 0,
+    roi: cost ? (t.sales - cost) / cost : 0,
+    conversion: t.sent ? t.buyer / t.sent * 100 : 0,
+    replyRate: t.sent ? t.reply / t.sent * 100 : 0,
+    readRate: t.sent ? t.read / t.sent * 100 : 0
+  };
+}
+function dashDateShift(iso, days) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T12:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
+}
+function dashScopedRowsForDate(date, kategoriOverride) {
+  const staff = document.getElementById('filter-staff').value;
+  const selectedKategori = document.getElementById('filter-kategori').value;
+  const kategori = kategoriOverride !== undefined ? kategoriOverride : selectedKategori;
+  return allEntries.filter(en => {
+    if (en.tarikh !== date) return false;
+    if (staff && en.staffId !== staff) return false;
+    if (kategori && en.kategori !== kategori) return false;
+    return true;
+  });
+}
+function dashSetDelta(id, current, previous, lowerIsBetter=false, suffix='') {
+  const el = document.getElementById(id); if (!el) return;
+  if (!previous && !current) { el.className='dash-delta neutral'; el.textContent='—'; return; }
+  if (!previous) { el.className='dash-delta up'; el.textContent='▲ Baru'; return; }
+  const pct = ((current - previous) / Math.abs(previous)) * 100;
+  const good = lowerIsBetter ? pct <= 0 : pct >= 0;
+  el.className = 'dash-delta ' + (good ? 'up' : 'down');
+  el.textContent = `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(1)}%${suffix}`;
+}
+function dashSetTarget(key, value, target, lowerIsBetter=false) {
+  const bar = document.getElementById(`target-${key}-bar`);
+  const txt = document.getElementById(`target-${key}-text`);
+  if (!bar || !txt) return;
+  const rawPct = target ? value / target * 100 : 0;
+  const width = Math.min(Math.max(rawPct,0),100);
+  bar.style.width = width + '%';
+  bar.classList.toggle('over', lowerIsBetter && rawPct > 100);
+  if (key === 'cost') txt.textContent = `${rawPct.toFixed(0)}% digunakan`;
+  else txt.textContent = `${rawPct.toFixed(0)}%`;
+}
+function dashProjectRows(kategori) {
+  const from = document.getElementById('filter-from').value;
+  const to = document.getElementById('filter-to').value;
+  const staff = document.getElementById('filter-staff').value;
+  return allEntries.filter(en => {
+    if (from && en.tarikh < from) return false;
+    if (to && en.tarikh > to) return false;
+    if (staff && en.staffId !== staff) return false;
+    return en.kategori === kategori;
+  });
+}
+function dashDateList(from, to) {
+  if (!from || !to) return [];
+  const out=[]; let d=from, guard=0;
+  while(d<=to && guard<370){ out.push(d); d=dashDateShift(d,1); guard++; }
+  return out;
+}
+function dashSvgChart(points, activeKeys) {
+  const W=760,H=250,L=52,R=18,T=22,B=42, pw=W-L-R, ph=H-T-B;
+  const keys = activeKeys.length ? activeKeys : ['sales'];
+  const vals=[];
+  points.forEach(p => keys.forEach(k => vals.push(Number(p[k])||0)));
+  const max=Math.max(...vals,1), min=0;
+  const x=i => L + (points.length<=1 ? pw/2 : i*pw/(points.length-1));
+  const y=v => T + ph - ((v-min)/(max-min||1))*ph;
+  const palette={sales:'#00b98b',sent:'#3b82f6',reply:'#f59e0b',buyer:'#8b5cf6',cost:'#ef4444'};
+  let grid='';
+  for(let i=0;i<4;i++){ const yy=T+i*ph/3; const val=max-(i*max/3); grid+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" class="trend-grid-line"/><text x="${L-8}" y="${yy+4}" text-anchor="end" class="trend-axis-text">${val>=1000?(val/1000).toFixed(1)+'k':Math.round(val)}</text>`; }
+  let lines='';
+  keys.forEach(k=>{
+    const pts=points.map((p,i)=>`${x(i)},${y(p[k]||0)}`).join(' ');
+    lines+=`<polyline points="${pts}" fill="none" stroke="${palette[k]}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    points.forEach((p,i)=>{lines+=`<circle cx="${x(i)}" cy="${y(p[k]||0)}" r="3.5" fill="${palette[k]}"><title>${p.date}: ${k} ${p[k]||0}</title></circle>`;});
+  });
+  let labels='';
+  const step=Math.max(1,Math.ceil(points.length/7));
+  points.forEach((p,i)=>{if(i%step===0 || i===points.length-1){const d=new Date(p.date+'T12:00:00'); labels+=`<text x="${x(i)}" y="${H-14}" text-anchor="middle" class="trend-axis-text">${d.getDate()}/${d.getMonth()+1}</text>`;}});
+  return `<svg viewBox="0 0 ${W} ${H}" class="trend-svg" role="img">${grid}${lines}${labels}</svg>`;
+}
+function renderProjectTrends() {
+  const grid=document.getElementById('project-trend-grid'); if(!grid) return;
+  const from=document.getElementById('filter-from').value, to=document.getElementById('filter-to').value;
+  const dates=dashDateList(from,to);
+  const projects=[
+    {key:'susu',label:'Projek Susu',kategori:'Projek Susu'},
+    {key:'ikhtiar',label:'Projek Leads Ikhtiar',kategori:'Projek Leads Ikhtiar (NaimFani)'},
+    {key:'jus',label:'Promo Jus',kategori:'Promo Jus'}
+  ];
+  window.__dashTrendActive = window.__dashTrendActive || {};
+  grid.innerHTML=projects.map(pr=>{
+    const rows=dashProjectRows(pr.kategori), m=dashMetrics(rows);
+    const daily=dates.map(date=>{const x=dashMetrics(rows.filter(r=>r.tarikh===date));return {date,sales:x.sales,sent:x.sent,reply:x.reply,buyer:x.buyer,cost:+x.cost.toFixed(2)};});
+    const active=window.__dashTrendActive[pr.key] || ['sales','sent'];
+    const chips=[['sales','Sales'],['sent','Sent'],['reply','Reply'],['buyer','Buyer'],['cost','Kos']].map(([k,l])=>`<button type="button" class="trend-chip ${active.includes(k)?'active':''}" data-project="${pr.key}" data-key="${k}"><span class="trend-dot ${k}"></span>${l}</button>`).join('');
+    return `<article class="project-trend-card">
+      <div class="project-trend-top"><div><div class="project-trend-name">${pr.label}</div><div class="project-trend-summary">Sales <b>RM ${fmt(m.sales)}</b> · Buyer <b>${fmt(m.buyer)}</b> · Reply <b>${m.replyRate.toFixed(1)}%</b></div></div><span class="hint-chip">${rows.length} entri</span></div>
+      <div class="trend-chip-row">${chips}</div>
+      <div class="trend-chart-wrap">${daily.length?dashSvgChart(daily,active):'<div class="empty-state">Pilih julat tarikh untuk lihat trend.</div>'}</div>
+    </article>`;
+  }).join('');
+  grid.querySelectorAll('.trend-chip').forEach(btn=>btn.onclick=()=>{
+    const p=btn.dataset.project,k=btn.dataset.key;
+    const arr=window.__dashTrendActive[p] || ['sales','sent'];
+    window.__dashTrendActive[p]=arr.includes(k)?arr.filter(x=>x!==k):[...arr,k];
+    if(!window.__dashTrendActive[p].length) window.__dashTrendActive[p]=['sales'];
+    renderProjectTrends();
+  });
+}
+
 function renderDashboard() {
   const rows = filteredEntries();
-  const totals = rows.reduce((a, r) => {
-    a.sent += r.sent; a.delivered += r.delivered; a.read += r.read;
-    a.reply += r.reply; a.failed += r.failed; a.buyer += r.buyer; a.sales += r.sales;
-    return a;
-  }, { sent: 0, delivered: 0, read: 0, reply: 0, failed: 0, buyer: 0, sales: 0 });
+  const m = dashMetrics(rows);
 
-  document.getElementById('stat-sent').textContent = fmt(totals.sent);
-  document.getElementById('stat-buyer').textContent = fmt(totals.buyer);
-  document.getElementById('stat-sales').textContent = 'RM ' + fmt(totals.sales);
-  const totalCostEUR = costEUR(totals.sent);
-  const totalCostRM = costRM(totals.sent);
-  document.getElementById('stat-cost-rm').textContent = 'RM ' + fmt(totalCostRM.toFixed(2));
-  document.getElementById('stat-cost-eur').textContent = '€' + totalCostEUR.toFixed(2);
-  const roi = totalCostRM ? (totals.sales / totalCostRM) : 0;
-  document.getElementById('stat-roi').textContent = roi.toFixed(2) + 'x';
-  const convRate = totals.sent ? (totals.buyer / totals.sent * 100).toFixed(2) : '0.00';
-  document.getElementById('stat-conv').textContent = convRate + '%';
+  document.getElementById('stat-sent').textContent = fmt(m.sent);
+  document.getElementById('stat-buyer').textContent = fmt(m.buyer);
+  document.getElementById('stat-sales').textContent = 'RM ' + fmt(m.sales);
+  document.getElementById('stat-cost-rm').textContent = 'RM ' + fmt(m.cost.toFixed(2));
+  document.getElementById('stat-cost-eur').textContent = '€' + costEUR(m.sent).toFixed(2);
+  document.getElementById('stat-roi').textContent = m.roas.toFixed(2) + 'x';
+  document.getElementById('stat-roi-real').textContent = m.roi.toFixed(2) + 'x';
+  document.getElementById('stat-conv').textContent = m.conversion.toFixed(2) + '%';
   document.getElementById('stat-sessions').textContent = fmt(rows.length) + ' entri';
+  document.getElementById('stat-respon-rate').textContent = m.readRate.toFixed(1) + '%';
+  document.getElementById('stat-reply-rate').textContent = m.replyRate.toFixed(1) + '%';
+  document.getElementById('stat-conv-rate').textContent = m.conversion.toFixed(2) + '%';
 
-  const responRate = totals.sent ? (totals.read / totals.sent * 100) : 0;
-  const replyRate = totals.sent ? (totals.reply / totals.sent * 100) : 0;
-  document.getElementById('stat-respon-rate').textContent = responRate.toFixed(1) + '%';
-  document.getElementById('stat-reply-rate').textContent = replyRate.toFixed(1) + '%';
-  document.getElementById('stat-conv-rate').textContent = convRate + '%';
+  dashSetTarget('sales',m.sales,DASH_TARGETS.sales);
+  dashSetTarget('roi',m.roi,DASH_TARGETS.roi);
+  dashSetTarget('roas',m.roas,DASH_TARGETS.roas);
+  dashSetTarget('conv',m.conversion,DASH_TARGETS.conversion);
+  dashSetTarget('reply',m.replyRate,DASH_TARGETS.reply);
+  dashSetTarget('buyer',m.buyer,DASH_TARGETS.buyer);
+  dashSetTarget('cost',m.cost,DASH_TARGETS.cost,true);
+
+  // Perubahan hari terakhir dalam range berbanding sehari sebelumnya
+  const lastDate=document.getElementById('filter-to').value || new Date().toISOString().slice(0,10);
+  const prevDate=dashDateShift(lastDate,-1);
+  const todayM=dashMetrics(dashScopedRowsForDate(lastDate));
+  const prevM=dashMetrics(dashScopedRowsForDate(prevDate));
+  dashSetDelta('delta-sales',todayM.sales,prevM.sales);
+  dashSetDelta('delta-roi',todayM.roi,prevM.roi);
+  dashSetDelta('delta-roas',todayM.roas,prevM.roas);
+  dashSetDelta('delta-conv',todayM.conversion,prevM.conversion);
+  dashSetDelta('delta-reply',todayM.replyRate,prevM.replyRate);
+  dashSetDelta('delta-sent',todayM.sent,prevM.sent);
+  dashSetDelta('delta-buyer',todayM.buyer,prevM.buyer);
+  dashSetDelta('delta-cost',todayM.cost,prevM.cost,true);
 
   // Funnel
   const stages = [
-    { label: 'Sent', value: totals.sent, color: '#59646A' },
-    { label: 'Delivered', value: totals.delivered, color: '#5FA8E0' },
-    { label: 'Read', value: totals.read, color: '#35E0AC' },
-    { label: 'Reply', value: totals.reply, color: '#F0AC52' },
-    { label: 'Jadi Buyer', value: totals.buyer, color: '#FF7A68' },
+    { label: 'Sent', value: m.sent, color: '#59646A' },
+    { label: 'Delivered', value: m.delivered, color: '#5FA8E0' },
+    { label: 'Read', value: m.read, color: '#35E0AC' },
+    { label: 'Reply', value: m.reply, color: '#F0AC52' },
+    { label: 'Jadi Buyer', value: m.buyer, color: '#FF7A68' },
   ];
   const funnelEl = document.getElementById('funnel');
   funnelEl.innerHTML = '';
   stages.forEach(s => {
-    const pct = totals.sent ? (s.value / totals.sent * 100) : 0;
+    const pct = m.sent ? (s.value / m.sent * 100) : 0;
     const row = document.createElement('div');
     row.className = 'funnel-stage';
     row.innerHTML = `<div class="tick">${s.label}</div>
@@ -337,7 +484,6 @@ function renderDashboard() {
     funnelEl.appendChild(row);
   });
 
-  // Sources breakdown
   const bySrc = {};
   rows.forEach(r => {
     const k = r.source || 'Umum';
@@ -356,6 +502,8 @@ function renderDashboard() {
     srcGrid.appendChild(card);
   });
   if (!Object.keys(bySrc).length) srcGrid.innerHTML = '<div class="empty-state">Tiada data lagi — isi entri di tab Input Data.</div>';
+
+  renderProjectTrends();
 }
 
 function renderTemplateReport() {
@@ -411,6 +559,26 @@ function renderTemplateReport() {
 
 ['filter-from', 'filter-to', 'filter-staff', 'filter-kategori'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
+    renderDashboard(); renderTemplateReport(); updateTopupVisibility();
+  });
+});
+
+document.querySelectorAll('[data-range]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.range;
+    const now = new Date();
+    const to = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let from = new Date(to);
+    if (type === '7') from.setDate(to.getDate() - 6);
+    else if (type === '30') from.setDate(to.getDate() - 29);
+    else if (type === 'month') from = new Date(to.getFullYear(), to.getMonth(), 1);
+    const iso = d => {
+      const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    };
+    document.getElementById('filter-from').value = iso(from);
+    document.getElementById('filter-to').value = iso(to);
+    document.querySelectorAll('[data-range]').forEach(x=>x.classList.toggle('active',x===btn));
     renderDashboard(); renderTemplateReport(); updateTopupVisibility();
   });
 });
