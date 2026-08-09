@@ -985,3 +985,36 @@ body { padding-bottom: 60px; }
   #view-wabotcontrol .wctrl-grid{grid-template-columns:1fr!important}
   #view-wabotcontrol .wctrl-transfer-form{grid-template-columns:1fr!important}
 }
+
+
+/* ==================== TRANSFER HISTORY EDIT V9.1 ==================== */
+.wctrl-history-actions{
+  display:flex;
+  gap:6px;
+  white-space:nowrap;
+}
+.wctrl-edit-transfer,
+.wctrl-delete-transfer{
+  appearance:none;
+  border-radius:8px;
+  padding:6px 9px;
+  font:600 9px/1 'IBM Plex Mono';
+  cursor:pointer;
+}
+.wctrl-edit-transfer{
+  color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--line);
+}
+.wctrl-edit-transfer:hover{
+  border-color:var(--mint);
+  color:var(--mint);
+}
+.wctrl-delete-transfer{
+  color:#ef4444;
+  background:rgba(239,68,68,.06);
+  border:1px solid rgba(239,68,68,.20);
+}
+.wctrl-delete-transfer:hover{
+  background:rgba(239,68,68,.12);
+}
