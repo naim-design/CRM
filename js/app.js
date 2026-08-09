@@ -65,7 +65,9 @@ function initWalletTransferInputs(){
 }
 
 function walletTransferRows(){
-  return (allTopups||[]).filter(t=>t.transactionType==='transfer');
+  return (allTopups||[]).filter(t =>
+    String(t.transactionType || t.type || '').toLowerCase() === 'transfer'
+  );
 }
 
 function walletTopupRows(){
@@ -202,10 +204,17 @@ function wabotWalletStats(acc){
     return !d || d>=baselineDate;
   });
   const transferInEUR=transfers
-    .filter(t=>String(t.toOfficialKey||'')===acc.key)
+    .filter(t =>
+      String(t.toOfficialKey||'')===acc.key ||
+      digitsOnly(t.toOfficialPhone||'')===digitsOnly(acc.phone)
+    )
     .reduce((s,t)=>s+Number(t.amountEUR||0),0);
+
   const transferOutEUR=transfers
-    .filter(t=>String(t.fromOfficialKey||'')===acc.key)
+    .filter(t =>
+      String(t.fromOfficialKey||'')===acc.key ||
+      digitsOnly(t.fromOfficialPhone||'')===digitsOnly(acc.phone)
+    )
     .reduce((s,t)=>s+Number(t.amountEUR||0),0);
 
   const rows=(allEntries||[]).filter(en=>{
@@ -1526,6 +1535,7 @@ document.getElementById('csv-import-btn').addEventListener('click', async () => 
     await batchRef.set({
       source, count: rows.length,
       createdBy: currentProfile.name,
+      createdAtMs: Date.now(),
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     registerSource(source);
@@ -2289,11 +2299,22 @@ let allTopups = [];
 let unsubTopups = null;
 
 function startTopupListener() {
-  unsubTopups = db.collection('topups').orderBy('createdAt', 'desc').onSnapshot(snap => {
+  // Jangan guna orderBy(createdAt) di query.
+  // Dokumen transfer baru menggunakan serverTimestamp dan boleh sementara
+  // belum mempunyai createdAt; query orderBy boleh menyebabkan ia tak muncul.
+  unsubTopups = db.collection('topups').onSnapshot(snap => {
     allTopups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Sort client-side: newest first. Support createdAt + createdAtMs.
+    allTopups.sort((a,b) => {
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Number(a.createdAtMs || 0);
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Number(b.createdAtMs || 0);
+      return bt - at;
+    });
+
     renderTopups();
     renderWabotControl();
-  }, err => toast('Ralat baca topup: ' + err.message, true));
+  }, err => toast('Ralat baca topup/transfer: ' + err.message, true));
 }
 
 document.getElementById('topup-form').addEventListener('submit', async (e) => {
@@ -2350,7 +2371,8 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
   btn.disabled=true; btn.textContent='Menyimpan...';
 
   try{
-    await db.collection('topups').add({
+    const localId='local-transfer-'+Date.now();
+    const payload={
       transactionType:'transfer',
       amountEUR,
       amountRM:amountEUR*EUR_TO_MYR,
@@ -2363,12 +2385,43 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
       toOfficialLabel:to.label,
       note,
       createdBy:currentProfile.name,
+      createdAtMs:Date.now(),
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
 
-    e.target.reset();
-    initWalletTransferInputs();
-    toast(`Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} ✓`);
+    // Optimistic update: balance berubah terus sebaik sahaja user tekan Transfer.
+    allTopups.unshift({
+      id:localId,
+      ...payload,
+      createdAt:null
+    });
+    renderTopups();
+    renderWabotControl();
+
+    try{
+      const ref=await db.collection('topups').add(payload);
+
+      // Buang temp row; realtime listener akan masukkan rekod sebenar.
+      allTopups=allTopups.filter(t=>t.id!==localId);
+
+      // Fallback fetch: kalau listener lambat, baca dokumen yang baru disimpan.
+      const saved=await ref.get();
+      if(saved.exists && !(allTopups||[]).some(t=>t.id===ref.id)){
+        allTopups.unshift({id:ref.id,...saved.data()});
+      }
+
+      renderTopups();
+      renderWabotControl();
+
+      e.target.reset();
+      initWalletTransferInputs();
+      toast(`Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} berjaya ✓`);
+    }catch(saveErr){
+      allTopups=allTopups.filter(t=>t.id!==localId);
+      renderTopups();
+      renderWabotControl();
+      throw saveErr;
+    }
   }catch(err){
     toast('Gagal simpan transfer: '+err.message,true);
   }finally{
