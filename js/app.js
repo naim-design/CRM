@@ -24,6 +24,66 @@ const EUR_TO_MYR = 4.73;            // kadar tukaran EUR -> RM
 function costEUR(sent) { return (sent || 0) * RATE_EUR_PER_SENT; }
 function costRM(sent) { return costEUR(sent) * EUR_TO_MYR; }
 
+
+// ---- Wabot Control: official number + Meta mapping ----
+const WABOT_OFFICIALS = [
+  { key:'601111920528', label:'Mamariam Sdn Bhd 5', phone:'601111920528', wabot:'Naim — Account 1', meta:'Kak Nur Mariam - Ibu Hamil Bahagia', wabaId:'1249739500433660', login:'kaknorycloud@gmail.com', chrome:'kaknor', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/phone_numbers/?asset_id=951135334630199&business_id=1116453605586355&ir_qe_exposed=1' },
+  { key:'601111920587', label:'MAMARIAM HQ OFFICIAL', phone:'601111920587', wabot:'Naim — Account 1', meta:'Kak Nor', wabaId:'Belum diberi', login:'mamariam.marketingm9f@gmail.com', chrome:'Naim Alpha', templateUrl:'' },
+  { key:'601111920523', label:'Mamariam Sdn Bhd 8', phone:'601111920523', wabot:'Naim — Account 1', meta:'Kak Nor', wabaId:'Belum diberi', login:'mamariam.marketingm9f@gmail.com', chrome:'Naim Alpha', templateUrl:'' },
+  { key:'60148769013', label:'Mamariam Sdn Bhd 3', phone:'60148769013', wabot:'Naim — Account 2', meta:'Kak Nur Mariam - Ibu Hamil Bahagia', wabaId:'951135334630199', login:'kaknorycloud@gmail.com', chrome:'kaknor', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/phone_numbers/?asset_id=951135334630199&business_id=1116453605586355&ir_qe_exposed=1' },
+  { key:'60142881728', label:'Fathiah Biz 1728', phone:'60142881728', wabot:'Naim — Account 2', meta:'Fathiah Biz', wabaId:'937507759346753', login:'niamamariam1821@gmail.com', chrome:'fani', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=174456364884123&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1428338965717585' },
+  { key:'601121001339', label:'Fathiah Biz 1339', phone:'601121001339', wabot:'Naim — Account 2', meta:'Fathiah Biz', wabaId:'1428338965717585', login:'niamamariam1821@gmail.com', chrome:'fani', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=174456364884123&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1428338965717585' }
+];
+function digitsOnly(v){ return String(v||'').replace(/\D/g,''); }
+function officialForValue(v){
+  const d=digitsOnly(v); if(!d) return null;
+  return WABOT_OFFICIALS.find(x=>d.includes(x.phone)||x.phone.includes(d)) || null;
+}
+function entryOfficial(en){ return officialForValue(en.wabotAccount||''); }
+function topupDateStr(t){
+  if(t.topupDate) return t.topupDate;
+  if(t.createdAt && t.createdAt.toDate) return t.createdAt.toDate().toISOString().slice(0,10);
+  return '';
+}
+function initWabotControlInputs(){
+  const sel=document.getElementById('topup-phone');
+  if(sel && !sel.options.length) sel.innerHTML='<option value="">-- Pilih nombor Official --</option>'+WABOT_OFFICIALS.map(x=>`<option value="${x.key}">${x.label} — ${x.phone}</option>`).join('');
+  const d=document.getElementById('topup-date'); if(d && !d.value) d.value=todayStr();
+}
+function wabotWalletStats(acc){
+  const tops=(allTopups||[]).filter(t=>String(t.officialKey||'')===acc.key);
+  const topupEUR=tops.reduce((s,t)=>s+Number(t.amountEUR||0),0);
+  const dates=tops.map(t=>topupDateStr(t)).filter(Boolean).sort();
+  const firstTopup=dates[0]||'';
+  const rows=firstTopup ? (allEntries||[]).filter(en=>{ const a=entryOfficial(en); return a&&a.key===acc.key&&(!en.tarikh||en.tarikh>=firstTopup); }) : [];
+  const sent=rows.reduce((s,en)=>s+Number(en.sent||0),0);
+  const usageEUR=costEUR(sent), balanceEUR=topupEUR-usageEUR;
+  return {topupEUR,firstTopup,sent,usageEUR,balanceEUR,topups:tops.length};
+}
+function renderWabotControl(){
+  const grid=document.getElementById('wctrl-grid'); if(!grid) return;
+  const stats=WABOT_OFFICIALS.map(a=>({a,s:wabotWalletStats(a)}));
+  const totalTop=stats.reduce((x,r)=>x+r.s.topupEUR,0), totalUse=stats.reduce((x,r)=>x+r.s.usageEUR,0), totalBal=stats.reduce((x,r)=>x+r.s.balanceEUR,0);
+  const low=stats.filter(r=>r.s.topupEUR>0 && r.s.balanceEUR<20).length;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+  set('wctrl-total-topup','€'+totalTop.toFixed(2)); set('wctrl-total-usage','€'+totalUse.toFixed(2)); set('wctrl-total-balance','€'+totalBal.toFixed(2)); set('wctrl-low-count',String(low));
+  grid.innerHTML=stats.map(({a,s})=>{
+    const pct=s.topupEUR?Math.max(0,Math.min(100,s.balanceEUR/s.topupEUR*100)):0;
+    const status=!s.topupEUR?'BELUM TOPUP':s.balanceEUR<0?'OVER USED':s.balanceEUR<20?'LOW BALANCE':'OK';
+    const cls=!s.topupEUR?'neutral':s.balanceEUR<20?'danger':'ok';
+    return `<article class="wctrl-card"><div class="wctrl-card-head"><div><div class="wctrl-name">${wabotEsc(a.label)}</div><div class="wctrl-phone">${a.phone}</div></div><span class="wctrl-status ${cls}">${status}</span></div>
+      <div class="wctrl-account">${wabotEsc(a.wabot)}</div>
+      <div class="wctrl-money"><div><span>BAKI ANGGARAN</span><b>€${s.balanceEUR.toFixed(2)}</b></div><div><span>TOPUP</span><b>€${s.topupEUR.toFixed(2)}</b></div></div>
+      <div class="wctrl-balance-track"><span style="width:${pct.toFixed(1)}%"></span></div>
+      <div class="wctrl-mini"><span>Usage €${s.usageEUR.toFixed(2)}</span><span>${fmt(s.sent)} sent</span><span>${s.topups} topup</span></div>
+      <div class="wctrl-meta"><b>${wabotEsc(a.meta)}</b><span>WABA: ${wabotEsc(a.wabaId)}</span><span>Login: ${wabotEsc(a.login)} · ${wabotEsc(a.chrome)}</span></div>
+      ${a.templateUrl?`<a class="btn btn-primary wctrl-template" href="${a.templateUrl}" target="_blank" rel="noopener">Manage Template ↗</a>`:`<button class="btn btn-ghost wctrl-template" disabled>Link Template Belum Diset</button>`}
+    </article>`;
+  }).join('');
+  const body=document.getElementById('wctrl-meta-body');
+  if(body) body.innerHTML=WABOT_OFFICIALS.map(a=>`<tr><td><b>${wabotEsc(a.label)}</b><br><span class="wctrl-table-sub">${a.phone}</span></td><td>${wabotEsc(a.wabot)}</td><td>${wabotEsc(a.meta)}<br><span class="wctrl-table-sub">${wabotEsc(a.wabaId)}</span></td><td>${wabotEsc(a.login)}</td><td>${wabotEsc(a.chrome)}</td><td>${a.templateUrl?`<a class="wctrl-link" href="${a.templateUrl}" target="_blank" rel="noopener">Buka ↗</a>`:'<span class="wctrl-table-sub">Belum diset</span>'}</td></tr>`).join('');
+}
+
 function toast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -72,6 +132,7 @@ auth.onAuthStateChanged(async (user) => {
   loadKnownSources();
   startListeners();
   startTopupListener();
+  initWabotControlInputs();
   updateTopupVisibility();
 });
 
@@ -94,6 +155,7 @@ function startListeners() {
   unsubEntries = db.collection('entries').orderBy('createdAt', 'desc').onSnapshot(snap => {
     allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderDashboard();
+    renderWabotControl();
     renderTemplateReport();
     renderDailyReport();
     renderPosterPerformance();
@@ -1947,6 +2009,26 @@ document.getElementById('seg-copy-btn').addEventListener('click', async () => {
   }
 });
 
+
+// ============================================================
+// WABOT OPENING BALANCE BASELINE — 4 Aug 2026
+// Total topup €90 dibahagi sama rata kepada 6 nombor official.
+// €15 setiap nombor. Usage sebelum tarikh ini tidak ditolak.
+// ============================================================
+const WABOT_OPENING_BALANCE_DATE = '2026-08-04';
+const WABOT_OPENING_BALANCE_EUR = {
+  '601111920528': 15,
+  '601111920587': 15,
+  '601111920523': 15,
+  '60148769013': 15,
+  '60142881728': 15,
+  '601121001339': 15,
+};
+
+function wabotOpeningBalanceEUR(phone) {
+  return Number(WABOT_OPENING_BALANCE_EUR[String(phone || '').replace(/\D/g,'')] || 0);
+}
+
 // ============================================================
 // TOPUP BLASTING — track topup EUR/RM, hanya untuk Dashboard Keseluruhan
 // ============================================================
@@ -1957,6 +2039,7 @@ function startTopupListener() {
   unsubTopups = db.collection('topups').orderBy('createdAt', 'desc').onSnapshot(snap => {
     allTopups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderTopups();
+    renderWabotControl();
   }, err => toast('Ralat baca topup: ' + err.message, true));
 }
 
@@ -1965,16 +2048,21 @@ document.getElementById('topup-form').addEventListener('submit', async (e) => {
   const btn = e.target.querySelector('button[type=submit]');
   const amountEUR = Number(document.getElementById('topup-amount').value || 0);
   const note = document.getElementById('topup-note').value.trim();
-  if (!amountEUR) return;
+  const officialKey = document.getElementById('topup-phone').value;
+  const topupDate = document.getElementById('topup-date').value || todayStr();
+  const official = WABOT_OFFICIALS.find(x=>x.key===officialKey);
+  if (!amountEUR || !official) return toast('Pilih nombor Official dan masukkan amaun topup.', true);
   btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
     await db.collection('topups').add({
-      amountEUR, amountRM: amountEUR * EUR_TO_MYR, note,
+      amountEUR, amountRM: amountEUR * EUR_TO_MYR, note, topupDate,
+      officialKey: official.key, officialPhone: official.phone, officialLabel: official.label, wabotGroup: official.wabot,
       createdBy: currentProfile.name,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
     e.target.reset();
-    toast('Topup ditambah ✓');
+    initWabotControlInputs();
+    toast('Topup ditambah untuk ' + official.label + ' ✓');
   } catch (err) {
     toast('Gagal tambah topup: ' + err.message, true);
   } finally {
@@ -2001,14 +2089,15 @@ function renderTopups() {
   allTopups.forEach(t => {
     const dateStr = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleString('ms-MY') : '-';
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td style="font-size:12px;">${dateStr}</td>
+    tr.innerHTML = `<td style="font-size:12px;">${t.topupDate || dateStr}</td>
+      <td style="font-size:12px;"><b>${t.officialLabel || 'Legacy / Belum Assigned'}</b>${t.officialPhone ? '<br><span style="color:var(--muted)">'+t.officialPhone+'</span>' : ''}</td>
       <td style="font-size:12px; color:var(--muted);">${t.note || '-'}</td>
       <td class="num">€${(t.amountEUR || 0).toFixed(2)}</td>
       <td class="num">RM ${fmt((t.amountRM || 0).toFixed(2))}</td>
       <td style="font-size:12px; color:var(--muted);">${t.createdBy || '-'}</td>`;
     body.appendChild(tr);
   });
-  if (!allTopups.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada rekod topup lagi.</td></tr>';
+  if (!allTopups.length) body.innerHTML = '<tr><td colspan="6" class="empty-state">Tiada rekod topup lagi.</td></tr>';
 }
 
 // ---- Edit manual Database stats (Total/Dah Blast/Belum Blast) ----
