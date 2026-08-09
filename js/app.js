@@ -51,33 +51,85 @@ function initWabotControlInputs(){
   const d=document.getElementById('topup-date'); if(d && !d.value) d.value=todayStr();
 }
 function wabotWalletStats(acc){
-  const tops=(allTopups||[]).filter(t=>String(t.officialKey||'')===acc.key);
-  const topupEUR=tops.reduce((s,t)=>s+Number(t.amountEUR||0),0);
-  const dates=tops.map(t=>topupDateStr(t)).filter(Boolean).sort();
-  const firstTopup=dates[0]||'';
-  const rows=firstTopup ? (allEntries||[]).filter(en=>{ const a=entryOfficial(en); return a&&a.key===acc.key&&(!en.tarikh||en.tarikh>=firstTopup); }) : [];
+  const baselineEUR = wabotOpeningBalanceEUR(acc.phone);
+  const baselineDate = WABOT_OPENING_BALANCE_DATE;
+
+  // Baseline 4/8/2026 (€15/nombor) mewakili topup terakhir yang diberi user.
+  // Rekod topup manual pada / sebelum baseline tidak ditambah semula supaya tak double count.
+  const tops=(allTopups||[]).filter(t=>{
+    if(String(t.officialKey||'')!==acc.key) return false;
+    const d=topupDateStr(t);
+    return !d || d > baselineDate;
+  });
+
+  const futureTopupEUR=tops.reduce((s,t)=>s+Number(t.amountEUR||0),0);
+  const topupEUR=baselineEUR+futureTopupEUR;
+
+  // Usage mula dikira dari baseline date.
+  const rows=(allEntries||[]).filter(en=>{
+    const a=entryOfficial(en);
+    return a && a.key===acc.key && (!en.tarikh || en.tarikh>=baselineDate);
+  });
+
   const sent=rows.reduce((s,en)=>s+Number(en.sent||0),0);
-  const usageEUR=costEUR(sent), balanceEUR=topupEUR-usageEUR;
-  return {topupEUR,firstTopup,sent,usageEUR,balanceEUR,topups:tops.length};
+  const usageEUR=costEUR(sent);
+  const balanceEUR=topupEUR-usageEUR;
+
+  return {
+    topupEUR,
+    baselineEUR,
+    futureTopupEUR,
+    firstTopup:baselineDate,
+    sent,
+    usageEUR,
+    balanceEUR,
+    topups:(baselineEUR>0?1:0)+tops.length
+  };
 }
 function renderWabotControl(){
   const grid=document.getElementById('wctrl-grid'); if(!grid) return;
   const stats=WABOT_OFFICIALS.map(a=>({a,s:wabotWalletStats(a)}));
   const totalTop=stats.reduce((x,r)=>x+r.s.topupEUR,0), totalUse=stats.reduce((x,r)=>x+r.s.usageEUR,0), totalBal=stats.reduce((x,r)=>x+r.s.balanceEUR,0);
-  const low=stats.filter(r=>r.s.topupEUR>0 && r.s.balanceEUR<20).length;
+  const low=stats.filter(r=>r.s.topupEUR>0 && r.s.balanceEUR<5).length;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
   set('wctrl-total-topup','€'+totalTop.toFixed(2)); set('wctrl-total-usage','€'+totalUse.toFixed(2)); set('wctrl-total-balance','€'+totalBal.toFixed(2)); set('wctrl-low-count',String(low));
   grid.innerHTML=stats.map(({a,s})=>{
     const pct=s.topupEUR?Math.max(0,Math.min(100,s.balanceEUR/s.topupEUR*100)):0;
-    const status=!s.topupEUR?'BELUM TOPUP':s.balanceEUR<0?'OVER USED':s.balanceEUR<20?'LOW BALANCE':'OK';
-    const cls=!s.topupEUR?'neutral':s.balanceEUR<20?'danger':'ok';
-    return `<article class="wctrl-card"><div class="wctrl-card-head"><div><div class="wctrl-name">${wabotEsc(a.label)}</div><div class="wctrl-phone">${a.phone}</div></div><span class="wctrl-status ${cls}">${status}</span></div>
-      <div class="wctrl-account">${wabotEsc(a.wabot)}</div>
-      <div class="wctrl-money"><div><span>BAKI ANGGARAN</span><b>€${s.balanceEUR.toFixed(2)}</b></div><div><span>TOPUP</span><b>€${s.topupEUR.toFixed(2)}</b></div></div>
+    const status=!s.topupEUR?'BELUM TOPUP':s.balanceEUR<0?'OVER USED':s.balanceEUR<5?'LOW BALANCE':'OK';
+    const cls=!s.topupEUR?'neutral':s.balanceEUR<5?'danger':'ok';
+    return `<article class="wctrl-card">
+      <div class="wctrl-card-head">
+        <div>
+          <div class="wctrl-name">${wabotEsc(a.label)}</div>
+          <div class="wctrl-phone">${a.phone}</div>
+        </div>
+        <span class="wctrl-status ${cls}">${status}</span>
+      </div>
+
+      <div class="wctrl-account"><span class="wctrl-dot"></span>${wabotEsc(a.wabot)}</div>
+
+      <div class="wctrl-money">
+        <div class="wctrl-balance-main"><span>BAKI ANGGARAN</span><b>€${s.balanceEUR.toFixed(2)}</b></div>
+        <div><span>TOPUP / OPENING</span><b>€${s.topupEUR.toFixed(2)}</b></div>
+      </div>
+
       <div class="wctrl-balance-track"><span style="width:${pct.toFixed(1)}%"></span></div>
-      <div class="wctrl-mini"><span>Usage €${s.usageEUR.toFixed(2)}</span><span>${fmt(s.sent)} sent</span><span>${s.topups} topup</span></div>
-      <div class="wctrl-meta"><b>${wabotEsc(a.meta)}</b><span>WABA: ${wabotEsc(a.wabaId)}</span><span>Login: ${wabotEsc(a.login)} · ${wabotEsc(a.chrome)}</span></div>
-      ${a.templateUrl?`<a class="btn btn-primary wctrl-template" href="${a.templateUrl}" target="_blank" rel="noopener">Manage Template ↗</a>`:`<button class="btn btn-ghost wctrl-template" disabled>Link Template Belum Diset</button>`}
+      <div class="wctrl-mini">
+        <span><small>Usage</small> €${s.usageEUR.toFixed(2)}</span>
+        <span><small>Sent</small> ${fmt(s.sent)}</span>
+        <span><small>Topup</small> ${s.topups}</span>
+      </div>
+
+      <div class="wctrl-meta">
+        <div class="wctrl-meta-title">${wabotEsc(a.meta)}</div>
+        <div><span class="wctrl-meta-label">WABA</span>${wabotEsc(a.wabaId)}</div>
+        <div><span class="wctrl-meta-label">Login</span>${wabotEsc(a.login)}</div>
+        <div><span class="wctrl-meta-label">Chrome</span>${wabotEsc(a.chrome)}</div>
+      </div>
+
+      ${a.templateUrl
+        ? `<a class="wctrl-template" href="${a.templateUrl}" target="_blank" rel="noopener"><span>Manage Template</span><b>↗</b></a>`
+        : `<button class="wctrl-template disabled" disabled><span>Link Template Belum Diset</span></button>`}
     </article>`;
   }).join('');
   const body=document.getElementById('wctrl-meta-body');
