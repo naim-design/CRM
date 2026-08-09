@@ -27,12 +27,12 @@ function costRM(sent) { return costEUR(sent) * EUR_TO_MYR; }
 
 // ---- Wabot Control: official number + Meta mapping ----
 const WABOT_OFFICIALS = [
-  { key:'601111920528', label:'Mamariam Sdn Bhd 5', phone:'601111920528', wabot:'Naim — Account 1', meta:'Kak Nur Mariam - Ibu Hamil Bahagia', wabaId:'1249739500433660', login:'kaknorycloud@gmail.com', chrome:'kaknor', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/phone_numbers/?asset_id=951135334630199&business_id=1116453605586355&ir_qe_exposed=1' },
-  {key:'hq_official', label:'MAMARIAM HQ OFFICIAL', phone:'601111920587', wabot:'Naim — Account 1', meta:'Jus Ibu Hamil by Alia', wabaId:'1744157189944013', login:'mamariam.marketingm9f@gmail.com', chrome:'Naim Alpha', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=261929100345166&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=1744157189944013'},
-  {key:'mamariam8', label:'Mamariam Sdn Bhd 8', phone:'601111920523', wabot:'Naim — Account 1', meta:'Jus Ibu Hamil by Alia', wabaId:'1320319290309736', login:'mamariam.marketingm9f@gmail.com', chrome:'Naim Alpha', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=261929100345166&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=1320319290309736'},
-  { key:'60148769013', label:'Mamariam Sdn Bhd 3', phone:'60148769013', wabot:'Naim — Account 2', meta:'Kak Nur Mariam - Ibu Hamil Bahagia', wabaId:'951135334630199', login:'kaknorycloud@gmail.com', chrome:'kaknor', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/phone_numbers/?asset_id=951135334630199&business_id=1116453605586355&ir_qe_exposed=1' },
-  { key:'60142881728', label:'Fathiah Biz 1728', phone:'60142881728', wabot:'Naim — Account 2', meta:'Fathiah Biz', wabaId:'937507759346753', login:'niamamariam1821@gmail.com', chrome:'fani', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=174456364884123&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1428338965717585' },
-  { key:'601121001339', label:'Fathiah Biz 1339', phone:'601121001339', wabot:'Naim — Account 2', meta:'Fathiah Biz', wabaId:'1428338965717585', login:'niamamariam1821@gmail.com', chrome:'fani', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=174456364884123&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1428338965717585' }
+  { key:'601111920528', label:'Mamariam Sdn Bhd 5', phone:'601111920528', dailyLimit:100000, wabot:'Naim — Account 1', meta:'Kak Nur Mariam - Ibu Hamil Bahagia', wabaId:'1249739500433660', login:'kaknorycloud@gmail.com', chrome:'kaknor', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/phone_numbers/?asset_id=951135334630199&business_id=1116453605586355&ir_qe_exposed=1' },
+  {key:'hq_official', label:'MAMARIAM HQ OFFICIAL', phone:'601111920587', dailyLimit:10000, wabot:'Naim — Account 1', meta:'Jus Ibu Hamil by Alia', wabaId:'1744157189944013', login:'mamariam.marketingm9f@gmail.com', chrome:'Naim Alpha', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=261929100345166&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=1744157189944013'},
+  {key:'mamariam8', label:'Mamariam Sdn Bhd 8', phone:'601111920523', dailyLimit:10000, wabot:'Naim — Account 1', meta:'Jus Ibu Hamil by Alia', wabaId:'1320319290309736', login:'mamariam.marketingm9f@gmail.com', chrome:'Naim Alpha', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=261929100345166&tab=message-templates&filters=%7B%22date_range%22%3A7%2C%22language%22%3A[]%2C%22quality%22%3A[]%2C%22search_text%22%3A%22%22%2C%22status%22%3A[%22APPROVED%22%2C%22IN_APPEAL%22%2C%22PAUSED%22%2C%22PENDING%22%2C%22REJECTED%22]%2C%22tag%22%3A[]%7D&nav_ref=whatsapp_manager&asset_id=1320319290309736'},
+  { key:'60148769013', label:'Mamariam Sdn Bhd 3', phone:'60148769013', dailyLimit:100000, wabot:'Naim — Account 2', meta:'Kak Nur Mariam - Ibu Hamil Bahagia', wabaId:'951135334630199', login:'kaknorycloud@gmail.com', chrome:'kaknor', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/phone_numbers/?asset_id=951135334630199&business_id=1116453605586355&ir_qe_exposed=1' },
+  { key:'60142881728', label:'Fathiah Biz 1728', phone:'60142881728', dailyLimit:250, wabot:'Naim — Account 2', meta:'Fathiah Biz', wabaId:'937507759346753', login:'niamamariam1821@gmail.com', chrome:'fani', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=174456364884123&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1428338965717585' },
+  { key:'601121001339', label:'Fathiah Biz 1339', phone:'601121001339', dailyLimit:250, wabot:'Naim — Account 2', meta:'Fathiah Biz', wabaId:'1428338965717585', login:'niamamariam1821@gmail.com', chrome:'fani', templateUrl:'https://business.facebook.com/latest/whatsapp_manager/message_templates/?business_id=174456364884123&tab=message-templates&nav_ref=whatsapp_manager&asset_id=1428338965717585' }
 ];
 function digitsOnly(v){ return String(v||'').replace(/\D/g,''); }
 function officialForValue(v){
@@ -50,22 +50,164 @@ function initWabotControlInputs(){
   if(sel && !sel.options.length) sel.innerHTML='<option value="">-- Pilih nombor Official --</option>'+WABOT_OFFICIALS.map(x=>`<option value="${x.key}">${x.label} — ${x.phone}</option>`).join('');
   const d=document.getElementById('topup-date'); if(d && !d.value) d.value=todayStr();
 }
+
+function initWalletTransferInputs(){
+  const from=document.getElementById('transfer-from');
+  const to=document.getElementById('transfer-to');
+  const d=document.getElementById('transfer-date');
+
+  const opts='<option value="">-- Pilih nombor --</option>'+
+    WABOT_OFFICIALS.map(x=>`<option value="${x.key}">${x.label} — ${x.phone}</option>`).join('');
+
+  if(from && !from.options.length) from.innerHTML=opts;
+  if(to && !to.options.length) to.innerHTML=opts;
+  if(d && !d.value) d.value=todayStr();
+}
+
+function walletTransferRows(){
+  return (allTopups||[]).filter(t=>t.transactionType==='transfer');
+}
+
+function walletTopupRows(){
+  return (allTopups||[]).filter(t=>t.transactionType!=='transfer');
+}
+
+function walletReadiness(acc, stats){
+  const dailyLimit=Number(acc.dailyLimit||0);
+  const targetSent=Math.min(1000,dailyLimit||1000);
+  const neededEUR=costEUR(targetSent);
+  const shortfallEUR=Math.max(0,neededEUR-Math.max(0,stats.balanceEUR));
+  const ready=shortfallEUR<=0;
+
+  return {dailyLimit,targetSent,neededEUR,shortfallEUR,ready};
+}
+
+function walletTransferRecommendations(){
+  const accounts=WABOT_OFFICIALS.map(a=>{
+    const s=wabotWalletStats(a);
+    const r=walletReadiness(a,s);
+    return {a,s,r};
+  });
+
+  // Fathiah perlu simpan cukup untuk kapasiti sendiri (250/hari).
+  const donors=accounts
+    .filter(x=>x.a.dailyLimit===250)
+    .map(x=>({
+      ...x,
+      excess:Math.max(0,x.s.balanceEUR-x.r.neededEUR)
+    }))
+    .filter(x=>x.excess>0.01)
+    .sort((a,b)=>b.excess-a.excess);
+
+  // Receiver fokus akaun high-capacity yang belum cukup untuk target 1,000 sent.
+  const receivers=accounts
+    .filter(x=>x.a.dailyLimit>=10000 && x.r.shortfallEUR>0.01)
+    .sort((a,b)=>{
+      if(b.a.dailyLimit!==a.a.dailyLimit) return b.a.dailyLimit-a.a.dailyLimit;
+      return b.r.shortfallEUR-a.r.shortfallEUR;
+    });
+
+  const out=[];
+  donors.forEach(d=>{
+    let available=d.excess;
+    receivers.forEach(r=>{
+      if(available<=0.01 || r.r.shortfallEUR<=0.01) return;
+      const already=out.filter(x=>x.to===r.a.key).reduce((s,x)=>s+x.amount,0);
+      const need=Math.max(0,r.r.shortfallEUR-already);
+      const amount=Math.min(available,need);
+      if(amount>0.01){
+        out.push({
+          from:d.a.key, fromLabel:d.a.label,
+          to:r.a.key, toLabel:r.a.label,
+          amount
+        });
+        available-=amount;
+      }
+    });
+  });
+  return out;
+}
+
+function renderTransferRecommendations(){
+  const wrap=document.getElementById('wctrl-transfer-recommend');
+  if(!wrap) return;
+  const rows=walletTransferRecommendations();
+
+  if(!rows.length){
+    wrap.innerHTML='<div class="wctrl-rec-ok">✓ Tiada transfer diperlukan untuk capai readiness harian berdasarkan baki anggaran semasa.</div>';
+    return;
+  }
+
+  wrap.innerHTML=rows.map(x=>`
+    <div class="wctrl-rec-row">
+      <div>
+        <b>${wabotEsc(x.fromLabel)}</b>
+        <span>→</span>
+        <b>${wabotEsc(x.toLabel)}</b>
+      </div>
+      <div class="wctrl-rec-actions">
+        <strong>€${x.amount.toFixed(2)}</strong>
+        <button type="button" class="btn btn-ghost wctrl-use-rec" data-from="${x.from}" data-to="${x.to}" data-amount="${x.amount.toFixed(2)}">Guna Cadangan</button>
+      </div>
+    </div>`).join('');
+
+  wrap.querySelectorAll('.wctrl-use-rec').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const from=document.getElementById('transfer-from');
+      const to=document.getElementById('transfer-to');
+      const amount=document.getElementById('transfer-amount');
+      if(from) from.value=btn.dataset.from;
+      if(to) to.value=btn.dataset.to;
+      if(amount) amount.value=btn.dataset.amount;
+      document.getElementById('transfer-form')?.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+  });
+}
+
+function renderTransferHistory(){
+  const body=document.getElementById('wctrl-transfer-body');
+  if(!body) return;
+
+  const rows=walletTransferRows();
+  if(!rows.length){
+    body.innerHTML='<tr><td colspan="6" class="empty-state">Belum ada transfer balance.</td></tr>';
+    return;
+  }
+
+  body.innerHTML=rows.map(t=>`
+    <tr>
+      <td>${wabotEsc(t.transferDate || topupDateStr(t) || '-')}</td>
+      <td><b>${wabotEsc(t.fromOfficialLabel || '-')}</b><br><span class="wctrl-table-sub">${wabotEsc(t.fromOfficialPhone || '')}</span></td>
+      <td><b>${wabotEsc(t.toOfficialLabel || '-')}</b><br><span class="wctrl-table-sub">${wabotEsc(t.toOfficialPhone || '')}</span></td>
+      <td class="num">€${Number(t.amountEUR||0).toFixed(2)}</td>
+      <td>${wabotEsc(t.note || '-')}</td>
+      <td>${wabotEsc(t.createdBy || '-')}</td>
+    </tr>`).join('');
+}
+
 function wabotWalletStats(acc){
   const baselineEUR = wabotOpeningBalanceEUR(acc.phone);
   const baselineDate = WABOT_OPENING_BALANCE_DATE;
 
-  // Baseline 4/8/2026 (€15/nombor) mewakili topup terakhir yang diberi user.
-  // Rekod topup manual pada / sebelum baseline tidak ditambah semula supaya tak double count.
-  const tops=(allTopups||[]).filter(t=>{
+  const tops=walletTopupRows().filter(t=>{
     if(String(t.officialKey||'')!==acc.key) return false;
     const d=topupDateStr(t);
     return !d || d > baselineDate;
   });
 
   const futureTopupEUR=tops.reduce((s,t)=>s+Number(t.amountEUR||0),0);
-  const topupEUR=baselineEUR+futureTopupEUR;
 
-  // Usage mula dikira dari baseline date.
+  const transfers=walletTransferRows().filter(t=>{
+    const d=t.transferDate || topupDateStr(t);
+    return !d || d>=baselineDate;
+  });
+  const transferInEUR=transfers
+    .filter(t=>String(t.toOfficialKey||'')===acc.key)
+    .reduce((s,t)=>s+Number(t.amountEUR||0),0);
+  const transferOutEUR=transfers
+    .filter(t=>String(t.fromOfficialKey||'')===acc.key)
+    .reduce((s,t)=>s+Number(t.amountEUR||0),0);
+
   const rows=(allEntries||[]).filter(en=>{
     const a=entryOfficial(en);
     return a && a.key===acc.key && (!en.tarikh || en.tarikh>=baselineDate);
@@ -73,12 +215,17 @@ function wabotWalletStats(acc){
 
   const sent=rows.reduce((s,en)=>s+Number(en.sent||0),0);
   const usageEUR=costEUR(sent);
-  const balanceEUR=topupEUR-usageEUR;
+
+  const fundsInEUR=baselineEUR+futureTopupEUR+transferInEUR;
+  const balanceEUR=fundsInEUR-transferOutEUR-usageEUR;
 
   return {
-    topupEUR,
+    topupEUR:baselineEUR+futureTopupEUR,
     baselineEUR,
     futureTopupEUR,
+    transferInEUR,
+    transferOutEUR,
+    fundsInEUR,
     firstTopup:baselineDate,
     sent,
     usageEUR,
@@ -88,15 +235,28 @@ function wabotWalletStats(acc){
 }
 function renderWabotControl(){
   const grid=document.getElementById('wctrl-grid'); if(!grid) return;
+  initWalletTransferInputs();
+
   const stats=WABOT_OFFICIALS.map(a=>({a,s:wabotWalletStats(a)}));
-  const totalTop=stats.reduce((x,r)=>x+r.s.topupEUR,0), totalUse=stats.reduce((x,r)=>x+r.s.usageEUR,0), totalBal=stats.reduce((x,r)=>x+r.s.balanceEUR,0);
+  const totalTop=stats.reduce((x,r)=>x+r.s.topupEUR,0);
+  const totalUse=stats.reduce((x,r)=>x+r.s.usageEUR,0);
+  const totalBal=stats.reduce((x,r)=>x+r.s.balanceEUR,0);
   const low=stats.filter(r=>r.s.topupEUR>0 && r.s.balanceEUR<5).length;
+
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
-  set('wctrl-total-topup','€'+totalTop.toFixed(2)); set('wctrl-total-usage','€'+totalUse.toFixed(2)); set('wctrl-total-balance','€'+totalBal.toFixed(2)); set('wctrl-low-count',String(low));
+  set('wctrl-total-topup','€'+totalTop.toFixed(2));
+  set('wctrl-total-usage','€'+totalUse.toFixed(2));
+  set('wctrl-total-balance','€'+totalBal.toFixed(2));
+  set('wctrl-low-count',String(low));
+
   grid.innerHTML=stats.map(({a,s})=>{
-    const pct=s.topupEUR?Math.max(0,Math.min(100,s.balanceEUR/s.topupEUR*100)):0;
-    const status=!s.topupEUR?'BELUM TOPUP':s.balanceEUR<0?'OVER USED':s.balanceEUR<5?'LOW BALANCE':'OK';
-    const cls=!s.topupEUR?'neutral':s.balanceEUR<5?'danger':'ok';
+    const pct=s.fundsInEUR?Math.max(0,Math.min(100,s.balanceEUR/s.fundsInEUR*100)):0;
+    const status=!s.fundsInEUR?'BELUM TOPUP':s.balanceEUR<0?'OVER USED':s.balanceEUR<5?'LOW BALANCE':'OK';
+    const cls=!s.fundsInEUR?'neutral':s.balanceEUR<5?'danger':'ok';
+    const ready=walletReadiness(a,s);
+    const readinessClass=ready.ready?'ready':'shortfall';
+    const limitLabel=a.dailyLimit>=1000?fmt(a.dailyLimit):String(a.dailyLimit);
+
     return `<article class="wctrl-card">
       <div class="wctrl-card-head">
         <div>
@@ -108,16 +268,34 @@ function renderWabotControl(){
 
       <div class="wctrl-account"><span class="wctrl-dot"></span>${wabotEsc(a.wabot)}</div>
 
+      <div class="wctrl-readiness ${readinessClass}">
+        <div>
+          <span>DAILY LIMIT</span>
+          <b>${limitLabel}/hari</b>
+        </div>
+        <div>
+          <span>TARGET READY</span>
+          <b>${fmt(ready.targetSent)} sent · €${ready.neededEUR.toFixed(2)}</b>
+        </div>
+        <strong>${ready.ready?'READY':'SHORT €'+ready.shortfallEUR.toFixed(2)}</strong>
+      </div>
+
       <div class="wctrl-money">
         <div class="wctrl-balance-main"><span>BAKI ANGGARAN</span><b>€${s.balanceEUR.toFixed(2)}</b></div>
         <div><span>TOPUP / OPENING</span><b>€${s.topupEUR.toFixed(2)}</b></div>
       </div>
 
       <div class="wctrl-balance-track"><span style="width:${pct.toFixed(1)}%"></span></div>
+
       <div class="wctrl-mini">
         <span><small>Usage</small> €${s.usageEUR.toFixed(2)}</span>
+        <span><small>Transfer In</small> €${s.transferInEUR.toFixed(2)}</span>
+        <span><small>Transfer Out</small> €${s.transferOutEUR.toFixed(2)}</span>
+      </div>
+      <div class="wctrl-mini">
         <span><small>Sent</small> ${fmt(s.sent)}</span>
         <span><small>Topup</small> ${s.topups}</span>
+        <span><small>Target Cost</small> €${ready.neededEUR.toFixed(2)}</span>
       </div>
 
       <div class="wctrl-meta">
@@ -132,10 +310,22 @@ function renderWabotControl(){
         : `<button class="wctrl-template disabled" disabled><span>Link Template Belum Diset</span></button>`}
     </article>`;
   }).join('');
-  const body=document.getElementById('wctrl-meta-body');
-  if(body) body.innerHTML=WABOT_OFFICIALS.map(a=>`<tr><td><b>${wabotEsc(a.label)}</b><br><span class="wctrl-table-sub">${a.phone}</span></td><td>${wabotEsc(a.wabot)}</td><td>${wabotEsc(a.meta)}<br><span class="wctrl-table-sub">${wabotEsc(a.wabaId)}</span></td><td>${wabotEsc(a.login)}</td><td>${wabotEsc(a.chrome)}</td><td>${a.templateUrl?`<a class="wctrl-link" href="${a.templateUrl}" target="_blank" rel="noopener">Buka ↗</a>`:'<span class="wctrl-table-sub">Belum diset</span>'}</td></tr>`).join('');
-}
 
+  const body=document.getElementById('wctrl-meta-body');
+  if(body) body.innerHTML=WABOT_OFFICIALS.map(a=>`
+    <tr>
+      <td><b>${wabotEsc(a.label)}</b><br><span class="wctrl-table-sub">${a.phone}</span></td>
+      <td>${wabotEsc(a.wabot)}</td>
+      <td class="num">${fmt(a.dailyLimit)}/hari</td>
+      <td>${wabotEsc(a.meta)}<br><span class="wctrl-table-sub">${wabotEsc(a.wabaId)}</span></td>
+      <td>${wabotEsc(a.login)}</td>
+      <td>${wabotEsc(a.chrome)}</td>
+      <td>${a.templateUrl?`<a class="wctrl-link" href="${a.templateUrl}" target="_blank" rel="noopener">Buka ↗</a>`:'<span class="wctrl-table-sub">Belum diset</span>'}</td>
+    </tr>`).join('');
+
+  renderTransferRecommendations();
+  renderTransferHistory();
+}
 function toast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -732,11 +922,22 @@ document.querySelectorAll('[data-range]').forEach(btn => {
 });
 
 function updateTopupVisibility() {
-  const kategori = document.getElementById('filter-kategori').value;
-  document.getElementById('topup-section').style.display = kategori ? 'none' : 'block';
-  document.getElementById('stat-roi-topup-wrap').style.display = kategori ? 'none' : 'block';
-  document.getElementById('kategori-susu-extra').style.display = kategori === 'Projek Susu' ? 'block' : 'none';
-  document.getElementById('kategori-naimfani-extra').style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
+  const kategori = document.getElementById('filter-kategori')?.value || '';
+
+  // Topup Wabot ialah fungsi operasi dan mesti sentiasa boleh diakses
+  // walaupun Dashboard sedang ditapis kepada projek tertentu.
+  const topupSection = document.getElementById('topup-section');
+  if (topupSection) topupSection.style.display = 'block';
+
+  // Backward compatibility untuk KPI lama jika elemen masih wujud.
+  const roiTopup = document.getElementById('stat-roi-topup-wrap');
+  if (roiTopup) roiTopup.style.display = kategori ? 'none' : 'block';
+
+  const susuExtra = document.getElementById('kategori-susu-extra');
+  if (susuExtra) susuExtra.style.display = kategori === 'Projek Susu' ? 'block' : 'none';
+
+  const leadsExtra = document.getElementById('kategori-naimfani-extra');
+  if (leadsExtra) leadsExtra.style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
 }
 
 // ---- Report full-view modal ----
@@ -2122,9 +2323,63 @@ document.getElementById('topup-form').addEventListener('submit', async (e) => {
   }
 });
 
+
+const transferForm = document.getElementById('transfer-form');
+if (transferForm) transferForm.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+
+  const fromKey=document.getElementById('transfer-from').value;
+  const toKey=document.getElementById('transfer-to').value;
+  const amountEUR=Number(document.getElementById('transfer-amount').value||0);
+  const transferDate=document.getElementById('transfer-date').value||todayStr();
+  const note=document.getElementById('transfer-note').value.trim();
+
+  const from=WABOT_OFFICIALS.find(x=>x.key===fromKey);
+  const to=WABOT_OFFICIALS.find(x=>x.key===toKey);
+
+  if(!from || !to) return toast('Pilih akaun asal dan akaun penerima.',true);
+  if(from.key===to.key) return toast('Akaun asal dan penerima tak boleh sama.',true);
+  if(!amountEUR || amountEUR<=0) return toast('Masukkan amaun transfer yang sah.',true);
+
+  const current=wabotWalletStats(from);
+  if(amountEUR>Math.max(0,current.balanceEUR)){
+    return toast(`Baki ${from.label} tak cukup. Anggaran baki €${current.balanceEUR.toFixed(2)}.`,true);
+  }
+
+  const btn=e.target.querySelector('button[type=submit]');
+  btn.disabled=true; btn.textContent='Menyimpan...';
+
+  try{
+    await db.collection('topups').add({
+      transactionType:'transfer',
+      amountEUR,
+      amountRM:amountEUR*EUR_TO_MYR,
+      transferDate,
+      fromOfficialKey:from.key,
+      fromOfficialPhone:from.phone,
+      fromOfficialLabel:from.label,
+      toOfficialKey:to.key,
+      toOfficialPhone:to.phone,
+      toOfficialLabel:to.label,
+      note,
+      createdBy:currentProfile.name,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    e.target.reset();
+    initWalletTransferInputs();
+    toast(`Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} ✓`);
+  }catch(err){
+    toast('Gagal simpan transfer: '+err.message,true);
+  }finally{
+    btn.disabled=false; btn.textContent='Transfer Balance';
+  }
+});
+
 function renderTopups() {
-  const totalEUR = allTopups.reduce((a, t) => a + (t.amountEUR || 0), 0);
-  const totalRM = allTopups.reduce((a, t) => a + (t.amountRM || 0), 0);
+  const actualTopups = walletTopupRows();
+  const totalEUR = actualTopups.reduce((a, t) => a + (t.amountEUR || 0), 0);
+  const totalRM = actualTopups.reduce((a, t) => a + (t.amountRM || 0), 0);
   document.getElementById('topup-total-eur').textContent = '€' + totalEUR.toFixed(2);
   document.getElementById('topup-total-rm').textContent = 'RM ' + fmt(totalRM.toFixed(2));
 
@@ -2138,7 +2393,7 @@ function renderTopups() {
 
   const body = document.getElementById('topup-history-body');
   body.innerHTML = '';
-  allTopups.forEach(t => {
+  actualTopups.forEach(t => {
     const dateStr = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleString('ms-MY') : '-';
     const tr = document.createElement('tr');
     tr.innerHTML = `<td style="font-size:12px;">${t.topupDate || dateStr}</td>
@@ -2149,7 +2404,7 @@ function renderTopups() {
       <td style="font-size:12px; color:var(--muted);">${t.createdBy || '-'}</td>`;
     body.appendChild(tr);
   });
-  if (!allTopups.length) body.innerHTML = '<tr><td colspan="6" class="empty-state">Tiada rekod topup lagi.</td></tr>';
+  if (!actualTopups.length) body.innerHTML = '<tr><td colspan="6" class="empty-state">Tiada rekod topup lagi.</td></tr>';
 }
 
 // ---- Edit manual Database stats (Total/Dah Blast/Belum Blast) ----
@@ -3485,3 +3740,93 @@ function renderAIInsight(){
 
 const insightRange = document.getElementById('insight-range');
 if (insightRange) insightRange.addEventListener('change', renderAIInsight);
+
+// ==================== PROJECTION SIMULATOR V8.4 ====================
+(function(){
+  const ids=['proj-aov','proj-buyers','proj-cost','proj-sent','proj-reply','proj-conv'];
+  const $=id=>document.getElementById(id);
+  const n=id=>Math.max(0,Number($(id)?.value||0));
+  const money=v=>'RM '+Number(v||0).toLocaleString('en-MY',{minimumFractionDigits:v<100?2:0,maximumFractionDigits:2});
+  const num=v=>Math.round(v||0).toLocaleString('en-MY');
+  const pct=v=>Number(v||0).toLocaleString('en-MY',{maximumFractionDigits:1})+'%';
+
+  function drawProjectionChart(sales){
+    const c=$('projection-chart'); if(!c) return;
+    const dpr=window.devicePixelRatio||1;
+    const rect=c.getBoundingClientRect();
+    const w=Math.max(600,rect.width||1100), h=Math.max(240,rect.height||300);
+    c.width=w*dpr;c.height=h*dpr;
+    const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+    const css=getComputedStyle(document.documentElement);
+    const text=css.getPropertyValue('--muted').trim()||'#667';
+    const line=css.getPropertyValue('--line').trim()||'#ddd';
+    const mint=css.getPropertyValue('--mint').trim()||'#00b98b';
+    const left=58,right=18,top=22,bottom=38, pw=w-left-right, ph=h-top-bottom;
+    ctx.clearRect(0,0,w,h);
+    ctx.font='10px IBM Plex Mono, monospace';ctx.fillStyle=text;
+    ctx.strokeStyle=line;ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const y=top+ph*(i/4), val=sales*(1-i/4);
+      ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();
+      ctx.fillText('RM'+Math.round(val/1000)+'K',5,y+3);
+    }
+    [1,5,10,15,20,25,30].forEach(day=>{
+      const x=left+pw*((day-1)/29);
+      ctx.fillText('D'+day,x-7,h-13);
+    });
+    ctx.strokeStyle=mint;ctx.lineWidth=3;ctx.beginPath();
+    for(let day=1;day<=30;day++){
+      const x=left+pw*((day-1)/29), y=top+ph-(ph*(sales*(day/30)/(sales||1)));
+      day===1?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.fillStyle=mint;
+    for(let day=1;day<=30;day+=4){
+      const x=left+pw*((day-1)/29), y=top+ph-(ph*(day/30));
+      ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  function updateProjection(){
+    if(!$('proj-aov')) return;
+    const aov=n('proj-aov'), buyers=n('proj-buyers'), cost=n('proj-cost'), sent=n('proj-sent');
+    const reply=n('proj-reply'), conv=n('proj-conv');
+    const sales=aov*buyers, roas=cost?sales/cost:0, roi=cost?((sales-cost)/cost)*100:0, cpa=buyers?cost/buyers:0;
+    const replies=sent*(reply/100), funnelBuyers=replies*(conv/100);
+
+    $('proj-sales').textContent=money(sales);
+    $('proj-sales-note').textContent=`${num(buyers)} buyer × ${money(aov)} AOV`;
+    $('proj-roas').textContent=roas.toFixed(2)+'x';
+    $('proj-roi').textContent=pct(roi);
+    $('proj-cpa').textContent=money(cpa);
+    $('proj-replies').textContent=num(replies);
+    $('proj-reply-note').textContent=`${reply.toFixed(1)}% daripada ${num(sent)} sent/leads`;
+    $('proj-funnel-buyers').textContent=num(funnelBuyers);
+    $('proj-funnel-note').textContent=`${conv.toFixed(1)}% daripada replies`;
+
+    const scenarios=[
+      ['Conservative',.70,''],
+      ['Target',1,'target'],
+      ['Aggressive',1.30,'']
+    ];
+    $('projection-scenario-grid').innerHTML=scenarios.map(([name,m,cls])=>{
+      const b=buyers*m, s=b*aov, r=cost?s/cost:0, cp=b?cost/b:0;
+      return `<article class="projection-scenario ${cls}">
+        <div class="scenario-name">${name}</div>
+        <div class="scenario-sales">${money(s)}</div>
+        <dl><dt>Buyer</dt><dd>${num(b)}</dd><dt>AOV</dt><dd>${money(aov)}</dd><dt>ROAS</dt><dd>${r.toFixed(2)}x</dd><dt>Cost / Buyer</dt><dd>${money(cp)}</dd></dl>
+      </article>`;
+    }).join('');
+    drawProjectionChart(sales);
+  }
+
+  ids.forEach(id=>$(id)?.addEventListener('input',updateProjection));
+  $('projection-reset')?.addEventListener('click',()=>{
+    const vals={'proj-aov':80,'proj-buyers':1000,'proj-cost':4210.53,'proj-sent':100000,'proj-reply':10,'proj-conv':1};
+    Object.entries(vals).forEach(([id,v])=>{if($(id))$(id).value=v;});
+    updateProjection();
+  });
+  document.querySelector('.app-nav button[data-view="projection"]')?.addEventListener('click',()=>setTimeout(updateProjection,50));
+  window.addEventListener('resize',()=>{if(document.getElementById('view-projection')?.classList.contains('active')) updateProjection();});
+  setTimeout(updateProjection,500);
+})();
