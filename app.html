@@ -36,6 +36,7 @@
         <button data-view="laporan">Laporan</button>
         <button data-view="wabotlive">Wabot Live</button>
         <button data-view="wabotcontrol">Wabot Control</button>
+        <button data-view="projection">Projection</button>
         <button data-view="analyticspro">Analytics Pro</button>
         <button data-view="campaignmanager">Campaign Manager</button>
         <button data-view="aiinsight">AI Insight</button>
@@ -237,7 +238,7 @@
       </section>
 
       <section id="topup-section" style="display:none;">
-        <div class="section-head"><h2><span class="idx">•</span>Topup Blasting <small style="font-weight:400; color:var(--muted); font-size:11px;">(Keseluruhan sahaja)</small></h2></div>
+        <div class="section-head"><h2><span class="idx">•</span>Topup Wabot <small style="font-weight:400; color:var(--muted); font-size:11px;">(sentiasa tersedia)</small></h2></div>
         <div class="stat-row">
           <div class="stat-card"><div class="label">Jumlah Topup (€)</div><div class="value" id="topup-total-eur">€0.00</div></div>
           <div class="stat-card accent-mint"><div class="label">Kos Topup (RM)</div><div class="value" id="topup-total-rm">RM 0.00</div></div>
@@ -636,6 +637,68 @@ Ahmad	60112223344"></textarea>
     </div>
 
     <!-- ================= WABOT LIVE (AUTO WEBHOOK) ================= -->
+
+    <!-- ==================== PROJECTION SIMULATOR ==================== -->
+    <div id="view-projection" class="view">
+      <div class="section-head projection-head">
+        <div>
+          <h2>Sales Projection Simulator</h2>
+          <p>Simulasi planning sahaja — tidak mengubah data sebenar Dashboard atau CRM.</p>
+        </div>
+        <button class="btn btn-ghost projection-reset" id="projection-reset">Reset</button>
+      </div>
+
+      <div class="projection-layout">
+        <section class="projection-panel">
+          <div class="projection-panel-title"><span>01</span> Input Projection</div>
+          <div class="projection-input-grid">
+            <label>AOV / Average Order Value (RM)
+              <input type="number" id="proj-aov" min="0" step="1" value="80">
+            </label>
+            <label>Target Buyer / Order
+              <input type="number" id="proj-buyers" min="0" step="1" value="1000">
+            </label>
+            <label>Anggaran Kos (RM)
+              <input type="number" id="proj-cost" min="0" step="1" value="4210.53">
+            </label>
+            <label>Jumlah Sent / Leads
+              <input type="number" id="proj-sent" min="0" step="1" value="100000">
+            </label>
+            <label>Reply Rate (%)
+              <input type="number" id="proj-reply" min="0" max="100" step="0.1" value="10">
+            </label>
+            <label>Conversion Rate (%)
+              <input type="number" id="proj-conv" min="0" max="100" step="0.1" value="1">
+            </label>
+          </div>
+          <div class="projection-hint">Buyer manual digunakan untuk Sales/ROAS utama. Funnel Sent × Reply × Conversion ditunjukkan sebagai anggaran tambahan untuk semak sama ada target buyer realistik.</div>
+        </section>
+
+        <section class="projection-results">
+          <div class="projection-kpi hero"><span>PROJECTED SALES</span><strong id="proj-sales">RM 80,000</strong><small id="proj-sales-note">1,000 buyer × RM80 AOV</small></div>
+          <div class="projection-kpi"><span>PROJECTED ROAS</span><strong id="proj-roas">19.00x</strong><small>Sales ÷ Kos</small></div>
+          <div class="projection-kpi"><span>PROJECTED ROI</span><strong id="proj-roi">1,800%</strong><small>(Sales − Kos) ÷ Kos</small></div>
+          <div class="projection-kpi"><span>COST / BUYER</span><strong id="proj-cpa">RM 4.21</strong><small>Kos ÷ Buyer</small></div>
+          <div class="projection-kpi"><span>FUNNEL REPLIES</span><strong id="proj-replies">10,000</strong><small id="proj-reply-note">10.0% daripada sent</small></div>
+          <div class="projection-kpi"><span>FUNNEL BUYER</span><strong id="proj-funnel-buyers">100</strong><small id="proj-funnel-note">1.0% daripada replies</small></div>
+        </section>
+      </div>
+
+      <section class="projection-panel projection-scenarios">
+        <div class="projection-panel-title"><span>02</span> Scenario Comparison</div>
+        <p class="projection-sub">Auto bandingkan projection berdasarkan buyer semasa: Conservative 70%, Target 100%, Aggressive 130%.</p>
+        <div class="projection-scenario-grid" id="projection-scenario-grid"></div>
+      </section>
+
+      <section class="projection-panel">
+        <div class="projection-panel-title"><span>03</span> Projection Trend</div>
+        <p class="projection-sub">Anggaran sales terkumpul jika target buyer dicapai secara sekata sepanjang 30 hari.</p>
+        <div class="projection-chart-wrap">
+          <canvas id="projection-chart" width="1100" height="300"></canvas>
+        </div>
+      </section>
+    </div>
+
     <div id="view-wabotcontrol" class="view">
       <div class="section-head wabot-control-head">
         <div>
@@ -653,15 +716,52 @@ Ahmad	60112223344"></textarea>
       </div>
 
       <div class="wctrl-note">
-        <b>Cara kira:</b> baki anggaran = jumlah topup yang direkod untuk nombor − kos Sent (€0.0116/mesej) selepas topup pertama nombor itu. Rekod topup lama yang belum ada nombor kekal sebagai “Legacy / Belum Assigned” dan tidak dipaksa masuk ke baki nombor.
+        <b>Cara kira:</b> baki anggaran = opening balance 4/8/2026 (€15 setiap nombor) + topup baru selepas 4/8 − kos Sent (€0.0116/mesej). Alert Low Balance aktif bila baki bawah €5. Transfer balance dikira berasingan dan tidak menambah total topup.
       </div>
 
       <div id="wctrl-grid" class="wctrl-grid"></div>
 
+      <div class="form-card wctrl-transfer-card" style="margin-top:18px;">
+        <div class="section-head" style="margin-bottom:10px;">
+          <div>
+            <h2><span class="idx">€</span>Transfer Balance</h2>
+            <p class="dash-v7-sub">Transfer hanya pindahkan baki antara nombor. Ia tidak menambah jumlah topup keseluruhan.</p>
+          </div>
+          <span class="hint-chip">Target readiness: 1,000 sent / atau limit akaun</span>
+        </div>
+
+        <form id="transfer-form" class="wctrl-transfer-form">
+          <div class="field" style="margin:0;"><label>Tarikh</label><input type="date" id="transfer-date" required></div>
+          <div class="field" style="margin:0;"><label>Dari Nombor</label><select id="transfer-from" required></select></div>
+          <div class="field" style="margin:0;"><label>Ke Nombor</label><select id="transfer-to" required></select></div>
+          <div class="field" style="margin:0;"><label>Amaun (€)</label><input type="number" id="transfer-amount" min="0.01" step="0.01" placeholder="cth: 4.40" required></div>
+          <div class="field" style="margin:0;"><label>Nota</label><input type="text" id="transfer-note" placeholder="cth: Cukupkan 1K blast"></div>
+          <button type="submit" class="btn btn-primary wctrl-transfer-btn">Transfer Balance</button>
+        </form>
+
+        <div class="wctrl-rec-box">
+          <div class="wctrl-rec-title">Cadangan Transfer Automatik</div>
+          <div class="wctrl-rec-sub">Fathiah Biz disimpan cukup untuk limit 250/hari. Lebihan dicadangkan ke akaun high-capacity yang short untuk target 1,000 sent.</div>
+          <div id="wctrl-transfer-recommend"></div>
+        </div>
+      </div>
+
+      <div class="form-card" style="margin-top:18px;">
+        <div class="section-head" style="margin-bottom:10px;">
+          <h2><span class="idx">HIST</span>Transfer History</h2>
+        </div>
+        <div class="wabot-table-wrap">
+          <table class="tbl">
+            <thead><tr><th>Tarikh</th><th>Dari</th><th>Ke</th><th>Amaun</th><th>Nota</th><th>Oleh</th></tr></thead>
+            <tbody id="wctrl-transfer-body"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div class="form-card" style="margin-top:18px;">
         <div class="section-head" style="margin-bottom:10px;"><h2><span class="idx">META</span>Mapping Meta & Login</h2></div>
         <div class="wabot-table-wrap">
-          <table class="tbl"><thead><tr><th>Nombor Official</th><th>Wabot</th><th>Meta / WABA</th><th>Login Google</th><th>Chrome Profile</th><th>Template</th></tr></thead><tbody id="wctrl-meta-body"></tbody></table>
+          <table class="tbl"><thead><tr><th>Nombor Official</th><th>Wabot</th><th>Daily Limit</th><th>Meta / WABA</th><th>Login Google</th><th>Chrome Profile</th><th>Template</th></tr></thead><tbody id="wctrl-meta-body"></tbody></table>
         </div>
       </div>
     </div>
