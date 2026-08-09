@@ -154,14 +154,34 @@ function renderTransferRecommendations(){
     </div>`).join('');
 
   wrap.querySelectorAll('.wctrl-use-rec').forEach(btn=>{
-    btn.addEventListener('click',()=>{
+    btn.addEventListener('click',async()=>{
+      await refreshWalletDataNow();
+
+      // Selepas refresh, cari semula cadangan terkini untuk pasangan yang sama.
+      const fresh=walletTransferRecommendations().find(x=>
+        x.from===btn.dataset.from &&
+        x.to===btn.dataset.to
+      );
+
       const from=document.getElementById('transfer-from');
       const to=document.getElementById('transfer-to');
       const amount=document.getElementById('transfer-amount');
+
       if(from) from.value=btn.dataset.from;
       if(to) to.value=btn.dataset.to;
-      if(amount) amount.value=btn.dataset.amount;
-      document.getElementById('transfer-form')?.scrollIntoView({behavior:'smooth',block:'center'});
+
+      if(amount){
+        amount.value=fresh
+          ? fresh.amount.toFixed(2)
+          : '';
+      }
+
+      renderWabotControl();
+
+      document.getElementById('transfer-form')?.scrollIntoView({
+        behavior:'smooth',
+        block:'center'
+      });
     });
   });
 }
@@ -2298,6 +2318,38 @@ function wabotOpeningBalanceEUR(phone) {
 let allTopups = [];
 let unsubTopups = null;
 
+
+async function refreshWalletDataNow(){
+  try{
+    const snap=await db.collection('topups').get();
+
+    allTopups=snap.docs.map(d=>({
+      id:d.id,
+      ...d.data()
+    }));
+
+    allTopups.sort((a,b)=>{
+      const at=a.createdAt && a.createdAt.toMillis
+        ? a.createdAt.toMillis()
+        : Number(a.createdAtMs||0);
+
+      const bt=b.createdAt && b.createdAt.toMillis
+        ? b.createdAt.toMillis()
+        : Number(b.createdAtMs||0);
+
+      return bt-at;
+    });
+
+    renderTopups();
+    renderWabotControl();
+
+    return true;
+  }catch(err){
+    console.warn('refreshWalletDataNow:',err);
+    return false;
+  }
+}
+
 function startTopupListener() {
   // Jangan guna orderBy(createdAt) di query.
   // Dokumen transfer baru menggunakan serverTimestamp dan boleh sementara
@@ -2362,9 +2414,20 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
   if(from.key===to.key) return toast('Akaun asal dan penerima tak boleh sama.',true);
   if(!amountEUR || amountEUR<=0) return toast('Masukkan amaun transfer yang sah.',true);
 
+  // Ambil keadaan wallet TERKINI dari Firestore sebelum semak baki.
+  // Ini elakkan card/cadangan lama kekal walaupun transfer sebelumnya sudah direkod.
+  await refreshWalletDataNow();
+
   const current=wabotWalletStats(from);
+
   if(amountEUR>Math.max(0,current.balanceEUR)){
-    return toast(`Baki ${from.label} tak cukup. Anggaran baki €${current.balanceEUR.toFixed(2)}.`,true);
+    // Paksa semua card + cadangan refresh sebelum tunjuk error.
+    renderWabotControl();
+
+    return toast(
+      `Baki ${from.label} tak cukup. Anggaran baki terkini €${current.balanceEUR.toFixed(2)}.`,
+      true
+    );
   }
 
   const btn=e.target.querySelector('button[type=submit]');
@@ -2410,11 +2473,13 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
         allTopups.unshift({id:ref.id,...saved.data()});
       }
 
-      renderTopups();
-      renderWabotControl();
+      // Ambil semula data sebenar Firestore supaya sender, receiver,
+      // Transfer History dan Cadangan Transfer semuanya selari.
+      await refreshWalletDataNow();
 
       e.target.reset();
       initWalletTransferInputs();
+
       toast(`Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} berjaya ✓`);
     }catch(saveErr){
       allTopups=allTopups.filter(t=>t.id!==localId);
@@ -3880,6 +3945,24 @@ if (insightRange) insightRange.addEventListener('change', renderAIInsight);
     updateProjection();
   });
   document.querySelector('.app-nav button[data-view="projection"]')?.addEventListener('click',()=>setTimeout(updateProjection,50));
+
+document.querySelector('.app-nav button[data-view="wabotcontrol"]')?.addEventListener('click',()=>{
+  setTimeout(async()=>{
+    await refreshWalletDataNow();
+  },80);
+});
+
   window.addEventListener('resize',()=>{if(document.getElementById('view-projection')?.classList.contains('active')) updateProjection();});
   setTimeout(updateProjection,500);
 })();
+
+
+// V8.9: sync wallet semasa tab Wabot Control dibuka.
+// Rendah frekuensi supaya tak membebankan Firestore.
+setInterval(()=>{
+  const view=document.getElementById('view-wabotcontrol');
+
+  if(view && view.classList.contains('active')){
+    refreshWalletDataNow();
+  }
+},15000);
