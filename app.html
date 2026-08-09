@@ -35,6 +35,7 @@
         <button data-view="feedback">Feedback</button>
         <button data-view="laporan">Laporan</button>
         <button data-view="wabotlive">Wabot Live</button>
+        <button data-view="wabotcontrol">Wabot Control</button>
         <button data-view="analyticspro">Analytics Pro</button>
         <button data-view="campaignmanager">Campaign Manager</button>
         <button data-view="aiinsight">AI Insight</button>
@@ -243,13 +244,15 @@
         </div>
         <div class="form-card" style="margin-top:16px;">
           <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-            <div class="field" style="margin:0; flex:1; min-width:160px;"><label>Amaun Topup (€)</label><input type="number" id="topup-amount" min="0" step="0.01" placeholder="cth: 90" required></div>
-            <div class="field" style="margin:0; flex:2; min-width:200px;"><label>Nota (pilihan)</label><input type="text" id="topup-note" placeholder="cth: Topup Wabot Ogos"></div>
+            <div class="field" style="margin:0; flex:1; min-width:150px;"><label>Tarikh Topup</label><input type="date" id="topup-date" required></div>
+            <div class="field" style="margin:0; flex:2; min-width:250px;"><label>Nombor Official</label><select id="topup-phone" required></select></div>
+            <div class="field" style="margin:0; flex:1; min-width:140px;"><label>Amaun Topup (€)</label><input type="number" id="topup-amount" min="0" step="0.01" placeholder="cth: 90" required></div>
+            <div class="field" style="margin:0; flex:2; min-width:190px;"><label>Nota (pilihan)</label><input type="text" id="topup-note" placeholder="cth: Topup minggu ini"></div>
             <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah Topup</button>
           </form>
         </div>
         <table class="tbl" style="margin-top:14px;">
-          <thead><tr><th>Tarikh</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
+          <thead><tr><th>Tarikh</th><th>Nombor Official</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
           <tbody id="topup-history-body"></tbody>
         </table>
       </section>
@@ -633,6 +636,36 @@ Ahmad	60112223344"></textarea>
     </div>
 
     <!-- ================= WABOT LIVE (AUTO WEBHOOK) ================= -->
+    <div id="view-wabotcontrol" class="view">
+      <div class="section-head wabot-control-head">
+        <div>
+          <h2>Wabot Control</h2>
+          <p class="dash-v7-sub">Pantau baki anggaran setiap nombor Official, mapping Meta dan shortcut Manage Template dalam satu tempat.</p>
+        </div>
+        <span class="hint-chip">6 nombor official</span>
+      </div>
+
+      <div class="wctrl-summary-grid">
+        <div class="stat-card"><div class="label">TOTAL TOPUP ASSIGNED</div><div class="value" id="wctrl-total-topup">€0.00</div></div>
+        <div class="stat-card"><div class="label">USAGE DIKIRA</div><div class="value" id="wctrl-total-usage">€0.00</div></div>
+        <div class="stat-card accent-mint"><div class="label">BAKI ANGGARAN</div><div class="value" id="wctrl-total-balance">€0.00</div></div>
+        <div class="stat-card"><div class="label">LOW BALANCE</div><div class="value" id="wctrl-low-count">0</div></div>
+      </div>
+
+      <div class="wctrl-note">
+        <b>Cara kira:</b> baki anggaran = jumlah topup yang direkod untuk nombor − kos Sent (€0.0116/mesej) selepas topup pertama nombor itu. Rekod topup lama yang belum ada nombor kekal sebagai “Legacy / Belum Assigned” dan tidak dipaksa masuk ke baki nombor.
+      </div>
+
+      <div id="wctrl-grid" class="wctrl-grid"></div>
+
+      <div class="form-card" style="margin-top:18px;">
+        <div class="section-head" style="margin-bottom:10px;"><h2><span class="idx">META</span>Mapping Meta & Login</h2></div>
+        <div class="wabot-table-wrap">
+          <table class="tbl"><thead><tr><th>Nombor Official</th><th>Wabot</th><th>Meta / WABA</th><th>Login Google</th><th>Chrome Profile</th><th>Template</th></tr></thead><tbody id="wctrl-meta-body"></tbody></table>
+        </div>
+      </div>
+    </div>
+
     <div id="view-wabotlive" class="view">
       <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
         <div>
