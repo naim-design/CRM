@@ -132,37 +132,108 @@
 
     <!-- ================= DASHBOARD ================= -->
     <div id="view-dashboard" class="view">
-      <div class="hero" style="padding-top:36px;">
-        <div class="eyebrow">Live Dashboard</div>
-        <h1>Prestasi Blasting</h1>
-        <div class="table-controls" style="margin-top:18px;">
-          <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="filter-from"></div>
-          <div class="field" style="margin:0;"><label>Hingga</label><input type="date" id="filter-to"></div>
+      <div class="hero dashboard-v7-hero" style="padding-top:36px;">
+        <div class="dashboard-v7-head">
+          <div>
+            <div class="eyebrow">Live Dashboard</div>
+            <h1>Prestasi & Trend CRM</h1>
+            <p class="dash-v7-sub">Pantau prestasi harian, perubahan berbanding semalam dan pencapaian target bulanan.</p>
+          </div>
+          <div class="dash-range-wrap">
+            <label>Julat Tarikh</label>
+            <div class="dash-range-box">
+              <input type="date" id="filter-from" aria-label="Tarikh mula">
+              <span class="dash-range-sep">—</span>
+              <input type="date" id="filter-to" aria-label="Tarikh akhir">
+            </div>
+            <div class="dash-range-presets">
+              <button type="button" data-range="today">Hari Ini</button>
+              <button type="button" data-range="7">7 Hari</button>
+              <button type="button" data-range="30">30 Hari</button>
+              <button type="button" data-range="month">Bulan Ini</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-v7-filters">
           <div class="field" style="margin:0;"><label>Staff</label>
             <select id="filter-staff" class="filter-box"><option value="">Semua Staff</option></select>
           </div>
-          <div class="field" style="margin:0;"><label>Kategori Laporan</label>
+          <div class="field" style="margin:0;"><label>Projek</label>
             <select id="filter-kategori" class="filter-box">
-              <option value="">Semua (Keseluruhan)</option>
+              <option value="">Semua Projek</option>
               <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
             </select>
           </div>
         </div>
 
-        <div class="stat-row">
-          <div class="stat-card accent-mint"><div class="label">Total Sent</div><div class="value" id="stat-sent">0</div><div class="foot" id="stat-sessions">0 entri</div></div>
-          <div class="stat-card accent-amber"><div class="label">Jadi Buyer</div><div class="value" id="stat-buyer">0</div><div class="foot" id="stat-conv">0.00% conversion</div></div>
-          <div class="stat-card"><div class="label">Total Sales</div><div class="value" id="stat-sales">RM 0</div></div>
-          <div class="stat-card"><div class="label">Kos Blasting</div><div class="value" id="stat-cost-rm">RM 0</div><div class="foot" id="stat-cost-eur">€0.00</div></div>
-          <div class="stat-card accent-mint"><div class="label">ROAS</div><div class="value" id="stat-roi">0.00x</div><div class="foot">Sales ÷ Kos</div></div>
-          <div class="stat-card accent-amber" id="stat-roi-topup-wrap" style="display:none;"><div class="label">ROI (dengan Topup)</div><div class="value" id="topup-roi">0.00x</div><div class="foot">Sales ÷ (Kos Blasting + Kos Topup)</div></div>
+        <div class="dash-kpi-grid">
+          <div class="dash-kpi-card" data-kpi="sales">
+            <div class="dash-kpi-label">TOTAL SALES</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-sales">RM 0</div><div class="dash-delta" id="delta-sales">—</div></div>
+            <div class="dash-target-meta"><span>Target RM30,000</span><span id="target-sales-text">0%</span></div>
+            <div class="dash-target-track"><div class="dash-target-fill" id="target-sales-bar"></div></div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="roi">
+            <div class="dash-kpi-label">ROI</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-roi-real">0.00x</div><div class="dash-delta" id="delta-roi">—</div></div>
+            <div class="dash-target-meta"><span>Target 10x</span><span id="target-roi-text">0%</span></div>
+            <div class="dash-target-track"><div class="dash-target-fill" id="target-roi-bar"></div></div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="roas">
+            <div class="dash-kpi-label">ROAS</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-roi">0.00x</div><div class="dash-delta" id="delta-roas">—</div></div>
+            <div class="dash-target-meta"><span>Target 10x</span><span id="target-roas-text">0%</span></div>
+            <div class="dash-target-track"><div class="dash-target-fill" id="target-roas-bar"></div></div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="conversion">
+            <div class="dash-kpi-label">CONVERSION RATE</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-conv-rate">0.00%</div><div class="dash-delta" id="delta-conv">—</div></div>
+            <div class="dash-target-meta"><span>Target 1%</span><span id="target-conv-text">0%</span></div>
+            <div class="dash-target-track"><div class="dash-target-fill" id="target-conv-bar"></div></div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="reply">
+            <div class="dash-kpi-label">REPLY RATE</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-reply-rate">0.0%</div><div class="dash-delta" id="delta-reply">—</div></div>
+            <div class="dash-target-meta"><span>Target 50%</span><span id="target-reply-text">0%</span></div>
+            <div class="dash-target-track"><div class="dash-target-fill" id="target-reply-bar"></div></div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="sent">
+            <div class="dash-kpi-label">TOTAL SENT</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-sent">0</div><div class="dash-delta" id="delta-sent">—</div></div>
+            <div class="dash-target-meta"><span id="stat-sessions">0 entri</span><span>Trend harian</span></div>
+            <div class="dash-target-track neutral"><div class="dash-target-fill" style="width:100%;opacity:.18;"></div></div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="buyer">
+            <div class="dash-kpi-label">BUYER</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-buyer">0</div><div class="dash-delta" id="delta-buyer">—</div></div>
+            <div class="dash-target-meta"><span>Target 100</span><span id="target-buyer-text">0%</span></div>
+            <div class="dash-target-track"><div class="dash-target-fill" id="target-buyer-bar"></div></div>
+            <div id="stat-conv" style="display:none;">0.00%</div>
+          </div>
+          <div class="dash-kpi-card" data-kpi="cost">
+            <div class="dash-kpi-label">KOS</div>
+            <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-cost-rm">RM 0</div><div class="dash-delta" id="delta-cost">—</div></div>
+            <div class="dash-target-meta"><span>Had RM1,000</span><span id="target-cost-text">0% digunakan</span></div>
+            <div class="dash-target-track cost"><div class="dash-target-fill" id="target-cost-bar"></div></div>
+            <div id="stat-cost-eur" style="display:none;">€0.00</div>
+          </div>
         </div>
-        <div class="stat-row" style="margin-top:14px;">
-          <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="stat-respon-rate">0.0%</div></div>
-          <div class="stat-card"><div class="label">Reply Rate<br><small style="font-weight:400;">(Reply/Sent)</small></div><div class="value" id="stat-reply-rate">0.0%</div></div>
-          <div class="stat-card"><div class="label">Conversion Rate<br><small style="font-weight:400;">(Buyer/Sent)</small></div><div class="value" id="stat-conv-rate">0.00%</div></div>
+
+        <div style="display:none;">
+          <span id="stat-respon-rate">0.0%</span>
         </div>
       </div>
+
+      <section class="dash-trend-section">
+        <div class="section-head dash-trend-head">
+          <div>
+            <h2><span class="idx">01</span>Trend Harian Mengikut Projek</h2>
+            <p class="dash-v7-sub">Klik KPI di setiap projek untuk hidup/matikan line pada graf.</p>
+          </div>
+        </div>
+        <div id="project-trend-grid" class="project-trend-grid"></div>
+      </section>
 
       <section id="topup-section" style="display:none;">
         <div class="section-head"><h2><span class="idx">•</span>Topup Blasting <small style="font-weight:400; color:var(--muted); font-size:11px;">(Keseluruhan sahaja)</small></h2></div>
@@ -184,18 +255,18 @@
       </section>
 
       <section>
-        <div class="section-head"><h2><span class="idx">01</span>Funnel</h2></div>
+        <div class="section-head"><h2><span class="idx">02</span>Funnel</h2></div>
         <div class="funnel-card"><div id="funnel"></div></div>
       </section>
 
       <section>
-        <div class="section-head"><h2><span class="idx">02</span>Sumber / Source</h2></div>
+        <div class="section-head"><h2><span class="idx">03</span>Sumber / Source</h2></div>
         <div class="source-grid" id="source-grid"></div>
       </section>
 
       <section id="template-section">
         <div class="section-head">
-          <h2><span class="idx">03</span>Laporan Template</h2>
+          <h2><span class="idx">04</span>Laporan Template</h2>
           <span class="hint-chip" id="tmpl-count">0 template</span>
         </div>
         <table class="tbl">
