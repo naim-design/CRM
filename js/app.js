@@ -217,41 +217,51 @@ function wabotWalletStats(acc){
     return !d || d > baselineDate;
   });
 
-  const futureTopupEUR=tops.reduce((s,t)=>s+Number(t.amountEUR||0),0);
-
-  const transfers=walletTransferRows().filter(t=>{
-    const d=t.transferDate || topupDateStr(t);
-    return !d || d>=baselineDate;
-  });
-  const transferInEUR=transfers
-    .filter(t =>
-      String(t.toOfficialKey||'')===acc.key ||
-      digitsOnly(t.toOfficialPhone||'')===digitsOnly(acc.phone)
-    )
-    .reduce((s,t)=>s+Number(t.amountEUR||0),0);
-
-  const transferOutEUR=transfers
-    .filter(t =>
-      String(t.fromOfficialKey||'')===acc.key ||
-      digitsOnly(t.fromOfficialPhone||'')===digitsOnly(acc.phone)
-    )
-    .reduce((s,t)=>s+Number(t.amountEUR||0),0);
+  const futureTopupEUR=tops.reduce(
+    (s,t)=>s+Number(t.amountEUR||0),
+    0
+  );
 
   const rows=(allEntries||[]).filter(en=>{
     const a=entryOfficial(en);
-    return a && a.key===acc.key && (!en.tarikh || en.tarikh>=baselineDate);
+    return a &&
+      a.key===acc.key &&
+      (!en.tarikh || en.tarikh>=baselineDate);
   });
 
-  const sent=rows.reduce((s,en)=>s+Number(en.sent||0),0);
-  const usageEUR=costEUR(sent);
+  const sent=rows.reduce(
+    (s,en)=>s+Number(en.sent||0),
+    0
+  );
 
-  const fundsInEUR=baselineEUR+futureTopupEUR+transferInEUR;
-  const balanceEUR=fundsInEUR-transferOutEUR-usageEUR;
+  const usageEUR=costEUR(sent);
+  const topupEUR=baselineEUR+futureTopupEUR;
+
+  // Ledger adjustment:
+  // negative = transfer keluar bersih
+  // positive = transfer masuk bersih
+  const ledgerAdjustmentEUR =
+    walletLedgerAdjustmentEUR(acc);
+
+  const transferInEUR =
+    Math.max(0,ledgerAdjustmentEUR);
+
+  const transferOutEUR =
+    Math.max(0,-ledgerAdjustmentEUR);
+
+  const fundsInEUR =
+    topupEUR + transferInEUR;
+
+  const balanceEUR =
+    topupEUR +
+    ledgerAdjustmentEUR -
+    usageEUR;
 
   return {
-    topupEUR:baselineEUR+futureTopupEUR,
+    topupEUR,
     baselineEUR,
     futureTopupEUR,
+    ledgerAdjustmentEUR,
     transferInEUR,
     transferOutEUR,
     fundsInEUR,
@@ -2319,8 +2329,153 @@ let allTopups = [];
 let unsubTopups = null;
 
 
+
+// ============================================================
+// WALLET LEDGER V9
+// Single source of truth untuk baki transfer.
+// Disimpan dalam collection `meta`, doc `wabotWalletLedger`.
+// ============================================================
+let wabotWalletLedger = {};
+
+function walletLedgerDefault(){
+  const base = {};
+  WABOT_OFFICIALS.forEach(a=>{
+    base[a.key] = {
+      phone:a.phone,
+      label:a.label,
+      adjustmentEUR:0,
+      updatedAtMs:0
+    };
+  });
+  return base;
+}
+
+async function loadWalletLedger(){
+  const ref = db.collection('meta').doc('wabotWalletLedger');
+  const snap = await ref.get();
+
+  const defaults = walletLedgerDefault();
+
+  if(!snap.exists){
+    wabotWalletLedger = defaults;
+    await ref.set({
+      accounts:defaults,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    return wabotWalletLedger;
+  }
+
+  const data = snap.data() || {};
+  const accounts = data.accounts || {};
+
+  wabotWalletLedger = {...defaults};
+
+  Object.keys(accounts).forEach(k=>{
+    wabotWalletLedger[k] = {
+      ...(wabotWalletLedger[k] || {}),
+      ...accounts[k]
+    };
+  });
+
+  return wabotWalletLedger;
+}
+
+function walletLedgerAdjustmentEUR(acc){
+  return Number(
+    wabotWalletLedger?.[acc.key]?.adjustmentEUR || 0
+  );
+}
+
+async function applyWalletTransferToLedger(from,to,amountEUR){
+  const ref = db.collection('meta').doc('wabotWalletLedger');
+
+  await db.runTransaction(async tx=>{
+    const snap = await tx.get(ref);
+    const data = snap.exists ? (snap.data() || {}) : {};
+    const accounts = {
+      ...walletLedgerDefault(),
+      ...(data.accounts || {})
+    };
+
+    const fromRow = {
+      ...(accounts[from.key] || {
+        phone:from.phone,
+        label:from.label,
+        adjustmentEUR:0
+      })
+    };
+
+    const toRow = {
+      ...(accounts[to.key] || {
+        phone:to.phone,
+        label:to.label,
+        adjustmentEUR:0
+      })
+    };
+
+    fromRow.adjustmentEUR =
+      Number(fromRow.adjustmentEUR || 0) -
+      Number(amountEUR || 0);
+
+    toRow.adjustmentEUR =
+      Number(toRow.adjustmentEUR || 0) +
+      Number(amountEUR || 0);
+
+    fromRow.updatedAtMs = Date.now();
+    toRow.updatedAtMs = Date.now();
+
+    accounts[from.key] = fromRow;
+    accounts[to.key] = toRow;
+
+    tx.set(ref,{
+      accounts,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  });
+
+  await loadWalletLedger();
+}
+
+async function rollbackWalletTransferLedger(from,to,amountEUR){
+  const ref = db.collection('meta').doc('wabotWalletLedger');
+
+  await db.runTransaction(async tx=>{
+    const snap = await tx.get(ref);
+    if(!snap.exists) return;
+
+    const data = snap.data() || {};
+    const accounts = {...(data.accounts || {})};
+
+    const fromRow = {...(accounts[from.key] || {})};
+    const toRow = {...(accounts[to.key] || {})};
+
+    fromRow.adjustmentEUR =
+      Number(fromRow.adjustmentEUR || 0) +
+      Number(amountEUR || 0);
+
+    toRow.adjustmentEUR =
+      Number(toRow.adjustmentEUR || 0) -
+      Number(amountEUR || 0);
+
+    fromRow.updatedAtMs = Date.now();
+    toRow.updatedAtMs = Date.now();
+
+    accounts[from.key] = fromRow;
+    accounts[to.key] = toRow;
+
+    tx.set(ref,{
+      accounts,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+  });
+
+  await loadWalletLedger();
+}
+
 async function refreshWalletDataNow(){
   try{
+    await loadWalletLedger();
+
     const snap=await db.collection('topups').get();
 
     allTopups=snap.docs.map(d=>({
@@ -2434,7 +2589,6 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
   btn.disabled=true; btn.textContent='Menyimpan...';
 
   try{
-    const localId='local-transfer-'+Date.now();
     const payload={
       transactionType:'transfer',
       amountEUR,
@@ -2452,39 +2606,53 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    // Optimistic update: balance berubah terus sebaik sahaja user tekan Transfer.
-    allTopups.unshift({
-      id:localId,
-      ...payload,
-      createdAt:null
-    });
-    renderTopups();
-    renderWabotControl();
+    let ledgerApplied=false;
 
     try{
-      const ref=await db.collection('topups').add(payload);
+      // 1) Ledger ialah source of truth.
+      await applyWalletTransferToLedger(
+        from,
+        to,
+        amountEUR
+      );
 
-      // Buang temp row; realtime listener akan masukkan rekod sebenar.
-      allTopups=allTopups.filter(t=>t.id!==localId);
+      ledgerApplied=true;
 
-      // Fallback fetch: kalau listener lambat, baca dokumen yang baru disimpan.
-      const saved=await ref.get();
-      if(saved.exists && !(allTopups||[]).some(t=>t.id===ref.id)){
-        allTopups.unshift({id:ref.id,...saved.data()});
-      }
+      // Update card terus dari ledger.
+      renderWabotControl();
 
-      // Ambil semula data sebenar Firestore supaya sender, receiver,
-      // Transfer History dan Cadangan Transfer semuanya selari.
+      // 2) Simpan audit/history selepas ledger berjaya.
+      await db.collection('topups').add(payload);
+
+      // 3) Refresh semua data.
       await refreshWalletDataNow();
 
       e.target.reset();
       initWalletTransferInputs();
 
-      toast(`Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} berjaya ✓`);
+      toast(
+        `Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} berjaya ✓`
+      );
+
     }catch(saveErr){
-      allTopups=allTopups.filter(t=>t.id!==localId);
-      renderTopups();
-      renderWabotControl();
+      // Kalau audit log gagal selepas ledger dah berubah,
+      // rollback ledger supaya tiada baki separuh jalan.
+      if(ledgerApplied){
+        try{
+          await rollbackWalletTransferLedger(
+            from,
+            to,
+            amountEUR
+          );
+        }catch(rollbackErr){
+          console.error(
+            'Ledger rollback gagal:',
+            rollbackErr
+          );
+        }
+      }
+
+      await refreshWalletDataNow();
       throw saveErr;
     }
   }catch(err){
@@ -3966,3 +4134,20 @@ setInterval(()=>{
     refreshWalletDataNow();
   }
 },15000);
+
+
+// V9 maintenance helper.
+// Jalankan dari browser console hanya jika perlu reset SEMUA transfer adjustment:
+// resetWabotWalletLedger()
+window.resetWabotWalletLedger = async function(){
+  const defaults=walletLedgerDefault();
+
+  await db.collection('meta').doc('wabotWalletLedger').set({
+    accounts:defaults,
+    resetAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  await refreshWalletDataNow();
+  toast('Wallet Ledger telah direset ke 0 transfer adjustment.');
+};
