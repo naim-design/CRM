@@ -186,6 +186,82 @@ function renderTransferRecommendations(){
   });
 }
 
+
+window.editWalletTransfer = async function(id){
+  const row=(allTopups||[]).find(t=>t.id===id);
+  if(!row) return toast('Rekod transfer tak dijumpai.',true);
+
+  const amountText=prompt(
+    'Amaun transfer baru (€):',
+    Number(row.amountEUR||0).toFixed(2)
+  );
+  if(amountText===null) return;
+
+  const amountEUR=Number(amountText);
+  if(!amountEUR || amountEUR<=0){
+    return toast('Amaun tidak sah.',true);
+  }
+
+  const noteText=prompt('Nota transfer:',row.note||'');
+  if(noteText===null) return;
+
+  const from=WABOT_OFFICIALS.find(x=>
+    x.key===row.fromOfficialKey ||
+    digitsOnly(x.phone)===digitsOnly(row.fromOfficialPhone||'')
+  );
+
+  if(!from) return toast('Akaun asal tak dijumpai.',true);
+
+  try{
+    // Calculate sender balance as if old transfer is temporarily removed.
+    const oldAmount=Number(row.amountEUR||0);
+    const current=wabotWalletStats(from);
+    const availableIfOldRestored=current.balanceEUR+oldAmount;
+
+    if(amountEUR>Math.max(0,availableIfOldRestored)){
+      return toast(
+        `Baki tak cukup untuk amaun baru. Maksimum €${Math.max(0,availableIfOldRestored).toFixed(2)}.`,
+        true
+      );
+    }
+
+    await db.collection('topups').doc(id).update({
+      amountEUR,
+      amountRM:amountEUR*EUR_TO_MYR,
+      note:noteText.trim(),
+      editedAtMs:Date.now(),
+      editedBy:currentProfile.name,
+      editedAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await refreshWalletDataNow();
+    toast('Transfer berjaya diedit ✓');
+  }catch(err){
+    toast('Gagal edit transfer: '+err.message,true);
+  }
+};
+
+window.deleteWalletTransfer = async function(id){
+  const row=(allTopups||[]).find(t=>t.id===id);
+  if(!row) return toast('Rekod transfer tak dijumpai.',true);
+
+  const ok=confirm(
+    `Buang transfer €${Number(row.amountEUR||0).toFixed(2)}\n`+
+    `${row.fromOfficialLabel||''} → ${row.toOfficialLabel||''}?\n\n`+
+    `Balance sender dan receiver akan dikira semula automatik.`
+  );
+
+  if(!ok) return;
+
+  try{
+    await db.collection('topups').doc(id).delete();
+    await refreshWalletDataNow();
+    toast('Transfer dibuang ✓');
+  }catch(err){
+    toast('Gagal buang transfer: '+err.message,true);
+  }
+};
+
 function renderTransferHistory(){
   const body=document.getElementById('wctrl-transfer-body');
   if(!body) return;
@@ -226,6 +302,25 @@ function wabotWalletStats(acc){
     0
   );
 
+  const transfers=walletTransferRows().filter(t=>{
+    const d=t.transferDate || topupDateStr(t);
+    return !d || d>=baselineDate;
+  });
+
+  const transferInEUR=transfers
+    .filter(t =>
+      String(t.toOfficialKey||'')===acc.key ||
+      digitsOnly(t.toOfficialPhone||'')===digitsOnly(acc.phone)
+    )
+    .reduce((s,t)=>s+Number(t.amountEUR||0),0);
+
+  const transferOutEUR=transfers
+    .filter(t =>
+      String(t.fromOfficialKey||'')===acc.key ||
+      digitsOnly(t.fromOfficialPhone||'')===digitsOnly(acc.phone)
+    )
+    .reduce((s,t)=>s+Number(t.amountEUR||0),0);
+
   const rows=(allEntries||[]).filter(en=>{
     const a=entryOfficial(en);
     return a &&
@@ -240,32 +335,13 @@ function wabotWalletStats(acc){
 
   const usageEUR=costEUR(sent);
   const topupEUR=baselineEUR+futureTopupEUR;
-
-  // Ledger adjustment:
-  // negative = transfer keluar bersih
-  // positive = transfer masuk bersih
-  const ledgerAdjustmentEUR =
-    walletLedgerAdjustmentEUR(acc);
-
-  const transferInEUR =
-    Math.max(0,ledgerAdjustmentEUR);
-
-  const transferOutEUR =
-    Math.max(0,-ledgerAdjustmentEUR);
-
-  const fundsInEUR =
-    topupEUR + transferInEUR;
-
-  const balanceEUR =
-    topupEUR +
-    ledgerAdjustmentEUR -
-    usageEUR;
+  const fundsInEUR=topupEUR+transferInEUR;
+  const balanceEUR=topupEUR+transferInEUR-transferOutEUR-usageEUR;
 
   return {
     topupEUR,
     baselineEUR,
     futureTopupEUR,
-    ledgerAdjustmentEUR,
     transferInEUR,
     transferOutEUR,
     fundsInEUR,
@@ -2526,122 +2602,9 @@ async function adjustWalletLedgerForTransferChange(oldTransfer,newTransfer){
   }
 }
 
-window.editWalletTransfer = async function(id){
-  const row=(allTopups||[]).find(t=>t.id===id);
-  if(!row) return toast('Rekod transfer tak dijumpai.',true);
 
-  const currentAmount=Number(row.amountEUR||0).toFixed(2);
-  const amountText=prompt('Amaun transfer baru (€):',currentAmount);
-  if(amountText===null) return;
 
-  const amountEUR=Number(amountText);
-  if(!amountEUR || amountEUR<=0){
-    return toast('Amaun tidak sah.',true);
-  }
 
-  const noteText=prompt('Nota transfer:',row.note||'');
-  if(noteText===null) return;
-
-  const updated={
-    ...row,
-    amountEUR,
-    amountRM:amountEUR*EUR_TO_MYR,
-    note:noteText.trim(),
-    ledgerApplied:true,
-    editedAtMs:Date.now(),
-    editedBy:currentProfile.name
-  };
-
-  try{
-    // Old rows from before V9 may only be audit history.
-    // We only reverse ledger when ledgerApplied=true.
-    await adjustWalletLedgerForTransferChange(row,updated);
-
-    await db.collection('topups').doc(id).update({
-      amountEUR:updated.amountEUR,
-      amountRM:updated.amountRM,
-      note:updated.note,
-      ledgerApplied:true,
-      editedAtMs:updated.editedAtMs,
-      editedBy:updated.editedBy,
-      editedAt:firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    await refreshWalletDataNow();
-    toast('Transfer berjaya dikemaskini ✓');
-  }catch(err){
-    // If Firestore update failed after ledger change, restore previous state.
-    try{
-      await adjustWalletLedgerForTransferChange(updated,row.ledgerApplied ? row : null);
-    }catch(rollbackErr){
-      console.error('Rollback edit transfer gagal',rollbackErr);
-    }
-
-    await refreshWalletDataNow();
-    toast('Gagal edit transfer: '+err.message,true);
-  }
-};
-
-window.deleteWalletTransfer = async function(id){
-  const row=(allTopups||[]).find(t=>t.id===id);
-  if(!row) return toast('Rekod transfer tak dijumpai.',true);
-
-  const ok=confirm(
-    `Buang rekod transfer €${Number(row.amountEUR||0).toFixed(2)}\n`+
-    `${row.fromOfficialLabel||''} → ${row.toOfficialLabel||''}?\n\n`+
-    (row.ledgerApplied
-      ? 'Baki sender & receiver akan dipulihkan automatik.'
-      : 'Rekod lama ini tidak ditanda sebagai ledger transfer, jadi hanya history akan dibuang.')
-  );
-
-  if(!ok) return;
-
-  try{
-    if(row.ledgerApplied){
-      const from=WABOT_OFFICIALS.find(x=>
-        x.key===row.fromOfficialKey ||
-        digitsOnly(x.phone)===digitsOnly(row.fromOfficialPhone||'')
-      );
-      const to=WABOT_OFFICIALS.find(x=>
-        x.key===row.toOfficialKey ||
-        digitsOnly(x.phone)===digitsOnly(row.toOfficialPhone||'')
-      );
-
-      if(from && to){
-        await rollbackWalletTransferLedger(
-          from,
-          to,
-          Number(row.amountEUR||0)
-        );
-      }
-    }
-
-    await db.collection('topups').doc(id).delete();
-    await refreshWalletDataNow();
-
-    toast('Rekod transfer dibuang ✓');
-  }catch(err){
-    // If delete failed after ledger rollback, re-apply it.
-    if(row.ledgerApplied){
-      try{
-        const from=WABOT_OFFICIALS.find(x=>x.key===row.fromOfficialKey);
-        const to=WABOT_OFFICIALS.find(x=>x.key===row.toOfficialKey);
-        if(from && to){
-          await applyWalletTransferToLedger(
-            from,
-            to,
-            Number(row.amountEUR||0)
-          );
-        }
-      }catch(restoreErr){
-        console.error('Restore delete transfer gagal',restoreErr);
-      }
-    }
-
-    await refreshWalletDataNow();
-    toast('Gagal buang transfer: '+err.message,true);
-  }
-};
 
 
 function sortWalletRows(){
@@ -2653,53 +2616,47 @@ function sortWalletRows(){
 }
 
 async function refreshWalletDataNow(){
-  // V9.3: topups/history dan ledger dibaca secara BERASINGAN.
-  // Kalau ledger gagal, history tetap keluar. Kalau history gagal, card ledger tetap boleh render.
-  let ledgerOK=false, topupsOK=false;
+  try{
+    const snap=await db.collection('topups').get();
 
-  const results=await Promise.allSettled([
-    loadWalletLedger(),
-    db.collection('topups').get()
-  ]);
+    allTopups=snap.docs.map(d=>({
+      id:d.id,
+      ...d.data()
+    }));
 
-  if(results[0].status==='fulfilled'){
-    ledgerOK=true;
-  }else{
-    console.error('Wallet ledger read gagal:',results[0].reason);
-  }
-
-  if(results[1].status==='fulfilled'){
-    const snap=results[1].value;
-    allTopups=snap.docs.map(d=>({id:d.id,...d.data()}));
     sortWalletRows();
-    topupsOK=true;
-  }else{
-    console.error('Topup/transfer read gagal:',results[1].reason);
+
+    renderTopups();
+    renderWabotControl();
+    renderTransferHistory();
+
+    return true;
+  }catch(err){
+    console.error('Wallet/topup/transfer sync gagal:',err);
+    toast('Ralat sync wallet: '+err.message,true);
+    return false;
   }
-
-  renderTopups();
-  renderWabotControl();
-  renderTransferHistory();
-
-  return ledgerOK && topupsOK;
 }
 
 function startTopupListener(){
-  // V9.3: realtime listener ialah sync utama Transfer History.
-  unsubTopups=db.collection('topups').onSnapshot(async snap=>{
-    allTopups=snap.docs.map(d=>({id:d.id,...d.data()}));
-    sortWalletRows();
+  if(unsubTopups){
+    try{ unsubTopups(); }catch(_){}
+  }
 
-    // Ledger tidak dibenarkan menghalang history daripada render.
-    try{ await loadWalletLedger(); }
-    catch(err){ console.error('Ledger realtime sync gagal:',err); }
+  unsubTopups=db.collection('topups').onSnapshot(snap=>{
+    allTopups=snap.docs.map(d=>({
+      id:d.id,
+      ...d.data()
+    }));
+
+    sortWalletRows();
 
     renderTopups();
     renderWabotControl();
     renderTransferHistory();
   },err=>{
-    console.error('Topup/transfer realtime listener:',err);
-    toast('Ralat baca transfer history: '+err.message,true);
+    console.error('Topup/transfer listener:',err);
+    toast('Ralat baca topup/transfer: '+err.message,true);
   });
 }
 
@@ -2732,80 +2689,72 @@ document.getElementById('topup-form').addEventListener('submit', async (e) => {
 
 
 const transferForm = document.getElementById('transfer-form');
-if (transferForm) transferForm.addEventListener('submit', async (e)=>{
-  e.preventDefault();
 
-  const fromKey=document.getElementById('transfer-from').value;
-  const toKey=document.getElementById('transfer-to').value;
-  const amountEUR=Number(document.getElementById('transfer-amount').value||0);
-  const transferDate=document.getElementById('transfer-date').value||todayStr();
-  const note=document.getElementById('transfer-note').value.trim();
+if(transferForm){
+  transferForm.addEventListener('submit', async (e)=>{
+    e.preventDefault();
 
-  const from=WABOT_OFFICIALS.find(x=>x.key===fromKey);
-  const to=WABOT_OFFICIALS.find(x=>x.key===toKey);
+    const fromKey=document.getElementById('transfer-from').value;
+    const toKey=document.getElementById('transfer-to').value;
+    const amountEUR=Number(document.getElementById('transfer-amount').value||0);
+    const transferDate=document.getElementById('transfer-date').value||todayStr();
+    const note=document.getElementById('transfer-note').value.trim();
 
-  if(!from || !to) return toast('Pilih akaun asal dan akaun penerima.',true);
-  if(from.key===to.key) return toast('Akaun asal dan penerima tak boleh sama.',true);
-  if(!amountEUR || amountEUR<=0) return toast('Masukkan amaun transfer yang sah.',true);
+    const from=WABOT_OFFICIALS.find(x=>x.key===fromKey);
+    const to=WABOT_OFFICIALS.find(x=>x.key===toKey);
 
-  // Ambil keadaan wallet TERKINI dari Firestore sebelum semak baki.
-  // Ini elakkan card/cadangan lama kekal walaupun transfer sebelumnya sudah direkod.
-  await refreshWalletDataNow();
+    if(!from || !to) return toast('Pilih akaun asal dan penerima.',true);
+    if(from.key===to.key) return toast('Akaun asal dan penerima tak boleh sama.',true);
+    if(!amountEUR || amountEUR<=0) return toast('Masukkan amaun transfer yang sah.',true);
 
-  const current=wabotWalletStats(from);
-
-  if(amountEUR>Math.max(0,current.balanceEUR)){
-    // Paksa semua card + cadangan refresh sebelum tunjuk error.
-    renderWabotControl();
-
-    return toast(
-      `Baki ${from.label} tak cukup. Anggaran baki terkini €${current.balanceEUR.toFixed(2)}.`,
-      true
-    );
-  }
-
-  const btn=e.target.querySelector('button[type=submit]');
-  btn.disabled=true; btn.textContent='Menyimpan...';
-
-  try{
-    const payload={
-      transactionType:'transfer',
-      amountEUR,
-      amountRM:amountEUR*EUR_TO_MYR,
-      transferDate,
-      fromOfficialKey:from.key,
-      fromOfficialPhone:from.phone,
-      fromOfficialLabel:from.label,
-      toOfficialKey:to.key,
-      toOfficialPhone:to.phone,
-      toOfficialLabel:to.label,
-      note,
-      createdBy:currentProfile.name,
-      ledgerApplied:true,
-      createdAtMs:Date.now(),
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    let ledgerApplied=false;
+    const btn=e.target.querySelector('button[type=submit]');
+    btn.disabled=true;
+    btn.textContent='Menyimpan...';
 
     try{
-      // 1) Ledger ialah source of truth.
-      await applyWalletTransferToLedger(
-        from,
-        to,
-        amountEUR
-      );
-
-      ledgerApplied=true;
-
-      // Update card terus dari ledger.
-      renderWabotControl();
-
-      // 2) Simpan audit/history selepas ledger berjaya.
-      await db.collection('topups').add(payload);
-
-      // 3) Refresh semua data.
+      // Ambil source of truth terkini sebelum validate.
       await refreshWalletDataNow();
+
+      const current=wabotWalletStats(from);
+
+      if(amountEUR>Math.max(0,current.balanceEUR)){
+        throw new Error(
+          `Baki ${from.label} tak cukup. Baki semasa €${current.balanceEUR.toFixed(2)}.`
+        );
+      }
+
+      const payload={
+        transactionType:'transfer',
+        amountEUR,
+        amountRM:amountEUR*EUR_TO_MYR,
+        transferDate,
+        fromOfficialKey:from.key,
+        fromOfficialPhone:from.phone,
+        fromOfficialLabel:from.label,
+        toOfficialKey:to.key,
+        toOfficialPhone:to.phone,
+        toOfficialLabel:to.label,
+        note,
+        createdBy:currentProfile.name,
+        createdAtMs:Date.now(),
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      // Save ONE record only. This one record drives:
+      // history + sender deduction + receiver addition.
+      const ref=await db.collection('topups').add(payload);
+
+      // Immediate local update, no need to wait listener.
+      allTopups.unshift({
+        id:ref.id,
+        ...payload,
+        createdAt:null
+      });
+
+      sortWalletRows();
+      renderTopups();
+      renderWabotControl();
+      renderTransferHistory();
 
       e.target.reset();
       initWalletTransferInputs();
@@ -2814,33 +2763,18 @@ if (transferForm) transferForm.addEventListener('submit', async (e)=>{
         `Transfer €${amountEUR.toFixed(2)}: ${from.label} → ${to.label} berjaya ✓`
       );
 
-    }catch(saveErr){
-      // Kalau audit log gagal selepas ledger dah berubah,
-      // rollback ledger supaya tiada baki separuh jalan.
-      if(ledgerApplied){
-        try{
-          await rollbackWalletTransferLedger(
-            from,
-            to,
-            amountEUR
-          );
-        }catch(rollbackErr){
-          console.error(
-            'Ledger rollback gagal:',
-            rollbackErr
-          );
-        }
-      }
+      // Reconfirm from Firestore shortly after save.
+      setTimeout(()=>refreshWalletDataNow(),500);
 
-      await refreshWalletDataNow();
-      throw saveErr;
+    }catch(err){
+      toast('Transfer gagal: '+err.message,true);
+    }finally{
+      btn.disabled=false;
+      btn.textContent='Transfer Balance';
     }
-  }catch(err){
-    toast('Gagal simpan transfer: '+err.message,true);
-  }finally{
-    btn.disabled=false; btn.textContent='Transfer Balance';
-  }
-});
+  });
+}
+
 
 function renderTopups() {
   const actualTopups = walletTopupRows();
