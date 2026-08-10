@@ -192,7 +192,7 @@ function renderTransferHistory(){
 
   const rows=walletTransferRows();
   if(!rows.length){
-    body.innerHTML='<tr><td colspan="6" class="empty-state">Belum ada transfer balance.</td></tr>';
+    body.innerHTML='<tr><td colspan="7" class="empty-state">Belum ada transfer balance.</td></tr>';
     return;
   }
 
@@ -423,6 +423,8 @@ auth.onAuthStateChanged(async (user) => {
   // V9.2: selepas login / browser refresh, jangan tunggu user klik apa-apa.
   // Load Wallet Ledger + Transfer History terus dari Firestore.
   await refreshWalletDataNow();
+  // Listener boleh fire sebelum ledger selesai; render sekali lagi selepas tick pertama.
+  setTimeout(()=>refreshWalletDataNow(),800);
 });
 
 document.getElementById('logout-btn').onclick = () => auth.signOut();
@@ -2642,56 +2644,63 @@ window.deleteWalletTransfer = async function(id){
 };
 
 
-async function refreshWalletDataNow(){
-  try{
-    await loadWalletLedger();
-
-    const snap=await db.collection('topups').get();
-
-    allTopups=snap.docs.map(d=>({
-      id:d.id,
-      ...d.data()
-    }));
-
-    allTopups.sort((a,b)=>{
-      const at=a.createdAt && a.createdAt.toMillis
-        ? a.createdAt.toMillis()
-        : Number(a.createdAtMs||0);
-
-      const bt=b.createdAt && b.createdAt.toMillis
-        ? b.createdAt.toMillis()
-        : Number(b.createdAtMs||0);
-
-      return bt-at;
-    });
-
-    renderTopups();
-    renderWabotControl();
-
-    return true;
-  }catch(err){
-    console.warn('refreshWalletDataNow:',err);
-    return false;
-  }
+function sortWalletRows(){
+  allTopups.sort((a,b)=>{
+    const at=a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Number(a.createdAtMs||0);
+    const bt=b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Number(b.createdAtMs||0);
+    return bt-at;
+  });
 }
 
-function startTopupListener() {
-  // Jangan guna orderBy(createdAt) di query.
-  // Dokumen transfer baru menggunakan serverTimestamp dan boleh sementara
-  // belum mempunyai createdAt; query orderBy boleh menyebabkan ia tak muncul.
-  unsubTopups = db.collection('topups').onSnapshot(snap => {
-    allTopups = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+async function refreshWalletDataNow(){
+  // V9.3: topups/history dan ledger dibaca secara BERASINGAN.
+  // Kalau ledger gagal, history tetap keluar. Kalau history gagal, card ledger tetap boleh render.
+  let ledgerOK=false, topupsOK=false;
 
-    // Sort client-side: newest first. Support createdAt + createdAtMs.
-    allTopups.sort((a,b) => {
-      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Number(a.createdAtMs || 0);
-      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Number(b.createdAtMs || 0);
-      return bt - at;
-    });
+  const results=await Promise.allSettled([
+    loadWalletLedger(),
+    db.collection('topups').get()
+  ]);
+
+  if(results[0].status==='fulfilled'){
+    ledgerOK=true;
+  }else{
+    console.error('Wallet ledger read gagal:',results[0].reason);
+  }
+
+  if(results[1].status==='fulfilled'){
+    const snap=results[1].value;
+    allTopups=snap.docs.map(d=>({id:d.id,...d.data()}));
+    sortWalletRows();
+    topupsOK=true;
+  }else{
+    console.error('Topup/transfer read gagal:',results[1].reason);
+  }
+
+  renderTopups();
+  renderWabotControl();
+  renderTransferHistory();
+
+  return ledgerOK && topupsOK;
+}
+
+function startTopupListener(){
+  // V9.3: realtime listener ialah sync utama Transfer History.
+  unsubTopups=db.collection('topups').onSnapshot(async snap=>{
+    allTopups=snap.docs.map(d=>({id:d.id,...d.data()}));
+    sortWalletRows();
+
+    // Ledger tidak dibenarkan menghalang history daripada render.
+    try{ await loadWalletLedger(); }
+    catch(err){ console.error('Ledger realtime sync gagal:',err); }
 
     renderTopups();
     renderWabotControl();
-  }, err => toast('Ralat baca topup/transfer: ' + err.message, true));
+    renderTransferHistory();
+  },err=>{
+    console.error('Topup/transfer realtime listener:',err);
+    toast('Ralat baca transfer history: '+err.message,true);
+  });
 }
 
 document.getElementById('topup-form').addEventListener('submit', async (e) => {
@@ -4340,4 +4349,22 @@ window.syncWabotWalletNow = async function(){
   const ok = await refreshWalletDataNow();
   if(ok) toast('Wallet, transfer & history sudah sync ✓');
   else toast('Sync wallet gagal. Semak connection / Firestore.', true);
+};
+
+
+// V9.3 diagnostic helper: console -> checkWabotSync()
+window.checkWabotSync=async function(){
+  const out={};
+  try{
+    const q=await db.collection('topups').get();
+    out.topups=q.size;
+    out.transfers=q.docs.filter(d=>String((d.data()||{}).transactionType||(d.data()||{}).type||'').toLowerCase()==='transfer').length;
+  }catch(e){out.topupsError=e.message;}
+  try{
+    const l=await db.collection('meta').doc('wabotWalletLedger').get();
+    out.ledgerExists=l.exists;
+    out.ledger=l.exists?l.data():null;
+  }catch(e){out.ledgerError=e.message;}
+  console.log('WABOT SYNC CHECK',out);
+  return out;
 };
