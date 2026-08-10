@@ -2780,31 +2780,54 @@ function renderTopups() {
   const actualTopups = walletTopupRows();
   const totalEUR = actualTopups.reduce((a, t) => a + (t.amountEUR || 0), 0);
   const totalRM = actualTopups.reduce((a, t) => a + (t.amountRM || 0), 0);
-  document.getElementById('topup-total-eur').textContent = '€' + totalEUR.toFixed(2);
-  document.getElementById('topup-total-rm').textContent = 'RM ' + fmt(totalRM.toFixed(2));
 
-  // ROI (dengan Topup) = Total Sales keseluruhan / (Kos Blasting keseluruhan + Kos Topup Terkumpul)
+  // V10.1: semua element Topup optional.
+  // Sync wallet berjalan pada semua tab, jadi jangan error jika card Topup
+  // tak wujud pada view/versi HTML semasa.
+  const eurEl = document.getElementById('topup-total-eur');
+  const rmEl = document.getElementById('topup-total-rm');
+  const roiEl = document.getElementById('topup-roi');
+
+  if (eurEl) eurEl.textContent = '€' + totalEUR.toFixed(2);
+  if (rmEl) rmEl.textContent = 'RM ' + fmt(totalRM.toFixed(2));
+
   const totalSentAll = allEntries.reduce((a, r) => a + (r.sent || 0), 0);
   const totalSalesAll = allEntries.reduce((a, r) => a + (r.sales || 0), 0);
   const kosBlastingAll = costRM(totalSentAll);
   const denom = kosBlastingAll + totalRM;
   const roiWithTopup = denom ? (totalSalesAll / denom) : 0;
-  document.getElementById('topup-roi').textContent = roiWithTopup.toFixed(2) + 'x';
+
+  if (roiEl) roiEl.textContent = roiWithTopup.toFixed(2) + 'x';
 
   const body = document.getElementById('topup-history-body');
+
+  // Jika Topup History tak ada dalam DOM, cukup update data sahaja.
+  if (!body) return;
+
   body.innerHTML = '';
+
   actualTopups.forEach(t => {
-    const dateStr = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toLocaleString('ms-MY') : '-';
+    const dateStr =
+      t.createdAt && t.createdAt.toDate
+        ? t.createdAt.toDate().toLocaleString('ms-MY')
+        : '-';
+
     const tr = document.createElement('tr');
+
     tr.innerHTML = `<td style="font-size:12px;">${t.topupDate || dateStr}</td>
       <td style="font-size:12px;"><b>${t.officialLabel || 'Legacy / Belum Assigned'}</b>${t.officialPhone ? '<br><span style="color:var(--muted)">'+t.officialPhone+'</span>' : ''}</td>
       <td style="font-size:12px; color:var(--muted);">${t.note || '-'}</td>
       <td class="num">€${(t.amountEUR || 0).toFixed(2)}</td>
       <td class="num">RM ${fmt((t.amountRM || 0).toFixed(2))}</td>
       <td style="font-size:12px; color:var(--muted);">${t.createdBy || '-'}</td>`;
+
     body.appendChild(tr);
   });
-  if (!actualTopups.length) body.innerHTML = '<tr><td colspan="6" class="empty-state">Tiada rekod topup lagi.</td></tr>';
+
+  if (!actualTopups.length) {
+    body.innerHTML =
+      '<tr><td colspan="6" class="empty-state">Tiada rekod topup lagi.</td></tr>';
+  }
 }
 
 // ---- Edit manual Database stats (Total/Dah Blast/Belum Blast) ----
@@ -3652,7 +3675,7 @@ function populateCampaignLinker() {
     entryEl.value = existing.entryId || '';
     if (statusEl) statusEl.textContent = `Linked: ${existing.campaignName || 'CRM Campaign'}`;
   } else if (statusEl) {
-    statusEl.textContent = 'Belum linked';
+    if (statusEl) statusEl.textContent = 'Belum linked';
   }
 }
 
