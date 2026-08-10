@@ -1018,3 +1018,29 @@ body { padding-bottom: 60px; }
 .wctrl-delete-transfer:hover{
   background:rgba(239,68,68,.12);
 }
+
+
+/* ==================== TRANSFER HISTORY ACTIONS V10 ==================== */
+.wctrl-history-actions{
+  display:flex;
+  gap:6px;
+  white-space:nowrap;
+}
+.wctrl-edit-transfer,
+.wctrl-delete-transfer{
+  appearance:none;
+  border-radius:8px;
+  padding:6px 9px;
+  font:600 9px/1 'IBM Plex Mono';
+  cursor:pointer;
+}
+.wctrl-edit-transfer{
+  color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--line);
+}
+.wctrl-delete-transfer{
+  color:#ef4444;
+  background:rgba(239,68,68,.06);
+  border:1px solid rgba(239,68,68,.20);
+}
