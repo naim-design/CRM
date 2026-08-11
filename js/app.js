@@ -719,15 +719,34 @@ function filteredEntries() {
   });
 }
 
-const DASH_TARGETS = {
+const DASH_TARGETS_DEFAULT = {
   sales: 30000,
   conversion: 1,
   reply: 50,
   roas: 10,
   roi: 10,
   cost: 1000,
-  buyer: 100
+  buyer: 100,
+  sent: 10000
 };
+
+// Target khas ikut Projek (Kategori Laporan) — override nilai default di atas.
+// Tambah entri baru di sini bila-bila untuk set target khas projek lain.
+const DASH_TARGETS_BY_KATEGORI = {
+  'Projek Leads Ikhtiar (NaimFani)': {
+    sales: 1000,
+    roi: 10,
+    roas: 19,
+    cost: 140,
+    sent: 2500
+  }
+};
+
+function getDashTargets() {
+  const kategori = document.getElementById('filter-kategori') ? document.getElementById('filter-kategori').value : '';
+  const overrides = DASH_TARGETS_BY_KATEGORI[kategori] || {};
+  return Object.assign({}, DASH_TARGETS_DEFAULT, overrides);
+}
 
 function dashTotals(rows) {
   return rows.reduce((a, r) => {
@@ -774,9 +793,21 @@ function dashSetDelta(id, current, previous, lowerIsBetter=false, suffix='') {
   el.className = 'dash-delta ' + (good ? 'up' : 'down');
   el.textContent = `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct).toFixed(1)}%${suffix}`;
 }
+const TARGET_LABEL_FORMAT = {
+  sales: t => `Target RM${fmt(t)}`,
+  roi: t => `Target ${t}x`,
+  roas: t => `Target ${t}x`,
+  conv: t => `Target ${t}%`,
+  reply: t => `Target ${t}%`,
+  buyer: t => `Target ${fmt(t)}`,
+  cost: t => `Had RM${fmt(t)}`,
+  sent: t => `Target ${fmt(t)}`,
+};
 function dashSetTarget(key, value, target, lowerIsBetter=false) {
   const bar = document.getElementById(`target-${key}-bar`);
   const txt = document.getElementById(`target-${key}-text`);
+  const label = document.getElementById(`target-${key}-label`);
+  if (label && TARGET_LABEL_FORMAT[key]) label.textContent = TARGET_LABEL_FORMAT[key](target);
   if (!bar || !txt) return;
   const rawPct = target ? value / target * 100 : 0;
   const width = Math.min(Math.max(rawPct,0),100);
@@ -905,6 +936,7 @@ function renderDashboard() {
   document.getElementById('stat-reply-rate').textContent = m.replyRate.toFixed(1) + '%';
   document.getElementById('stat-conv-rate').textContent = m.conversion.toFixed(2) + '%';
 
+  const DASH_TARGETS = getDashTargets();
   dashSetTarget('sales',m.sales,DASH_TARGETS.sales);
   dashSetTarget('roi',m.roi,DASH_TARGETS.roi);
   dashSetTarget('roas',m.roas,DASH_TARGETS.roas);
@@ -912,6 +944,7 @@ function renderDashboard() {
   dashSetTarget('reply',m.replyRate,DASH_TARGETS.reply);
   dashSetTarget('buyer',m.buyer,DASH_TARGETS.buyer);
   dashSetTarget('cost',m.cost,DASH_TARGETS.cost,true);
+  dashSetTarget('sent',m.sent,DASH_TARGETS.sent);
 
   // Perubahan hari terakhir dalam range berbanding sehari sebelumnya
   const lastDate=document.getElementById('filter-to').value || new Date().toISOString().slice(0,10);
