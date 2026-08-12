@@ -4467,7 +4467,13 @@ function renderPlanning(){
 
   list.innerHTML=rows.map(p=>{
     const posterLink=p.posterUrl
-      ? `<a href="${planningEsc(p.posterUrl)}" target="_blank" rel="noopener" class="planning-poster-link">Buka Poster ↗</a>`
+      ? `<a href="${planningEsc(p.posterUrl)}" target="_blank" rel="noopener" class="planning-poster-link">Lihat Poster ↗</a>`
+      : '';
+
+    const posterPreview=p.posterUrl
+      ? `<a href="${planningEsc(p.posterUrl)}" target="_blank" rel="noopener" class="planning-card-poster-preview">
+           <img src="${planningEsc(p.posterUrl)}" alt="${planningEsc(p.posterName||'Poster')}">
+         </a>`
       : '';
 
     const due=p.dueDate
@@ -4496,11 +4502,12 @@ function renderPlanning(){
 
         ${p.posterName || p.posterUrl ? `
           <div class="planning-poster-box">
-            <div>
+            ${posterPreview}
+            <div class="planning-poster-info">
               <span>POSTER / CREATIVE</span>
               <b>${planningEsc(p.posterName||'Creative')}</b>
+              ${posterLink}
             </div>
-            ${posterLink}
           </div>
         ` : ''}
 
@@ -4583,6 +4590,91 @@ function renderPlanning(){
   });
 }
 
+
+let planningPosterFile = null;
+
+function planningResetPosterUpload(){
+  planningPosterFile = null;
+
+  const fileInput=document.getElementById('plan-poster-file');
+  const previewWrap=document.getElementById('plan-poster-preview-wrap');
+  const preview=document.getElementById('plan-poster-preview');
+
+  if(fileInput) fileInput.value='';
+  if(preview) preview.src='';
+  if(previewWrap) previewWrap.style.display='none';
+}
+
+async function uploadPlanningPoster(file){
+  if(!file) return '';
+
+  const allowed=['image/png','image/jpeg','image/webp'];
+
+  if(!allowed.includes(file.type)){
+    throw new Error('Poster mesti PNG, JPG atau WEBP.');
+  }
+
+  if(file.size > 5 * 1024 * 1024){
+    throw new Error('Saiz poster maksimum 5MB.');
+  }
+
+  const safeName=String(file.name||'poster')
+    .replace(/[^a-zA-Z0-9._-]+/g,'-');
+
+  const uid=currentUser?.uid || 'staff';
+  const path=`planning-posters/${uid}/${Date.now()}-${safeName}`;
+
+  const ref=storage.ref().child(path);
+
+  const snapshot=await ref.put(file,{
+    contentType:file.type,
+    customMetadata:{
+      uploadedBy:currentProfile?.name || '',
+      source:'crm-planning'
+    }
+  });
+
+  return await snapshot.ref.getDownloadURL();
+}
+
+document.getElementById('plan-poster-file')?.addEventListener('change',(e)=>{
+  const file=e.target.files?.[0] || null;
+
+  if(!file){
+    planningResetPosterUpload();
+    return;
+  }
+
+  if(file.size > 5 * 1024 * 1024){
+    planningResetPosterUpload();
+    toast('Poster maksimum 5MB.',true);
+    return;
+  }
+
+  if(!['image/png','image/jpeg','image/webp'].includes(file.type)){
+    planningResetPosterUpload();
+    toast('Format poster mesti PNG, JPG atau WEBP.',true);
+    return;
+  }
+
+  planningPosterFile=file;
+
+  const preview=document.getElementById('plan-poster-preview');
+  const previewWrap=document.getElementById('plan-poster-preview-wrap');
+
+  if(preview){
+    preview.src=URL.createObjectURL(file);
+  }
+
+  if(previewWrap){
+    previewWrap.style.display='flex';
+  }
+});
+
+document.getElementById('plan-poster-remove')?.addEventListener('click',()=>{
+  planningResetPosterUpload();
+});
+
 const planningForm=document.getElementById('planning-form');
 if(planningForm){
   planningForm.addEventListener('submit',async(e)=>{
@@ -4598,7 +4690,7 @@ if(planningForm){
       status:document.getElementById('plan-status').value,
       note:document.getElementById('plan-note').value.trim(),
       posterName:document.getElementById('plan-poster-name').value.trim(),
-      posterUrl:document.getElementById('plan-poster-url').value.trim(),
+      posterUrl:'',
       createdBy:currentProfile.name,
       createdAtMs:Date.now(),
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -4613,10 +4705,21 @@ if(planningForm){
     btn.textContent='Menyimpan...';
 
     try{
+      if(planningPosterFile){
+        btn.textContent='Upload Poster...';
+        payload.posterUrl=await uploadPlanningPoster(planningPosterFile);
+      }
+
+      btn.textContent='Menyimpan Planning...';
+
       await db.collection('planning').add(payload);
+
       planningForm.reset();
+      planningResetPosterUpload();
+
       const d=document.getElementById('plan-review-date');
       if(d) d.value=todayStr();
+
       toast('Planning ditambah ✓');
     }catch(err){
       toast('Gagal tambah planning: '+err.message,true);
@@ -4629,6 +4732,7 @@ if(planningForm){
 
 document.getElementById('planning-clear')?.addEventListener('click',()=>{
   document.getElementById('planning-form')?.reset();
+  planningResetPosterUpload();
   const d=document.getElementById('plan-review-date');
   if(d) d.value=todayStr();
 });
