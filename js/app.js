@@ -4614,27 +4614,81 @@ async function uploadPlanningPoster(file){
     throw new Error('Poster mesti PNG, JPG atau WEBP.');
   }
 
-  if(file.size > 5 * 1024 * 1024){
-    throw new Error('Saiz poster maksimum 5MB.');
-  }
+  // Firestore document limit is ~1 MiB, so compress aggressively.
+  // Target output is kept well below that limit to leave room for other fields.
+  const dataUrl = await new Promise((resolve,reject)=>{
+    const reader=new FileReader();
 
-  const safeName=String(file.name||'poster')
-    .replace(/[^a-zA-Z0-9._-]+/g,'-');
+    reader.onerror=()=>reject(new Error('Gagal membaca fail poster.'));
 
-  const uid=currentUser?.uid || 'staff';
-  const path=`planning-posters/${uid}/${Date.now()}-${safeName}`;
+    reader.onload=()=>{
+      const img=new Image();
 
-  const ref=storage.ref().child(path);
+      img.onerror=()=>reject(new Error('Gagal membaca imej poster.'));
 
-  const snapshot=await ref.put(file,{
-    contentType:file.type,
-    customMetadata:{
-      uploadedBy:currentProfile?.name || '',
-      source:'crm-planning'
-    }
+      img.onload=()=>{
+        try{
+          const maxW=900;
+          const maxH=1200;
+
+          let w=img.naturalWidth || img.width;
+          let h=img.naturalHeight || img.height;
+
+          const scale=Math.min(1,maxW/w,maxH/h);
+          w=Math.max(1,Math.round(w*scale));
+          h=Math.max(1,Math.round(h*scale));
+
+          const canvas=document.createElement('canvas');
+          canvas.width=w;
+          canvas.height=h;
+
+          const ctx=canvas.getContext('2d',{alpha:false});
+          ctx.fillStyle='#ffffff';
+          ctx.fillRect(0,0,w,h);
+          ctx.drawImage(img,0,0,w,h);
+
+          let quality=.72;
+          let out=canvas.toDataURL('image/jpeg',quality);
+
+          // Keep encoded string around <= 650 KB.
+          while(out.length > 650000 && quality > .32){
+            quality-=.08;
+            out=canvas.toDataURL('image/jpeg',quality);
+          }
+
+          // If still too large, resize once more.
+          if(out.length > 650000){
+            const canvas2=document.createElement('canvas');
+            const ratio=.72;
+            canvas2.width=Math.max(1,Math.round(w*ratio));
+            canvas2.height=Math.max(1,Math.round(h*ratio));
+
+            const ctx2=canvas2.getContext('2d',{alpha:false});
+            ctx2.fillStyle='#ffffff';
+            ctx2.fillRect(0,0,canvas2.width,canvas2.height);
+            ctx2.drawImage(canvas,0,0,canvas2.width,canvas2.height);
+
+            out=canvas2.toDataURL('image/jpeg',.55);
+          }
+
+          if(out.length > 800000){
+            reject(new Error('Poster masih terlalu besar selepas compress. Cuba guna gambar yang lebih kecil.'));
+            return;
+          }
+
+          resolve(out);
+        }catch(err){
+          reject(err);
+        }
+      };
+
+      img.src=reader.result;
+    };
+
+    reader.readAsDataURL(file);
   });
 
-  return await snapshot.ref.getDownloadURL();
+  return dataUrl;
 }
 
 document.getElementById('plan-poster-file')?.addEventListener('change',(e)=>{
@@ -4645,9 +4699,9 @@ document.getElementById('plan-poster-file')?.addEventListener('change',(e)=>{
     return;
   }
 
-  if(file.size > 5 * 1024 * 1024){
+  if(file.size > 15 * 1024 * 1024){
     planningResetPosterUpload();
-    toast('Poster maksimum 5MB.',true);
+    toast('Fail asal terlalu besar. Sila pilih poster bawah 15MB.',true);
     return;
   }
 
@@ -4706,7 +4760,7 @@ if(planningForm){
 
     try{
       if(planningPosterFile){
-        btn.textContent='Upload Poster...';
+        btn.textContent='Compress Poster...';
         payload.posterUrl=await uploadPlanningPoster(planningPosterFile);
       }
 
