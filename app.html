@@ -810,9 +810,28 @@ Ahmad	60112223344"></textarea>
 
           <div class="field planning-span-2">
             <label>Poster / Creative</label>
-            <div class="planning-poster-row">
-              <input type="text" id="plan-poster-name" placeholder="Nama poster / creative">
-              <input type="url" id="plan-poster-url" placeholder="Link Canva / Google Drive / asset (optional)">
+            <div class="planning-poster-upload">
+              <div class="planning-poster-name-wrap">
+                <input type="text" id="plan-poster-name" placeholder="Nama poster / creative">
+              </div>
+
+              <label class="planning-upload-box" for="plan-poster-file">
+                <input
+                  type="file"
+                  id="plan-poster-file"
+                  accept="image/png,image/jpeg,image/webp"
+                >
+                <span class="planning-upload-icon">＋</span>
+                <div>
+                  <b>Upload Poster</b>
+                  <small>PNG, JPG atau WEBP · maksimum 5MB</small>
+                </div>
+              </label>
+
+              <div id="plan-poster-preview-wrap" class="planning-poster-preview-wrap" style="display:none;">
+                <img id="plan-poster-preview" alt="Preview poster">
+                <button type="button" id="plan-poster-remove" class="planning-poster-remove">Buang Gambar</button>
+              </div>
             </div>
           </div>
 
@@ -1160,7 +1179,8 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-storage-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=planning-v2-20260812"></script>
+<script src="js/app.js?v=planning-upload-poster-20260812"></script>
 </body>
 </html>
