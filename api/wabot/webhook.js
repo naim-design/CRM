@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { admin, getDb } = require('./_firebase');
+const { admin, getDb } = require('./firebase');
 
 function parseBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
