@@ -37,6 +37,7 @@
         <button data-view="wabotlive">Wabot Live</button>
         <button data-view="wabotcontrol">Wabot Control</button>
         <button data-view="projection">Projection</button>
+        <button data-view="planning">Planning</button>
         <button data-view="analyticspro">Analytics Pro</button>
         <button data-view="campaignmanager">Campaign Manager</button>
         <button data-view="aiinsight">AI Insight</button>
@@ -72,7 +73,7 @@
             <div class="field"><label>Kategori Laporan</label>
               <select id="entry-kategori">
                 <option>Projek Susu</option>
-                <option>Promo Jus</option>
+                <option>Promo TikTok</option>
                 <option>Database WS/Lead</option>
                 <option>Projek Leads Ikhtiar (NaimFani)</option>
               </select>
@@ -164,7 +165,7 @@
           <div class="field" style="margin:0;"><label>Projek</label>
             <select id="filter-kategori" class="filter-box">
               <option value="">Semua Projek</option>
-              <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+              <option>Projek Susu</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
             </select>
           </div>
         </div>
@@ -217,7 +218,7 @@
           <div class="dash-kpi-card" data-kpi="cost">
             <div class="dash-kpi-label">KOS</div>
             <div class="dash-kpi-line"><div class="dash-kpi-value" id="stat-cost-rm">RM 0</div><div class="dash-delta" id="delta-cost">—</div></div>
-            <div class="dash-target-meta"><span id="target-cost-label">Had RM1,000</span><span id="target-cost-text">0% digunakan</span></div>
+            <div class="dash-target-meta"><span id="target-cost-label">Had RM1,650</span><span id="target-cost-text">0% digunakan</span></div>
             <div class="dash-target-track cost"><div class="dash-target-fill" id="target-cost-bar"></div></div>
             <div id="stat-cost-eur" style="display:none;">€0.00</div>
           </div>
@@ -377,7 +378,7 @@
         <div class="field" style="margin:0;"><label>Kategori Laporan</label>
           <select id="lap-filter-kategori" class="filter-box">
             <option value="">Semua (Keseluruhan)</option>
-            <option>Projek Susu</option><option>Promo Jus</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+            <option>Projek Susu</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
           </select>
         </div>
       </div>
@@ -696,6 +697,153 @@ Ahmad	60112223344"></textarea>
         <p class="projection-sub">Anggaran sales terkumpul jika target buyer dicapai secara sekata sepanjang 30 hari.</p>
         <div class="projection-chart-wrap">
           <canvas id="projection-chart" width="1100" height="300"></canvas>
+        </div>
+      </section>
+    </div>
+
+
+    <!-- ==================== PLANNING ==================== -->
+    <div id="view-planning" class="view">
+      <div class="planning-head">
+        <div>
+          <h2>Planning</h2>
+          <p>Susun tindakan selepas review — apa nak buat, poster yang perlu disediakan, tarikh sasaran dan status progress.</p>
+        </div>
+        <div class="planning-head-actions">
+          <button type="button" class="btn btn-ghost planning-filter-btn active" data-plan-filter="all">Semua</button>
+          <button type="button" class="btn btn-ghost planning-filter-btn" data-plan-filter="todo">To Do</button>
+          <button type="button" class="btn btn-ghost planning-filter-btn" data-plan-filter="progress">In Progress</button>
+          <button type="button" class="btn btn-ghost planning-filter-btn" data-plan-filter="done">Done</button>
+        </div>
+      </div>
+
+      <div class="planning-summary-grid">
+        <div class="planning-summary-card">
+          <span>TOTAL PLANNING</span>
+          <strong id="plan-total">0</strong>
+          <small>Semua action item</small>
+        </div>
+        <div class="planning-summary-card">
+          <span>TO DO</span>
+          <strong id="plan-todo">0</strong>
+          <small>Belum mula</small>
+        </div>
+        <div class="planning-summary-card">
+          <span>IN PROGRESS</span>
+          <strong id="plan-progress">0</strong>
+          <small>Sedang dibuat</small>
+        </div>
+        <div class="planning-summary-card">
+          <span>DONE</span>
+          <strong id="plan-done">0</strong>
+          <small>Sudah selesai</small>
+        </div>
+      </div>
+
+      <section class="planning-form-card">
+        <div class="planning-card-title"><span>01</span> Tambah Planning Baru</div>
+
+        <form id="planning-form" class="planning-form-grid">
+          <div class="field">
+            <label>Tarikh Review</label>
+            <input type="date" id="plan-review-date" required>
+          </div>
+
+          <div class="field">
+            <label>Projek</label>
+            <select id="plan-project" required>
+              <option value="">-- Pilih Projek --</option>
+              <option value="Projek Susu">Projek Susu</option>
+              <option value="Promo TikTok">Promo TikTok</option>
+              <option value="Database WS/Lead">Database WS/Lead</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Kategori Action</label>
+            <select id="plan-category" required>
+              <option value="Action">Action / Task</option>
+              <option value="Poster">Poster</option>
+              <option value="Copywriting">Copywriting</option>
+              <option value="Blasting">Blasting</option>
+              <option value="Follow Up">Follow Up</option>
+              <option value="Testing">Testing</option>
+              <option value="Report">Report</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Priority</label>
+            <select id="plan-priority">
+              <option value="Normal">Normal</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+
+          <div class="field planning-span-2">
+            <label>Apa yang nak dibuat selepas review?</label>
+            <input type="text" id="plan-title" placeholder="cth: Buat poster baru untuk angle sakit belakang" required>
+          </div>
+
+          <div class="field">
+            <label>Target Tarikh Siap</label>
+            <input type="date" id="plan-due-date">
+          </div>
+
+          <div class="field">
+            <label>Status</label>
+            <select id="plan-status">
+              <option value="todo">To Do</option>
+              <option value="progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+
+          <div class="field planning-span-2">
+            <label>Detail / Nota</label>
+            <textarea id="plan-note" rows="3" placeholder="cth: Test headline A/B, gunakan visual ibu bekerja, CTA Learn More"></textarea>
+          </div>
+
+          <div class="field planning-span-2">
+            <label>Poster / Creative</label>
+            <div class="planning-poster-row">
+              <input type="text" id="plan-poster-name" placeholder="Nama poster / creative">
+              <input type="url" id="plan-poster-url" placeholder="Link Canva / Google Drive / asset (optional)">
+            </div>
+          </div>
+
+          <div class="planning-form-actions planning-span-2">
+            <button type="submit" class="btn btn-primary">Tambah Planning</button>
+            <button type="button" class="btn btn-ghost" id="planning-clear">Kosongkan</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="planning-board-card">
+        <div class="planning-board-top">
+          <div>
+            <div class="planning-card-title"><span>02</span> Planning Board</div>
+            <p>Review semua action item dan update status bila progress berubah.</p>
+          </div>
+          <div class="planning-board-controls">
+            <select id="planning-project-filter">
+              <option value="">Semua Projek</option>
+              <option value="Projek Susu">Projek Susu</option>
+              <option value="Promo TikTok">Promo TikTok</option>
+              <option value="Database WS/Lead">Database WS/Lead</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+            <input type="search" id="planning-search" placeholder="Cari planning / poster...">
+          </div>
+        </div>
+
+        <div id="planning-list" class="planning-list">
+          <div class="empty-state">Belum ada planning.</div>
         </div>
       </section>
     </div>
