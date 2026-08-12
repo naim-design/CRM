@@ -1953,3 +1953,134 @@ body { padding-bottom: 60px; }
     grid-template-columns:1fr;
   }
 }
+
+
+/* =========================================================
+   PLANNING POSTER PREVIEW — BIG CARD V3
+   ========================================================= */
+
+#view-planning .planning-poster-box{
+  display:grid !important;
+  grid-template-columns:180px minmax(0,1fr) !important;
+  gap:16px !important;
+  align-items:center !important;
+  padding:14px !important;
+  margin-top:12px !important;
+
+  border:1px solid rgba(0,215,170,.28) !important;
+  border-radius:14px !important;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,215,170,.045),
+      rgba(0,215,170,.012)
+    ) !important;
+}
+
+#view-planning .planning-card-poster-preview{
+  display:block !important;
+  width:180px !important;
+  height:180px !important;
+  border-radius:12px !important;
+  overflow:hidden !important;
+  border:1px solid var(--line) !important;
+  background:var(--surface-raised) !important;
+  box-shadow:0 8px 20px rgba(0,0,0,.08) !important;
+}
+
+#view-planning .planning-card-poster-preview img{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  background:#fff !important;
+}
+
+#view-planning .planning-poster-info{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  min-width:0 !important;
+  padding:4px 0 !important;
+}
+
+#view-planning .planning-poster-info span{
+  display:block !important;
+  margin-bottom:7px !important;
+  color:var(--muted) !important;
+  font:600 8px 'IBM Plex Mono',monospace !important;
+  letter-spacing:.08em !important;
+}
+
+#view-planning .planning-poster-info b{
+  display:block !important;
+  color:var(--text) !important;
+  font-family:'Space Grotesk',sans-serif !important;
+  font-size:14px !important;
+  line-height:1.35 !important;
+  margin-bottom:10px !important;
+}
+
+#view-planning .planning-poster-info .planning-poster-link{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:max-content !important;
+  min-height:34px !important;
+  padding:0 11px !important;
+  border:1px solid rgba(0,215,170,.28) !important;
+  border-radius:8px !important;
+  background:rgba(0,215,170,.08) !important;
+  color:var(--mint) !important;
+  text-decoration:none !important;
+  font:700 8px 'IBM Plex Mono',monospace !important;
+}
+
+#view-planning .planning-poster-info .planning-poster-link:hover{
+  background:rgba(0,215,170,.13) !important;
+}
+
+/* Planning item itself gets more card-like spacing */
+#view-planning .planning-item{
+  padding:18px !important;
+  border-radius:16px !important;
+}
+
+#view-planning .planning-item-title{
+  font-size:16px !important;
+}
+
+#view-planning .planning-note{
+  margin-top:12px !important;
+  padding:12px 13px !important;
+  border:1px solid rgba(255,255,255,.025) !important;
+}
+
+/* Larger poster on wide monitors */
+@media(min-width:1400px){
+  #view-planning .planning-poster-box{
+    grid-template-columns:210px minmax(0,1fr) !important;
+  }
+
+  #view-planning .planning-card-poster-preview{
+    width:210px !important;
+    height:210px !important;
+  }
+}
+
+/* Tablet/mobile */
+@media(max-width:760px){
+  #view-planning .planning-poster-box{
+    grid-template-columns:1fr !important;
+  }
+
+  #view-planning .planning-card-poster-preview{
+    width:100% !important;
+    height:auto !important;
+    aspect-ratio:1 / 1 !important;
+  }
+
+  #view-planning .planning-card-poster-preview img{
+    object-fit:contain !important;
+  }
+}
