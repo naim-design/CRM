@@ -493,6 +493,7 @@ auth.onAuthStateChanged(async (user) => {
   loadKnownSources();
   startListeners();
   startTopupListener();
+  startPlanningListener();
   initWabotControlInputs();
   updateTopupVisibility();
 
@@ -520,7 +521,12 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
 // ---- Realtime listeners ----
 function startListeners() {
   unsubEntries = db.collection('entries').orderBy('createdAt', 'desc').onSnapshot(snap => {
-    allEntries = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allEntries = snap.docs.map(d => {
+      const row = { id: d.id, ...d.data() };
+      // Backward compatibility: rekod lama Promo Jus dipaparkan sebagai Promo TikTok.
+      if (row.kategori === 'Promo Jus') row.kategori = 'Promo TikTok';
+      return row;
+    });
     renderDashboard();
     renderWabotControl();
     renderTemplateReport();
@@ -725,7 +731,7 @@ const DASH_TARGETS_DEFAULT = {
   reply: 50,
   roas: 10,
   roi: 10,
-  cost: 1000,
+  cost: 1650,
   buyer: 100,
   sent: 10000
 };
@@ -865,7 +871,7 @@ function renderProjectTrends() {
   const projectLabelMap = {
     'Projek Susu':'Projek Susu',
     'Projek Leads Ikhtiar (NaimFani)':'Projek Leads Ikhtiar',
-    'Promo Jus':'Promo Jus',
+    'Promo TikTok':'Promo TikTok',
     'Database WS/Lead':'Database WS/Lead'
   };
 
@@ -4358,3 +4364,297 @@ window.checkWabotSync=async function(){
   console.log('WABOT SYNC CHECK',out);
   return out;
 };
+
+
+// ============================================================
+// PLANNING TAB
+// ============================================================
+let allPlans = [];
+let currentPlanFilter = 'all';
+let unsubPlans = null;
+
+function planningEsc(v){
+  return String(v ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function planningStatusLabel(s){
+  if(s==='progress') return 'In Progress';
+  if(s==='done') return 'Done';
+  return 'To Do';
+}
+
+function planningPriorityClass(p){
+  const x=String(p||'Normal').toLowerCase();
+  if(x==='urgent') return 'urgent';
+  if(x==='high') return 'high';
+  return 'normal';
+}
+
+function startPlanningListener(){
+  if(unsubPlans){
+    try{unsubPlans();}catch(_){}
+  }
+
+  unsubPlans=db.collection('planning').onSnapshot(snap=>{
+    allPlans=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+    allPlans.sort((a,b)=>{
+      const ad=String(a.dueDate||a.reviewDate||'');
+      const bd=String(b.dueDate||b.reviewDate||'');
+      if(ad!==bd) return ad.localeCompare(bd);
+      const at=a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : Number(a.createdAtMs||0);
+      const bt=b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : Number(b.createdAtMs||0);
+      return bt-at;
+    });
+
+    renderPlanning();
+  },err=>{
+    console.error('Planning listener:',err);
+    toast('Ralat baca Planning: '+err.message,true);
+  });
+}
+
+function planningFilteredRows(){
+  const project=document.getElementById('planning-project-filter')?.value || '';
+  const q=String(document.getElementById('planning-search')?.value || '').trim().toLowerCase();
+
+  return (allPlans||[]).filter(p=>{
+    if(currentPlanFilter!=='all' && String(p.status||'todo')!==currentPlanFilter) return false;
+    if(project && String(p.project||'')!==project) return false;
+
+    if(q){
+      const hay=[
+        p.title,p.note,p.project,p.category,p.posterName,p.priority,p.createdBy
+      ].join(' ').toLowerCase();
+
+      if(!hay.includes(q)) return false;
+    }
+
+    return true;
+  });
+}
+
+function renderPlanning(){
+  const total=(allPlans||[]).length;
+  const todo=(allPlans||[]).filter(x=>(x.status||'todo')==='todo').length;
+  const progress=(allPlans||[]).filter(x=>x.status==='progress').length;
+  const done=(allPlans||[]).filter(x=>x.status==='done').length;
+
+  const set=(id,v)=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=v;
+  };
+
+  set('plan-total',total);
+  set('plan-todo',todo);
+  set('plan-progress',progress);
+  set('plan-done',done);
+
+  const list=document.getElementById('planning-list');
+  if(!list) return;
+
+  const rows=planningFilteredRows();
+
+  if(!rows.length){
+    list.innerHTML='<div class="empty-state">Tiada planning untuk filter ini.</div>';
+    return;
+  }
+
+  list.innerHTML=rows.map(p=>{
+    const posterLink=p.posterUrl
+      ? `<a href="${planningEsc(p.posterUrl)}" target="_blank" rel="noopener" class="planning-poster-link">Buka Poster ↗</a>`
+      : '';
+
+    const due=p.dueDate
+      ? `<span class="planning-meta-chip">Due ${planningEsc(p.dueDate)}</span>`
+      : '';
+
+    return `
+      <article class="planning-item status-${planningEsc(p.status||'todo')}">
+        <div class="planning-item-top">
+          <div>
+            <div class="planning-item-title">${planningEsc(p.title||'Untitled')}</div>
+            <div class="planning-item-sub">
+              <span>${planningEsc(p.project||'-')}</span>
+              <span>•</span>
+              <span>${planningEsc(p.category||'Action')}</span>
+            </div>
+          </div>
+
+          <div class="planning-item-badges">
+            <span class="planning-priority ${planningPriorityClass(p.priority)}">${planningEsc(p.priority||'Normal')}</span>
+            <span class="planning-status-badge ${planningEsc(p.status||'todo')}">${planningStatusLabel(p.status||'todo')}</span>
+          </div>
+        </div>
+
+        ${p.note ? `<div class="planning-note">${planningEsc(p.note)}</div>` : ''}
+
+        ${p.posterName || p.posterUrl ? `
+          <div class="planning-poster-box">
+            <div>
+              <span>POSTER / CREATIVE</span>
+              <b>${planningEsc(p.posterName||'Creative')}</b>
+            </div>
+            ${posterLink}
+          </div>
+        ` : ''}
+
+        <div class="planning-item-bottom">
+          <div class="planning-meta-row">
+            <span class="planning-meta-chip">Review ${planningEsc(p.reviewDate||'-')}</span>
+            ${due}
+            <span class="planning-meta-chip">${planningEsc(p.createdBy||'-')}</span>
+          </div>
+
+          <div class="planning-actions">
+            <select class="planning-status-select" data-id="${p.id}">
+              <option value="todo" ${p.status==='todo'?'selected':''}>To Do</option>
+              <option value="progress" ${p.status==='progress'?'selected':''}>In Progress</option>
+              <option value="done" ${p.status==='done'?'selected':''}>Done</option>
+            </select>
+            <button type="button" class="planning-edit-btn" data-id="${p.id}">Edit</button>
+            <button type="button" class="planning-delete-btn" data-id="${p.id}">Buang</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  list.querySelectorAll('.planning-status-select').forEach(sel=>{
+    sel.addEventListener('change',async()=>{
+      try{
+        await db.collection('planning').doc(sel.dataset.id).update({
+          status:sel.value,
+          updatedBy:currentProfile.name,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }catch(err){
+        toast('Gagal update status: '+err.message,true);
+      }
+    });
+  });
+
+  list.querySelectorAll('.planning-delete-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const row=allPlans.find(x=>x.id===btn.dataset.id);
+      if(!row) return;
+      if(!confirm(`Buang planning "${row.title}"?`)) return;
+
+      try{
+        await db.collection('planning').doc(row.id).delete();
+        toast('Planning dibuang ✓');
+      }catch(err){
+        toast('Gagal buang planning: '+err.message,true);
+      }
+    });
+  });
+
+  list.querySelectorAll('.planning-edit-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const row=allPlans.find(x=>x.id===btn.dataset.id);
+      if(!row) return;
+
+      const title=prompt('Planning / Action:',row.title||'');
+      if(title===null) return;
+
+      const note=prompt('Nota:',row.note||'');
+      if(note===null) return;
+
+      const posterName=prompt('Nama Poster / Creative:',row.posterName||'');
+      if(posterName===null) return;
+
+      db.collection('planning').doc(row.id).update({
+        title:title.trim(),
+        note:note.trim(),
+        posterName:posterName.trim(),
+        updatedBy:currentProfile.name,
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+      }).then(()=>{
+        toast('Planning dikemaskini ✓');
+      }).catch(err=>{
+        toast('Gagal edit planning: '+err.message,true);
+      });
+    });
+  });
+}
+
+const planningForm=document.getElementById('planning-form');
+if(planningForm){
+  planningForm.addEventListener('submit',async(e)=>{
+    e.preventDefault();
+
+    const payload={
+      reviewDate:document.getElementById('plan-review-date').value,
+      project:document.getElementById('plan-project').value,
+      category:document.getElementById('plan-category').value,
+      priority:document.getElementById('plan-priority').value,
+      title:document.getElementById('plan-title').value.trim(),
+      dueDate:document.getElementById('plan-due-date').value,
+      status:document.getElementById('plan-status').value,
+      note:document.getElementById('plan-note').value.trim(),
+      posterName:document.getElementById('plan-poster-name').value.trim(),
+      posterUrl:document.getElementById('plan-poster-url').value.trim(),
+      createdBy:currentProfile.name,
+      createdAtMs:Date.now(),
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    if(!payload.reviewDate || !payload.project || !payload.title){
+      return toast('Isi Tarikh Review, Projek dan Planning.',true);
+    }
+
+    const btn=planningForm.querySelector('button[type=submit]');
+    btn.disabled=true;
+    btn.textContent='Menyimpan...';
+
+    try{
+      await db.collection('planning').add(payload);
+      planningForm.reset();
+      const d=document.getElementById('plan-review-date');
+      if(d) d.value=todayStr();
+      toast('Planning ditambah ✓');
+    }catch(err){
+      toast('Gagal tambah planning: '+err.message,true);
+    }finally{
+      btn.disabled=false;
+      btn.textContent='Tambah Planning';
+    }
+  });
+}
+
+document.getElementById('planning-clear')?.addEventListener('click',()=>{
+  document.getElementById('planning-form')?.reset();
+  const d=document.getElementById('plan-review-date');
+  if(d) d.value=todayStr();
+});
+
+document.querySelectorAll('.planning-filter-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    currentPlanFilter=btn.dataset.planFilter || 'all';
+
+    document.querySelectorAll('.planning-filter-btn').forEach(b=>{
+      b.classList.toggle('active',b===btn);
+    });
+
+    renderPlanning();
+  });
+});
+
+document.getElementById('planning-project-filter')?.addEventListener('change',renderPlanning);
+document.getElementById('planning-search')?.addEventListener('input',renderPlanning);
+
+document.querySelector('.app-nav button[data-view="planning"]')?.addEventListener('click',()=>{
+  const d=document.getElementById('plan-review-date');
+  if(d && !d.value) d.value=todayStr();
+
+  if(!unsubPlans){
+    startPlanningListener();
+  }else{
+    renderPlanning();
+  }
+});
