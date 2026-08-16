@@ -2740,3 +2740,207 @@ body { padding-bottom: 60px; }
   .library-filter-grid.two{grid-template-columns:1fr}
   .poster-image-button{height:auto;aspect-ratio:4/5}
 }
+
+/* =========================================================
+   MAMARIAM CRM — PREMIUM CONTROL ROOM THEME V1
+   ========================================================= */
+
+:root{
+  --premium-bg:#091012;
+  --premium-card:#111c20;
+  --premium-line:rgba(255,255,255,.075);
+  --premium-text:#f4f8f7;
+  --premium-muted:#7f9697;
+  --premium-mint:#08d7aa;
+}
+
+html,body{
+  background:
+    radial-gradient(circle at 72% -10%, rgba(0,215,170,.08), transparent 30%),
+    linear-gradient(180deg,#091012 0%,#0a1114 100%) !important;
+}
+body{color:var(--premium-text)!important}
+.app-shell,main{background:transparent!important}
+.view{max-width:1240px!important;margin-left:auto!important;margin-right:auto!important}
+
+.app-header{
+  position:sticky!important;
+  top:0!important;
+  z-index:50!important;
+  background:linear-gradient(180deg,rgba(9,16,18,.97),rgba(9,16,18,.92))!important;
+  backdrop-filter:blur(18px) saturate(120%)!important;
+  -webkit-backdrop-filter:blur(18px) saturate(120%)!important;
+  border-bottom:1px solid rgba(255,255,255,.065)!important;
+  box-shadow:0 14px 35px rgba(0,0,0,.10)!important;
+}
+
+.app-nav{
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  flex-wrap:wrap!important;
+  margin-top:11px!important;
+}
+.app-nav button{
+  position:relative!important;
+  min-height:34px!important;
+  padding:0 11px!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  background:transparent!important;
+  color:#829496!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:10px!important;
+  transition:.18s ease!important;
+}
+.app-nav button:hover{
+  color:#d6e2df!important;
+  background:rgba(255,255,255,.035)!important;
+  border-color:rgba(255,255,255,.055)!important;
+}
+.app-nav button.active{
+  color:#08d7aa!important;
+  background:linear-gradient(180deg,rgba(8,215,170,.14),rgba(8,215,170,.075))!important;
+  border-color:rgba(8,215,170,.18)!important;
+}
+.app-nav button.active::after{
+  content:""!important;
+  position:absolute!important;
+  left:22%!important;
+  right:22%!important;
+  bottom:-1px!important;
+  height:2px!important;
+  border-radius:999px!important;
+  background:#08d7aa!important;
+  box-shadow:0 0 12px rgba(8,215,170,.55)!important;
+}
+
+h1,h2,h3,.section-head h2,.library-page-head h2,.planning-head h2{
+  color:#f4f8f7!important;
+  letter-spacing:-.025em!important;
+}
+.idx{color:#08d7aa!important}
+.hint-chip{
+  border:1px solid rgba(255,255,255,.075)!important;
+  background:rgba(255,255,255,.025)!important;
+  color:#8fa2a3!important;
+}
+
+.form-card,.hero,.kpi-card,.stat-card,.planning-summary-card,.planning-form-card,.planning-board-card,
+.library-stat,.template-library-card,.poster-performance-card,.wctrl-card,.wctrl-transfer-card{
+  border:1px solid rgba(255,255,255,.075)!important;
+  background:linear-gradient(145deg,rgba(20,33,38,.96),rgba(16,27,31,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.018),0 14px 38px rgba(0,0,0,.12)!important;
+}
+.form-card,.planning-form-card,.planning-board-card{border-radius:18px!important}
+
+.template-library-card,.poster-performance-card,.planning-item,.wctrl-card{
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+.template-library-card:hover,.poster-performance-card:hover,.planning-item:hover,.wctrl-card:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(8,215,170,.17)!important;
+  box-shadow:0 18px 42px rgba(0,0,0,.16)!important;
+}
+
+.dashboard-v7-grid > *,.library-stat,.planning-summary-card{
+  position:relative!important;
+  overflow:hidden!important;
+}
+.dashboard-v7-grid > *::before,.library-stat::before,.planning-summary-card::before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;top:0!important;right:0!important;
+  height:2px!important;
+  background:linear-gradient(90deg,rgba(8,215,170,.55),rgba(8,215,170,.04))!important;
+}
+
+input,select,textarea{
+  border-color:rgba(255,255,255,.075)!important;
+  background:#0f191d!important;
+  color:#e8efed!important;
+  transition:.15s ease!important;
+}
+input::placeholder,textarea::placeholder{color:#607577!important}
+input:focus,select:focus,textarea:focus{
+  border-color:rgba(8,215,170,.48)!important;
+  background:#111d21!important;
+  box-shadow:0 0 0 3px rgba(8,215,170,.07)!important;
+}
+
+.btn-primary,button.btn-primary{
+  border:1px solid rgba(8,215,170,.26)!important;
+  background:linear-gradient(135deg,#0bd9ad,#04c99f)!important;
+  color:#06211b!important;
+  font-weight:750!important;
+  box-shadow:0 8px 20px rgba(8,215,170,.10)!important;
+}
+.btn-primary:hover,button.btn-primary:hover{transform:translateY(-1px)!important}
+
+.tbl{
+  overflow:hidden!important;
+  border-collapse:separate!important;
+  border-spacing:0!important;
+  border:1px solid rgba(255,255,255,.065)!important;
+  border-radius:13px!important;
+}
+.tbl thead th{
+  background:#0e181c!important;
+  color:#789092!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:8px!important;
+  letter-spacing:.075em!important;
+  border-bottom:1px solid rgba(255,255,255,.065)!important;
+}
+.tbl tbody td{
+  border-bottom:1px solid rgba(255,255,255,.045)!important;
+  color:#dce5e3!important;
+}
+.tbl tbody tr:hover{background:rgba(8,215,170,.025)!important}
+
+.template-library-card{border-radius:18px!important;padding:17px!important}
+.template-script-text{
+  background:#0d171a!important;
+  border-color:rgba(255,255,255,.06)!important;
+  color:#cdd9d6!important;
+}
+.template-mini-kpi > div,.poster-card-kpis > div{
+  border:1px solid rgba(255,255,255,.045)!important;
+  background:#0d171a!important;
+}
+.template-sales-badge,.poster-sales-chip{
+  border-color:rgba(8,215,170,.22)!important;
+  background:rgba(8,215,170,.075)!important;
+  color:#0de0b2!important;
+}
+
+#view-planning .planning-item{
+  border:1px solid rgba(255,255,255,.065)!important;
+  background:linear-gradient(145deg,rgba(20,33,38,.98),rgba(15,26,30,.98))!important;
+}
+#view-planning .planning-note{
+  background:#0d171a!important;
+  border-color:rgba(255,255,255,.05)!important;
+}
+
+#view-wabotcontrol .wctrl-card::before{
+  height:2px!important;
+  background:linear-gradient(90deg,#08d7aa,rgba(8,215,170,.03))!important;
+}
+#view-wabotcontrol .wctrl-readiness,
+#view-wabotcontrol .wctrl-money > div,
+#view-wabotcontrol .wctrl-meta,
+#view-wabotcontrol .wctrl-mini span{
+  background:#0d171a!important;
+  border-color:rgba(255,255,255,.055)!important;
+}
+
+*{scrollbar-width:thin;scrollbar-color:rgba(8,215,170,.28) rgba(255,255,255,.025)}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-track{background:rgba(255,255,255,.02)}
+*::-webkit-scrollbar-thumb{background:rgba(8,215,170,.24);border-radius:999px}
+
+@media(max-width:900px){
+  .app-header{position:relative!important}
+  .view{max-width:100%!important}
+}
