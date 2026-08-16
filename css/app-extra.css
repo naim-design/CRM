@@ -3308,3 +3308,274 @@ input:focus,select:focus,textarea:focus{
 [data-theme="light"] .content-wrap{
   background:transparent !important;
 }
+
+
+/* =========================================================
+   MAMARIAM CRM — SIDEBAR CONTROL ROOM V2
+   Inspired by provided mockup
+   ========================================================= */
+
+@media(min-width:1100px){
+
+  body.crm-sidebar-layout{
+    background:#f6f8f7 !important;
+  }
+
+  /* LEFT SIDEBAR */
+  body.crm-sidebar-layout .app-header{
+    position:fixed !important;
+    top:0 !important;
+    left:0 !important;
+    bottom:0 !important;
+
+    width:190px !important;
+    height:100vh !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+
+    padding:22px 12px 18px !important;
+
+    overflow-y:auto !important;
+
+    background:
+      radial-gradient(circle at 50% 0%,rgba(8,215,170,.08),transparent 28%),
+      linear-gradient(180deg,#08161b,#071318) !important;
+
+    border-right:1px solid rgba(255,255,255,.06) !important;
+    border-bottom:0 !important;
+
+    box-shadow:14px 0 38px rgba(3,15,18,.08) !important;
+
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  body.crm-sidebar-layout .brand-wrap{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:flex-start !important;
+    gap:8px !important;
+    margin-bottom:18px !important;
+  }
+
+  body.crm-sidebar-layout .brand-logo{
+    max-width:120px !important;
+    height:auto !important;
+  }
+
+  body.crm-sidebar-layout .brand-title{
+    display:none !important;
+  }
+
+  /* NAV IN SIDEBAR */
+  body.crm-sidebar-layout .app-nav{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+
+    gap:4px !important;
+    margin:0 !important;
+  }
+
+  body.crm-sidebar-layout .app-nav button{
+    width:100% !important;
+    min-height:38px !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+
+    padding:0 12px !important;
+
+    border-radius:9px !important;
+
+    color:#adc0c1 !important;
+    background:transparent !important;
+
+    font-size:10px !important;
+    font-weight:550 !important;
+    text-align:left !important;
+  }
+
+  body.crm-sidebar-layout .app-nav button:hover{
+    background:rgba(255,255,255,.045) !important;
+    color:#ffffff !important;
+  }
+
+  body.crm-sidebar-layout .app-nav button.active{
+    color:#ffffff !important;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(8,215,170,.78),
+        rgba(0,151,126,.76)
+      ) !important;
+
+    border-color:rgba(8,215,170,.24) !important;
+
+    box-shadow:
+      0 7px 20px rgba(0,171,137,.16) !important;
+  }
+
+  body.crm-sidebar-layout .app-nav button.active::after{
+    display:none !important;
+  }
+
+  /* USER AREA AT BOTTOM OF SIDEBAR */
+  body.crm-sidebar-layout .userbar,
+  body.crm-sidebar-layout .user-bar{
+    margin-top:20px !important;
+    padding-top:14px !important;
+
+    border-top:1px solid rgba(255,255,255,.07) !important;
+
+    display:grid !important;
+    grid-template-columns:auto 1fr !important;
+    gap:8px !important;
+  }
+
+  body.crm-sidebar-layout .theme-toggle{
+    background:rgba(255,255,255,.06) !important;
+    border-color:rgba(255,255,255,.08) !important;
+  }
+
+  body.crm-sidebar-layout #user-name{
+    color:#f4f8f7 !important;
+  }
+
+  body.crm-sidebar-layout #logout-btn{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    background:rgba(255,255,255,.04) !important;
+    border-color:rgba(255,255,255,.07) !important;
+    color:#dce7e5 !important;
+  }
+
+  /* CONTENT AREA */
+  body.crm-sidebar-layout #app-shell,
+  body.crm-sidebar-layout .app-shell{
+    padding-left:190px !important;
+    background:#f6f8f7 !important;
+  }
+
+  body.crm-sidebar-layout main,
+  body.crm-sidebar-layout .view{
+    max-width:none !important;
+  }
+
+  body.crm-sidebar-layout .view{
+    padding-left:26px !important;
+    padding-right:26px !important;
+  }
+
+  /* TOP WHITE CONTROL BAR EFFECT */
+  body.crm-sidebar-layout .view.active::before{
+    content:"MAMARIAM — DASHBOARD TEAM CRM   ·   Control Room" !important;
+
+    display:flex !important;
+    align-items:center !important;
+
+    min-height:58px !important;
+    margin:-1px -26px 22px !important;
+    padding:0 28px !important;
+
+    border-bottom:1px solid #e4ebe7 !important;
+    background:#ffffff !important;
+
+    color:#13251f !important;
+
+    font-family:'Space Grotesk',sans-serif !important;
+    font-size:14px !important;
+    font-weight:700 !important;
+    letter-spacing:-.02em !important;
+
+    box-shadow:0 5px 16px rgba(29,50,42,.035) !important;
+  }
+
+  /* LIGHT DASHBOARD CARDS */
+  body.crm-sidebar-layout .form-card,
+  body.crm-sidebar-layout .hero,
+  body.crm-sidebar-layout .kpi-card,
+  body.crm-sidebar-layout .stat-card,
+  body.crm-sidebar-layout .library-stat,
+  body.crm-sidebar-layout .template-library-card,
+  body.crm-sidebar-layout .poster-performance-card,
+  body.crm-sidebar-layout .planning-summary-card,
+  body.crm-sidebar-layout .planning-form-card,
+  body.crm-sidebar-layout .planning-board-card{
+    background:#ffffff !important;
+    border:1px solid #e1e9e5 !important;
+
+    box-shadow:
+      0 8px 24px rgba(30,50,42,.045) !important;
+  }
+
+  body.crm-sidebar-layout h1,
+  body.crm-sidebar-layout h2,
+  body.crm-sidebar-layout h3,
+  body.crm-sidebar-layout .section-head h2{
+    color:#15271f !important;
+  }
+
+  body.crm-sidebar-layout input,
+  body.crm-sidebar-layout select,
+  body.crm-sidebar-layout textarea{
+    background:#fbfcfb !important;
+    border-color:#dfe7e3 !important;
+    color:#1a2c24 !important;
+  }
+
+  body.crm-sidebar-layout .tbl{
+    background:#ffffff !important;
+    border-color:#e0e8e4 !important;
+  }
+
+  body.crm-sidebar-layout .tbl thead th{
+    background:#f7f9f8 !important;
+    color:#667a72 !important;
+  }
+
+  body.crm-sidebar-layout .tbl tbody td{
+    color:#263830 !important;
+    border-bottom-color:#edf1ef !important;
+  }
+
+  body.crm-sidebar-layout .hint-chip{
+    background:#f4f8f6 !important;
+    color:#657870 !important;
+    border-color:#e0e8e4 !important;
+  }
+
+  body.crm-sidebar-layout .btn-primary{
+    background:
+      linear-gradient(135deg,#19c694,#0ca77d) !important;
+    color:#ffffff !important;
+    border-color:#0da67d !important;
+  }
+
+  /* KPI visual closer to mockup */
+  body.crm-sidebar-layout .dashboard-v7-grid{
+    gap:12px !important;
+  }
+
+  body.crm-sidebar-layout .dashboard-v7-grid > *{
+    border-radius:14px !important;
+    background:#ffffff !important;
+    border:1px solid #e2e9e6 !important;
+    box-shadow:0 7px 20px rgba(31,52,44,.04) !important;
+  }
+
+  /* charts */
+  body.crm-sidebar-layout canvas{
+    max-width:100% !important;
+  }
+}
+
+/* Keep mobile/tablet using current top-nav layout */
+@media(max-width:1099px){
+  body.crm-sidebar-layout .app-header{
+    position:relative !important;
+  }
+}
