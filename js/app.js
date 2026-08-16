@@ -10,6 +10,8 @@ let unsubPosters = null;
 let allEntries = [];
 let allTodos = [];
 let allPosters = [];
+let allTemplateLibrary = [];
+let unsubTemplateLibrary = null;
 let allFeedback = [];
 let unsubFeedback = null;
 let allCampaignMappings = [];
@@ -532,6 +534,9 @@ function startListeners() {
     renderTemplateReport();
     renderDailyReport();
     renderPosterPerformance();
+    renderTemplateLibraryReport();
+    renderTemplateLibrary();
+    renderPosterLibraryPerformance();
     renderWabotPerformance();
     renderDayOfWeek();
     renderHourOfDay();
@@ -549,6 +554,13 @@ function startListeners() {
     renderPosters();
     populatePosterSelect();
   }, err => toast('Ralat baca poster: ' + err.message, true));
+
+  unsubTemplateLibrary = db.collection('templateLibrary').orderBy('createdAt','desc').onSnapshot(snap => {
+    allTemplateLibrary = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderTemplateLibrary();
+    populateTemplateDatalist();
+  }, err => toast('Ralat baca Template Library: ' + err.message, true));
+
 
   unsubFeedback = db.collection('feedback').orderBy('createdAt', 'desc').onSnapshot(snap => {
     allFeedback = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1898,20 +1910,60 @@ document.getElementById('poster-form').addEventListener('submit', async (e) => {
 });
 
 function renderPosters() {
-  document.getElementById('poster-count').textContent = fmt(allPosters.length) + ' poster';
+  const countEl=document.getElementById('poster-count');
+  if(countEl) countEl.textContent = fmt(allPosters.length) + ' poster';
+
   const grid = document.getElementById('poster-grid');
+  if(!grid) return;
+
+  const q=String(document.getElementById('poster-library-search')?.value || '').trim().toLowerCase();
+  const perf=posterLibraryPerformanceMap();
+
+  const rows=(allPosters||[])
+    .filter(p=>!q || String(p.name||'').toLowerCase().includes(q))
+    .sort((a,b)=>(perf[b.name]?.sales||0)-(perf[a.name]?.sales||0));
+
   grid.innerHTML = '';
-  allPosters.forEach(p => {
+
+  rows.forEach(p => {
+    const x=perf[p.name] || {sent:0,reply:0,buyer:0,sales:0};
+    const conv=x.sent ? x.buyer/x.sent*100 : 0;
+    const replyRate=x.sent ? x.reply/x.sent*100 : 0;
+
     const card = document.createElement('div');
-    card.className = 'poster-card';
-    card.innerHTML = `<img src="${p.imageData}" alt="${p.name}">
-      <div class="poster-info"><span class="poster-name">${p.name}</span>
-      <button class="poster-del" data-id="${p.id}">✕</button></div>`;
+    card.className = 'poster-card poster-performance-card';
+
+    card.innerHTML = `
+      <button type="button" class="poster-image-button" onclick="openImageModal('${p.imageData}')">
+        <img src="${p.imageData}" alt="${escHtml(p.name)}">
+      </button>
+
+      <div class="poster-info poster-performance-info">
+        <div class="poster-card-title-row">
+          <span class="poster-name">${escHtml(p.name)}</span>
+          <span class="poster-sales-chip">${x.sales ? 'RM '+fmt(x.sales) : 'Belum Sales'}</span>
+        </div>
+
+        <div class="poster-card-kpis">
+          <div><span>Sent</span><b>${fmt(x.sent)}</b></div>
+          <div><span>Buyer</span><b>${fmt(x.buyer)}</b></div>
+          <div><span>Reply</span><b>${replyRate.toFixed(1)}%</b></div>
+          <div><span>Conv.</span><b>${conv.toFixed(2)}%</b></div>
+        </div>
+
+        <div class="poster-card-actions">
+          <button class="poster-del" data-id="${p.id}">Buang</button>
+        </div>
+      </div>
+    `;
+
     grid.appendChild(card);
   });
-  document.querySelectorAll('.poster-del').forEach(btn => {
+
+  grid.querySelectorAll('.poster-del').forEach(btn => {
     btn.onclick = async () => {
       if (!confirm('Padam poster ni?')) return;
+
       try {
         await db.collection('posters').doc(btn.dataset.id).delete();
       } catch (err) {
@@ -1919,9 +1971,13 @@ function renderPosters() {
       }
     };
   });
-  if (!allPosters.length) grid.innerHTML = '<div class="empty-state">Tiada poster lagi — upload di atas.</div>';
-}
 
+  if (!rows.length){
+    grid.innerHTML = '<div class="empty-state">Tiada poster lagi — upload di atas.</div>';
+  }
+
+  renderPosterLibraryPerformance();
+}
 function populatePosterSelect() {
   const sel = document.getElementById('entry-poster');
   const current = sel.value;
@@ -4830,4 +4886,409 @@ document.querySelectorAll('.salespage-copy-btn').forEach(btn => {
       toast('Gagal salin — browser tak sokong clipboard', true);
     }
   });
+});
+
+
+// ============================================================
+// TEMPLATE LIBRARY + TEMPLATE PERFORMANCE
+// ============================================================
+let templateLibraryImageFile = null;
+
+function escHtml(v){
+  return String(v ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function templatePerfRows(){
+  const from=document.getElementById('tmpl-report-from')?.value || '';
+  const to=document.getElementById('tmpl-report-to')?.value || '';
+  const project=document.getElementById('tmpl-report-project')?.value || '';
+
+  return (allEntries||[]).filter(r=>{
+    if(!r.template) return false;
+    if(from && r.tarikh<from) return false;
+    if(to && r.tarikh>to) return false;
+    if(project && r.kategori!==project) return false;
+    return true;
+  });
+}
+
+function getTemplatePerformanceMap(){
+  const map={};
+
+  templatePerfRows().forEach(r=>{
+    const k=String(r.template||'').trim();
+    if(!k) return;
+
+    map[k]=map[k] || {
+      sessions:0,sent:0,read:0,reply:0,buyer:0,sales:0
+    };
+
+    const t=map[k];
+    t.sessions++;
+    t.sent+=Number(r.sent||0);
+    t.read+=Number(r.read||0);
+    t.reply+=Number(r.reply||0);
+    t.buyer+=Number(r.buyer||0);
+    t.sales+=Number(r.sales||0);
+  });
+
+  return map;
+}
+
+function renderTemplateLibraryReport(){
+  const body=document.getElementById('template-report-body');
+  if(!body) return;
+
+  const map=getTemplatePerformanceMap();
+
+  const rows=Object.entries(map)
+    .map(([name,x])=>{
+      const replyRate=x.sent ? x.reply/x.sent*100 : 0;
+      const conv=x.sent ? x.buyer/x.sent*100 : 0;
+      const cost=costRM(x.sent);
+      const roas=cost ? x.sales/cost : 0;
+      return {name,...x,replyRate,conv,cost,roas};
+    })
+    .sort((a,b)=>b.sales-a.sales || b.buyer-a.buyer || b.replyRate-a.replyRate);
+
+  body.innerHTML=rows.map((x,i)=>`
+    <tr>
+      <td class="rank">${i+1}</td>
+      <td class="tname">${escHtml(x.name)}</td>
+      <td class="num">${x.sessions}</td>
+      <td class="num">${fmt(x.sent)}</td>
+      <td class="num">${x.replyRate.toFixed(1)}%</td>
+      <td class="num">${fmt(x.buyer)}</td>
+      <td class="num">${x.conv.toFixed(2)}%</td>
+      <td class="num">${x.sales ? 'RM '+fmt(x.sales) : '–'}</td>
+      <td class="num">RM ${fmt(x.cost.toFixed(2))}</td>
+      <td class="num">${x.cost ? x.roas.toFixed(2)+'x' : '–'}</td>
+    </tr>
+  `).join('');
+
+  if(!rows.length){
+    body.innerHTML='<tr><td colspan="10" class="empty-state">Belum ada data template untuk filter ini.</td></tr>';
+  }
+
+  const salesCount=rows.filter(x=>x.sales>0).length;
+  const topSales=rows[0];
+  const topReply=[...rows].sort((a,b)=>b.replyRate-a.replyRate)[0];
+
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('tmpl-lib-sales-count',salesCount);
+  set('tmpl-lib-top-sales',topSales ? 'RM '+fmt(topSales.sales) : '–');
+  set('tmpl-lib-top-sales-name',topSales ? topSales.name : 'Belum ada data');
+  set('tmpl-lib-top-reply',topReply ? topReply.replyRate.toFixed(1)+'%' : '–');
+  set('tmpl-lib-top-reply-name',topReply ? topReply.name : 'Belum ada data');
+}
+
+function populateTemplateDatalist(){
+  const list=document.getElementById('entry-template-list');
+  if(!list) return;
+
+  const names=new Set();
+
+  (allTemplateLibrary||[]).forEach(t=>{
+    if(t.name) names.add(t.name);
+  });
+
+  (allEntries||[]).forEach(e=>{
+    if(e.template) names.add(e.template);
+  });
+
+  list.innerHTML=[...names].sort().map(n=>`<option value="${escHtml(n)}"></option>`).join('');
+
+  const count=document.getElementById('template-library-count');
+  if(count) count.textContent=fmt(allTemplateLibrary.length)+' template';
+
+  const total=document.getElementById('tmpl-lib-total');
+  if(total) total.textContent=fmt(allTemplateLibrary.length);
+}
+
+function renderTemplateLibrary(){
+  const grid=document.getElementById('template-library-grid');
+  if(!grid) return;
+
+  const project=document.getElementById('tmpl-library-project-filter')?.value || '';
+  const q=String(document.getElementById('tmpl-library-search')?.value || '').trim().toLowerCase();
+  const perf=getTemplatePerformanceMap();
+
+  const rows=(allTemplateLibrary||[]).filter(t=>{
+    if(project && t.project!==project) return false;
+    if(q){
+      const hay=[t.name,t.script,t.note,t.project].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  grid.innerHTML=rows.map(t=>{
+    const p=perf[t.name] || {sent:0,reply:0,buyer:0,sales:0};
+    const replyRate=p.sent ? p.reply/p.sent*100 : 0;
+    const conv=p.sent ? p.buyer/p.sent*100 : 0;
+
+    return `
+      <article class="template-library-card">
+        <div class="template-library-card-head">
+          <div>
+            <div class="template-library-name">${escHtml(t.name||'Tanpa Nama')}</div>
+            <div class="template-library-project">${escHtml(t.project||'-')}</div>
+          </div>
+          <div class="template-sales-badge">${p.sales ? 'RM '+fmt(p.sales) : 'Belum Sales'}</div>
+        </div>
+
+        ${t.imageData ? `
+          <button type="button" class="template-script-image" onclick="openImageModal('${t.imageData}')">
+            <img src="${t.imageData}" alt="Screenshot skrip">
+          </button>
+        ` : ''}
+
+        ${t.script ? `
+          <div class="template-script-text">${escHtml(t.script)}</div>
+        ` : '<div class="template-script-empty">Tiada teks skrip — rujuk screenshot.</div>'}
+
+        ${t.note ? `<div class="template-angle"><span>ANGLE / NOTA</span>${escHtml(t.note)}</div>` : ''}
+
+        <div class="template-mini-kpi">
+          <div><span>Sent</span><b>${fmt(p.sent)}</b></div>
+          <div><span>Reply</span><b>${replyRate.toFixed(1)}%</b></div>
+          <div><span>Buyer</span><b>${fmt(p.buyer)}</b></div>
+          <div><span>Conv.</span><b>${conv.toFixed(2)}%</b></div>
+        </div>
+
+        <div class="template-card-actions">
+          <button type="button" class="btn btn-ghost template-copy-btn" data-id="${t.id}">Copy Skrip</button>
+          <button type="button" class="template-delete-btn" data-id="${t.id}">Buang</button>
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  if(!rows.length){
+    grid.innerHTML='<div class="empty-state">Belum ada template dalam library.</div>';
+  }
+
+  grid.querySelectorAll('.template-copy-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const t=allTemplateLibrary.find(x=>x.id===btn.dataset.id);
+      if(!t?.script) return toast('Template ini tiada teks skrip.',true);
+
+      try{
+        await navigator.clipboard.writeText(t.script);
+        toast('Skrip dicopy ✓');
+      }catch(_){
+        toast('Tak dapat copy automatik. Pilih teks secara manual.',true);
+      }
+    });
+  });
+
+  grid.querySelectorAll('.template-delete-btn').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const t=allTemplateLibrary.find(x=>x.id===btn.dataset.id);
+      if(!t || !confirm(`Buang template "${t.name}"?`)) return;
+
+      try{
+        await db.collection('templateLibrary').doc(t.id).delete();
+        toast('Template dibuang ✓');
+      }catch(err){
+        toast('Gagal buang template: '+err.message,true);
+      }
+    });
+  });
+
+  populateTemplateDatalist();
+  renderTemplateLibraryReport();
+}
+
+document.getElementById('tmpl-lib-file')?.addEventListener('change',(e)=>{
+  const file=e.target.files?.[0] || null;
+  templateLibraryImageFile=file;
+
+  const wrap=document.getElementById('tmpl-lib-preview-wrap');
+  const img=document.getElementById('tmpl-lib-preview');
+
+  if(!file){
+    if(wrap) wrap.style.display='none';
+    return;
+  }
+
+  if(img) img.src=URL.createObjectURL(file);
+  if(wrap) wrap.style.display='flex';
+});
+
+document.getElementById('tmpl-lib-remove-image')?.addEventListener('click',()=>{
+  templateLibraryImageFile=null;
+  const input=document.getElementById('tmpl-lib-file');
+  const wrap=document.getElementById('tmpl-lib-preview-wrap');
+  if(input) input.value='';
+  if(wrap) wrap.style.display='none';
+});
+
+document.getElementById('template-library-form')?.addEventListener('submit',async(e)=>{
+  e.preventDefault();
+
+  const name=document.getElementById('tmpl-lib-name').value.trim();
+  const project=document.getElementById('tmpl-lib-project').value;
+  const script=document.getElementById('tmpl-lib-script').value.trim();
+  const note=document.getElementById('tmpl-lib-note').value.trim();
+
+  if(!name) return toast('Masukkan nama template.',true);
+  if(!script && !templateLibraryImageFile){
+    return toast('Masukkan skrip atau upload screenshot skrip.',true);
+  }
+
+  const btn=document.getElementById('tmpl-lib-submit');
+  btn.disabled=true;
+  btn.textContent='Menyimpan...';
+
+  try{
+    let imageData='';
+
+    if(templateLibraryImageFile){
+      btn.textContent='Compress gambar...';
+      imageData=await compressImageToBase64(templateLibraryImageFile);
+
+      if(imageData.length>850000){
+        throw new Error('Screenshot terlalu besar selepas compress.');
+      }
+    }
+
+    await db.collection('templateLibrary').add({
+      name,project,script,note,imageData,
+      createdBy:currentProfile.name,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    e.target.reset();
+    templateLibraryImageFile=null;
+    const wrap=document.getElementById('tmpl-lib-preview-wrap');
+    if(wrap) wrap.style.display='none';
+    toast('Template disimpan ✓');
+
+  }catch(err){
+    toast('Gagal simpan template: '+err.message,true);
+  }finally{
+    btn.disabled=false;
+    btn.textContent='Simpan Template';
+  }
+});
+
+document.getElementById('tmpl-lib-clear')?.addEventListener('click',()=>{
+  document.getElementById('template-library-form')?.reset();
+  templateLibraryImageFile=null;
+  const wrap=document.getElementById('tmpl-lib-preview-wrap');
+  if(wrap) wrap.style.display='none';
+});
+
+['tmpl-report-from','tmpl-report-to','tmpl-report-project'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('change',()=>{
+    renderTemplateLibraryReport();
+    renderTemplateLibrary();
+  });
+});
+
+document.getElementById('tmpl-library-project-filter')?.addEventListener('change',renderTemplateLibrary);
+document.getElementById('tmpl-library-search')?.addEventListener('input',renderTemplateLibrary);
+
+document.querySelector('.app-nav button[data-view="template"]')?.addEventListener('click',()=>{
+  renderTemplateLibrary();
+  renderTemplateLibraryReport();
+});
+
+// ============================================================
+// POSTER PERFORMANCE INSIDE POSTER TAB
+// ============================================================
+function posterLibraryPerformanceMap(){
+  const from=document.getElementById('poster-report-from')?.value || '';
+  const to=document.getElementById('poster-report-to')?.value || '';
+  const project=document.getElementById('poster-report-project')?.value || '';
+
+  const map={};
+
+  (allEntries||[]).forEach(r=>{
+    if(!r.poster) return;
+    if(from && r.tarikh<from) return;
+    if(to && r.tarikh>to) return;
+    if(project && r.kategori!==project) return;
+
+    const k=r.poster;
+    map[k]=map[k] || {sessions:0,sent:0,reply:0,buyer:0,sales:0};
+    const p=map[k];
+
+    p.sessions++;
+    p.sent+=Number(r.sent||0);
+    p.reply+=Number(r.reply||0);
+    p.buyer+=Number(r.buyer||0);
+    p.sales+=Number(r.sales||0);
+  });
+
+  return map;
+}
+
+function renderPosterLibraryPerformance(){
+  const body=document.getElementById('poster-library-report-body');
+  if(!body) return;
+
+  const map=posterLibraryPerformanceMap();
+
+  const rows=Object.entries(map)
+    .map(([name,x])=>{
+      const replyRate=x.sent ? x.reply/x.sent*100 : 0;
+      const conv=x.sent ? x.buyer/x.sent*100 : 0;
+      const cost=costRM(x.sent);
+      const roas=cost ? x.sales/cost : 0;
+      return {name,...x,replyRate,conv,cost,roas};
+    })
+    .sort((a,b)=>b.sales-a.sales || b.buyer-a.buyer || b.conv-a.conv);
+
+  body.innerHTML=rows.map((x,i)=>`
+    <tr>
+      <td class="rank">${i+1}</td>
+      <td class="tname">${escHtml(x.name)}</td>
+      <td class="num">${x.sessions}</td>
+      <td class="num">${fmt(x.sent)}</td>
+      <td class="num">${x.replyRate.toFixed(1)}%</td>
+      <td class="num">${fmt(x.buyer)}</td>
+      <td class="num">${x.conv.toFixed(2)}%</td>
+      <td class="num">${x.sales ? 'RM '+fmt(x.sales) : '–'}</td>
+      <td class="num">RM ${fmt(x.cost.toFixed(2))}</td>
+      <td class="num">${x.cost ? x.roas.toFixed(2)+'x' : '–'}</td>
+    </tr>
+  `).join('');
+
+  if(!rows.length){
+    body.innerHTML='<tr><td colspan="10" class="empty-state">Belum ada data poster untuk filter ini.</td></tr>';
+  }
+
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+
+  set('poster-stat-total',allPosters.length);
+  set('poster-stat-sales-count',rows.filter(x=>x.sales>0).length);
+
+  const topSales=rows[0];
+  const topConv=[...rows].sort((a,b)=>b.conv-a.conv)[0];
+
+  set('poster-stat-top-sales',topSales ? 'RM '+fmt(topSales.sales) : '–');
+  set('poster-stat-top-sales-name',topSales ? topSales.name : 'Belum ada data');
+  set('poster-stat-top-conv',topConv ? topConv.conv.toFixed(2)+'%' : '–');
+  set('poster-stat-top-conv-name',topConv ? topConv.name : 'Belum ada data');
+}
+
+['poster-report-from','poster-report-to','poster-report-project'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('change',()=>{
+    renderPosterLibraryPerformance();
+    renderPosters();
+  });
+});
+
+document.getElementById('poster-library-search')?.addEventListener('input',renderPosters);
+
+document.querySelector('.app-nav button[data-view="poster"]')?.addEventListener('click',()=>{
+  renderPosterLibraryPerformance();
+  renderPosters();
 });
