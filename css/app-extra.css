@@ -2944,3 +2944,367 @@ input:focus,select:focus,textarea:focus{
   .app-header{position:relative!important}
   .view{max-width:100%!important}
 }
+
+
+/* =========================================================
+   PREMIUM THEME V1.1 — READABLE NAV + ENTRY LIST
+   ========================================================= */
+
+/* Main navigation — larger and easier to scan */
+.app-nav{
+  column-gap:7px !important;
+  row-gap:7px !important;
+}
+
+.app-nav button{
+  min-height:38px !important;
+  padding:0 13px !important;
+  border-radius:10px !important;
+
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:11.5px !important;
+  font-weight:600 !important;
+  letter-spacing:-.015em !important;
+
+  color:#9aabad !important;
+}
+
+.app-nav button:hover{
+  color:#eef5f3 !important;
+}
+
+.app-nav button.active{
+  color:#12e3b5 !important;
+  font-weight:700 !important;
+}
+
+/* Brand and user controls slightly larger too */
+.brand-title{
+  font-size:15px !important;
+}
+
+.userbar,
+.user-bar{
+  font-size:11px !important;
+}
+
+#logout-btn{
+  min-height:34px !important;
+  padding:0 13px !important;
+  font-size:10px !important;
+}
+
+/* Entry list readability */
+#entries-list-count{
+  font-size:9.5px !important;
+  padding:7px 11px !important;
+}
+
+#entries-list-body td{
+  font-size:11px !important;
+  padding-top:11px !important;
+  padding-bottom:11px !important;
+}
+
+#entries-list-body .tname{
+  font-size:11px !important;
+  font-weight:650 !important;
+}
+
+@media(max-width:900px){
+  .app-nav button{
+    min-height:36px !important;
+    padding:0 11px !important;
+    font-size:10.5px !important;
+  }
+}
+
+
+/* =========================================================
+   PREMIUM V1.2 — CLEAN LIGHT THEME
+   Full light-mode override so it does not mix dark + white.
+   ========================================================= */
+
+[data-theme="light"]{
+  --bg:#f4f7f6 !important;
+  --surface:#ffffff !important;
+  --surface-raised:#f8faf9 !important;
+  --line:#dde6e2 !important;
+  --line-soft:#e9efec !important;
+  --text:#16231f !important;
+  --muted:#687a73 !important;
+  --muted-2:#92a09a !important;
+  --mint:#0ba77a !important;
+  --mint-dim:rgba(11,167,122,.09) !important;
+}
+
+[data-theme="light"] body{
+  background:
+    radial-gradient(circle at 85% -10%, rgba(11,167,122,.07), transparent 28%),
+    #f4f7f6 !important;
+  color:#16231f !important;
+}
+
+/* Header becomes a clean white toolbar, not a large glowing block */
+[data-theme="light"] .app-header{
+  background:rgba(255,255,255,.96) !important;
+  border-bottom:1px solid #e0e8e4 !important;
+  box-shadow:0 8px 24px rgba(23,42,35,.055) !important;
+  backdrop-filter:blur(14px) !important;
+  -webkit-backdrop-filter:blur(14px) !important;
+}
+
+/* Brand */
+[data-theme="light"] .brand-title,
+[data-theme="light"] #user-name{
+  color:#24322d !important;
+}
+
+/* Navigation */
+[data-theme="light"] .app-nav button{
+  color:#6f817a !important;
+  background:transparent !important;
+  border-color:transparent !important;
+}
+
+[data-theme="light"] .app-nav button:hover{
+  color:#263630 !important;
+  background:#f3f7f5 !important;
+  border-color:#e2eae6 !important;
+}
+
+[data-theme="light"] .app-nav button.active{
+  color:#087c5d !important;
+  background:#e6f7f0 !important;
+  border-color:#ccecdf !important;
+  box-shadow:none !important;
+}
+
+[data-theme="light"] .app-nav button.active::after{
+  background:#0ba77a !important;
+  box-shadow:none !important;
+}
+
+/* User / theme controls */
+[data-theme="light"] .theme-toggle,
+[data-theme="light"] #logout-btn,
+[data-theme="light"] .btn-ghost{
+  background:#ffffff !important;
+  border-color:#dce6e1 !important;
+  color:#34453e !important;
+}
+
+/* Main surfaces */
+[data-theme="light"] .form-card,
+[data-theme="light"] .hero,
+[data-theme="light"] .kpi-card,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .planning-summary-card,
+[data-theme="light"] .planning-form-card,
+[data-theme="light"] .planning-board-card,
+[data-theme="light"] .library-stat,
+[data-theme="light"] .template-library-card,
+[data-theme="light"] .poster-performance-card,
+[data-theme="light"] .wctrl-card,
+[data-theme="light"] .wctrl-transfer-card,
+[data-theme="light"] .dashboard-v7-card,
+[data-theme="light"] .dashboard-v7-chart-card,
+[data-theme="light"] .dashboard-v7-trend-card,
+[data-theme="light"] .dashboard-v7-project-card,
+[data-theme="light"] .chart-card,
+[data-theme="light"] .trend-card,
+[data-theme="light"] .table-card{
+  background:#ffffff !important;
+  border-color:#dfe7e3 !important;
+  color:#16231f !important;
+  box-shadow:0 9px 28px rgba(33,56,47,.045) !important;
+}
+
+/* Remove dark hover tint in light theme */
+[data-theme="light"] .template-library-card:hover,
+[data-theme="light"] .poster-performance-card:hover,
+[data-theme="light"] .planning-item:hover,
+[data-theme="light"] .wctrl-card:hover{
+  border-color:#bcded1 !important;
+  box-shadow:0 12px 30px rgba(33,56,47,.07) !important;
+}
+
+/* Headings */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] .section-head h2,
+[data-theme="light"] .library-page-head h2,
+[data-theme="light"] .planning-head h2{
+  color:#16231f !important;
+}
+
+/* Inputs */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea{
+  background:#f8faf9 !important;
+  border-color:#dce5e1 !important;
+  color:#192822 !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder{
+  color:#93a39c !important;
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus{
+  background:#ffffff !important;
+  border-color:#48b996 !important;
+  box-shadow:0 0 0 3px rgba(11,167,122,.08) !important;
+}
+
+/* Primary action */
+[data-theme="light"] .btn-primary,
+[data-theme="light"] button.btn-primary{
+  background:linear-gradient(135deg,#10ba88,#0b9c73) !important;
+  border-color:#0a936d !important;
+  color:#ffffff !important;
+  box-shadow:0 8px 18px rgba(11,167,122,.12) !important;
+}
+
+/* Tables */
+[data-theme="light"] .tbl{
+  border-color:#dfe7e3 !important;
+  background:#ffffff !important;
+}
+
+[data-theme="light"] .tbl thead th{
+  background:#f5f8f7 !important;
+  color:#6f817a !important;
+  border-bottom-color:#dfe7e3 !important;
+}
+
+[data-theme="light"] .tbl tbody td{
+  color:#24342e !important;
+  border-bottom-color:#edf1ef !important;
+}
+
+[data-theme="light"] .tbl tbody tr{
+  background:#ffffff !important;
+}
+
+[data-theme="light"] .tbl tbody tr:hover{
+  background:#f5fbf8 !important;
+}
+
+/* Dashboard chart/trend containers */
+[data-theme="light"] .dashboard-v7-chart,
+[data-theme="light"] .dashboard-v7-trend,
+[data-theme="light"] .dashboard-v7-project-trend,
+[data-theme="light"] #trend-container,
+[data-theme="light"] #trend-chart-wrap,
+[data-theme="light"] #trend-project-wrap{
+  background:#ffffff !important;
+  border-color:#dfe7e3 !important;
+}
+
+[data-theme="light"] .empty-state,
+[data-theme="light"] .dashboard-empty,
+[data-theme="light"] #trend-empty,
+[data-theme="light"] #trend-project-empty{
+  color:#859790 !important;
+}
+
+/* KPI cards */
+[data-theme="light"] .dashboard-v7-grid > *::before,
+[data-theme="light"] .library-stat::before,
+[data-theme="light"] .planning-summary-card::before{
+  background:linear-gradient(90deg,#19b486,rgba(25,180,134,.08)) !important;
+}
+
+[data-theme="light"] .library-stat strong,
+[data-theme="light"] .planning-summary-card strong,
+[data-theme="light"] .dashboard-v7-grid strong{
+  color:#172620 !important;
+}
+
+/* Template */
+[data-theme="light"] .template-script-text,
+[data-theme="light"] .template-mini-kpi > div,
+[data-theme="light"] .poster-card-kpis > div{
+  background:#f7faf8 !important;
+  border-color:#e1e9e5 !important;
+  color:#33463f !important;
+}
+
+[data-theme="light"] .template-sales-badge,
+[data-theme="light"] .poster-sales-chip{
+  background:#e9f8f2 !important;
+  border-color:#c9ebde !important;
+  color:#087d5d !important;
+}
+
+/* Planning */
+[data-theme="light"] #view-planning .planning-item{
+  background:#ffffff !important;
+  border-color:#dfe7e3 !important;
+}
+
+[data-theme="light"] #view-planning .planning-note{
+  background:#f7faf8 !important;
+  border-color:#e3eae7 !important;
+  color:#566a62 !important;
+}
+
+[data-theme="light"] #view-planning .planning-poster-box{
+  background:#f4fbf8 !important;
+  border-color:#cde9df !important;
+}
+
+/* Wabot */
+[data-theme="light"] #view-wabotcontrol .wctrl-readiness,
+[data-theme="light"] #view-wabotcontrol .wctrl-money > div,
+[data-theme="light"] #view-wabotcontrol .wctrl-meta,
+[data-theme="light"] #view-wabotcontrol .wctrl-mini span{
+  background:#f7faf8 !important;
+  border-color:#e1e9e5 !important;
+}
+
+/* Topup / generic panels */
+[data-theme="light"] #topup-section .form-card,
+[data-theme="light"] #topup-section .kpi-card,
+[data-theme="light"] #topup-section .stat-card,
+[data-theme="light"] .panel,
+[data-theme="light"] .metric-card,
+[data-theme="light"] .summary-card{
+  background:#ffffff !important;
+  border-color:#dfe7e3 !important;
+}
+
+/* Chips / legends */
+[data-theme="light"] .hint-chip,
+[data-theme="light"] .legend-chip,
+[data-theme="light"] .trend-legend button,
+[data-theme="light"] .chart-legend button{
+  background:#f7faf8 !important;
+  border-color:#dfe7e3 !important;
+  color:#6b7e76 !important;
+}
+
+/* Scrollbar */
+[data-theme="light"] *{
+  scrollbar-color:#b8dcd0 #eef3f1;
+}
+[data-theme="light"] *::-webkit-scrollbar-track{
+  background:#eef3f1;
+}
+[data-theme="light"] *::-webkit-scrollbar-thumb{
+  background:#b8dcd0;
+}
+
+/* Important: no dark strip around the content in light mode */
+[data-theme="light"] main,
+[data-theme="light"] .view,
+[data-theme="light"] .app-shell,
+[data-theme="light"] .app-content,
+[data-theme="light"] .content-wrap{
+  background:transparent !important;
+}
