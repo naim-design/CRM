@@ -522,12 +522,35 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
 
 // ---- Realtime listeners ----
 function startListeners() {
-  unsubEntries = db.collection('entries').orderBy('createdAt', 'desc').onSnapshot(snap => {
+  // Jangan orderBy(createdAt) di Firestore.
+  // Rekod CRM lama ada yang tiada field createdAt; Firestore akan mengecualikan
+  // dokumen tersebut daripada query orderBy dan menyebabkan Senarai Entri nampak kosong.
+  unsubEntries = db.collection('entries').onSnapshot(snap => {
     allEntries = snap.docs.map(d => {
       const row = { id: d.id, ...d.data() };
+
       // Backward compatibility: rekod lama Promo Jus dipaparkan sebagai Promo TikTok.
       if (row.kategori === 'Promo Jus') row.kategori = 'Promo TikTok';
+
       return row;
+    });
+
+    // Sort client-side supaya data lama + baru semua kekal dibaca.
+    allEntries.sort((a,b) => {
+      const ad = String(a.tarikh || '');
+      const bd = String(b.tarikh || '');
+
+      if (ad !== bd) return bd.localeCompare(ad);
+
+      const at = a.createdAt && a.createdAt.toMillis
+        ? a.createdAt.toMillis()
+        : Number(a.createdAtMs || 0);
+
+      const bt = b.createdAt && b.createdAt.toMillis
+        ? b.createdAt.toMillis()
+        : Number(b.createdAtMs || 0);
+
+      return bt - at;
     });
     renderDashboard();
     renderWabotControl();
@@ -696,6 +719,7 @@ async function deleteEntry(id) {
 function renderEntriesList() {
   const sorted = [...allEntries].sort((a, b) => (b.tarikh || '').localeCompare(a.tarikh || ''));
   const body = document.getElementById('entries-list-body');
+  if (!body) return;
   body.innerHTML = '';
   const LIMIT = 100;
   sorted.slice(0, LIMIT).forEach(en => {
@@ -714,7 +738,11 @@ function renderEntriesList() {
       </td>`;
     body.appendChild(tr);
   });
-  document.getElementById('entries-list-count').textContent = fmt(sorted.length) + ' entri' + (sorted.length > LIMIT ? ` (papar ${LIMIT} terkini)` : '');
+  const countEl = document.getElementById('entries-list-count');
+  if (countEl) {
+    countEl.textContent = fmt(sorted.length) + ' entri' +
+      (sorted.length > LIMIT ? ` (papar ${LIMIT} terkini)` : '');
+  }
   document.querySelectorAll('.entry-edit-btn').forEach(b => b.onclick = () => startEditEntry(b.dataset.id));
   document.querySelectorAll('.entry-del-btn').forEach(b => b.onclick = () => deleteEntry(b.dataset.id));
   if (!sorted.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada entri lagi.</td></tr>';
