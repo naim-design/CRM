@@ -552,19 +552,35 @@ function startListeners() {
 
       return bt - at;
     });
-    renderDashboard();
-    renderWabotControl();
-    renderTemplateReport();
-    renderDailyReport();
-    renderPosterPerformance();
-    renderTemplateLibraryReport();
-    renderTemplateLibrary();
-    renderPosterLibraryPerformance();
-    renderWabotPerformance();
-    renderDayOfWeek();
-    renderHourOfDay();
+    // Render Senarai Entri FIRST so old data stays editable even if
+    // another report/view has a UI error.
     renderEntriesList();
-    if (allTopups) renderTopups();
+
+    // Each secondary renderer is isolated. One broken/moved section
+    // must never stop the rest of CRM from rendering.
+    const safeRender = (name, fn) => {
+      try {
+        if (typeof fn === 'function') fn();
+      } catch (err) {
+        console.warn('[CRM render skipped] ' + name, err);
+      }
+    };
+
+    safeRender('Dashboard', renderDashboard);
+    safeRender('Wabot Control', renderWabotControl);
+
+    // Old Dashboard Template Report was moved into the Template tab.
+    // Do not call renderTemplateReport() here because its old DOM may no longer exist.
+    safeRender('Daily Report', renderDailyReport);
+    safeRender('Poster Performance', renderPosterPerformance);
+    safeRender('Template Library Report', renderTemplateLibraryReport);
+    safeRender('Template Library', renderTemplateLibrary);
+    safeRender('Poster Library Performance', renderPosterLibraryPerformance);
+    safeRender('Wabot Performance', renderWabotPerformance);
+    safeRender('Day of Week', renderDayOfWeek);
+    safeRender('Hour of Day', renderHourOfDay);
+
+    if (allTopups) safeRender('Topups', renderTopups);
   }, err => toast('Ralat baca data: ' + err.message, true));
 
   unsubTodos = db.collection('todos').orderBy('createdAt', 'desc').onSnapshot(snap => {
@@ -1049,6 +1065,10 @@ function renderDashboard() {
 }
 
 function renderTemplateReport() {
+  // Legacy report: its table was moved out of Dashboard.
+  // If old DOM does not exist, exit safely.
+  if (!document.getElementById('tmpl-body') || !document.getElementById('tmpl-count')) return;
+
   const rows = filteredEntries();
   const byTmpl = {};
   rows.forEach(r => {
@@ -2152,6 +2172,8 @@ function renderDailyReport() {
 }
 
 function renderPosterPerformance() {
+  if (!document.getElementById('poster-perf-body') || !document.getElementById('poster-perf-count')) return;
+
   const rows = lapFilteredEntries().filter(r => r.poster);
   const byPoster = {};
   rows.forEach(r => {
@@ -5320,3 +5342,45 @@ document.querySelector('.app-nav button[data-view="poster"]')?.addEventListener(
   renderPosterLibraryPerformance();
   renderPosters();
 });
+
+
+// Manual refresh for historical CRM entries.
+async function refreshEntriesNow(){
+  try{
+    const snap = await db.collection('entries').get();
+
+    allEntries = snap.docs.map(d=>{
+      const row={id:d.id,...d.data()};
+      if(row.kategori==='Promo Jus') row.kategori='Promo TikTok';
+      return row;
+    });
+
+    allEntries.sort((a,b)=>{
+      const ad=String(a.tarikh||'');
+      const bd=String(b.tarikh||'');
+      if(ad!==bd) return bd.localeCompare(ad);
+
+      const at=a.createdAt&&a.createdAt.toMillis
+        ? a.createdAt.toMillis()
+        : Number(a.createdAtMs||0);
+
+      const bt=b.createdAt&&b.createdAt.toMillis
+        ? b.createdAt.toMillis()
+        : Number(b.createdAtMs||0);
+
+      return bt-at;
+    });
+
+    renderEntriesList();
+
+    try{ renderDashboard(); }catch(e){ console.warn(e); }
+    try{ renderTemplateLibraryReport(); }catch(e){ console.warn(e); }
+    try{ renderPosterLibraryPerformance(); }catch(e){ console.warn(e); }
+
+    toast(`${allEntries.length} entri berjaya dimuat semula ✓`);
+  }catch(err){
+    toast('Gagal refresh data lama: '+err.message,true);
+  }
+}
+
+document.getElementById('entries-reload-btn')?.addEventListener('click',refreshEntriesNow);
