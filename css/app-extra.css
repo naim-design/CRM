@@ -3579,3 +3579,427 @@ input:focus,select:focus,textarea:focus{
     position:relative !important;
   }
 }
+
+
+/* =========================================================
+   SIDEBAR CONTROL ROOM V3 — ACTUAL HEADER STRUCTURE FIX
+   Actual DOM uses: header.top > .wrap > .brand/.app-nav/.user-badge
+   ========================================================= */
+
+@media (min-width:1100px){
+
+  body.crm-sidebar-layout{
+    margin:0 !important;
+    background:#f4f7f6 !important;
+  }
+
+  /* =======================================================
+     FIXED LEFT SIDEBAR
+     ======================================================= */
+
+  body.crm-sidebar-layout header.top{
+    position:fixed !important;
+    inset:0 auto 0 0 !important;
+    width:205px !important;
+    height:100vh !important;
+    z-index:200 !important;
+
+    padding:0 !important;
+    margin:0 !important;
+
+    background:
+      radial-gradient(circle at 45% 2%,rgba(16,210,169,.09),transparent 24%),
+      linear-gradient(180deg,#08171c 0%,#061319 100%) !important;
+
+    border:0 !important;
+    border-right:1px solid rgba(255,255,255,.075) !important;
+    box-shadow:12px 0 34px rgba(4,20,25,.10) !important;
+
+    overflow:hidden !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+
+  body.crm-sidebar-layout header.top > .wrap{
+    width:100% !important;
+    max-width:none !important;
+    height:100vh !important;
+
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+
+    padding:24px 13px 16px !important;
+    margin:0 !important;
+
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+
+  /* =======================================================
+     BRAND
+     ======================================================= */
+
+  body.crm-sidebar-layout header.top .brand{
+    display:block !important;
+    width:100% !important;
+    margin:0 0 18px !important;
+    padding:0 8px 16px !important;
+    border-bottom:1px solid rgba(255,255,255,.07) !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand-logo{
+    display:none !important;
+    width:128px !important;
+    max-width:128px !important;
+    height:auto !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand-logo-dark{
+    display:block !important;
+  }
+
+  /* Sidebar is always dark, even when main content is light. */
+  body.crm-sidebar-layout[data-theme="light"] header.top .brand-logo-dark,
+  [data-theme="light"] body.crm-sidebar-layout header.top .brand-logo-dark{
+    display:block !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand-logo-light,
+  [data-theme="light"] body.crm-sidebar-layout header.top .brand-logo-light{
+    display:none !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand-name{
+    margin-top:8px !important;
+    color:#8ea3a5 !important;
+    font-family:'IBM Plex Mono',monospace !important;
+    font-size:8px !important;
+    line-height:1.4 !important;
+    letter-spacing:.03em !important;
+  }
+
+  /* =======================================================
+     VERTICAL NAV
+     ======================================================= */
+
+  body.crm-sidebar-layout header.top .app-nav{
+    width:100% !important;
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:stretch !important;
+
+    gap:4px !important;
+    margin:0 !important;
+    padding:0 !important;
+
+    flex:0 0 auto !important;
+  }
+
+  body.crm-sidebar-layout header.top .app-nav button{
+    position:relative !important;
+
+    width:100% !important;
+    min-width:0 !important;
+    min-height:38px !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:flex-start !important;
+
+    margin:0 !important;
+    padding:0 12px !important;
+
+    border:1px solid transparent !important;
+    border-radius:9px !important;
+
+    background:transparent !important;
+    color:#a4b7b8 !important;
+
+    font-family:'Inter',sans-serif !important;
+    font-size:10.5px !important;
+    font-weight:550 !important;
+    letter-spacing:0 !important;
+    text-align:left !important;
+
+    box-shadow:none !important;
+  }
+
+  body.crm-sidebar-layout header.top .app-nav button::after{
+    display:none !important;
+  }
+
+  body.crm-sidebar-layout header.top .app-nav button:hover{
+    background:rgba(255,255,255,.045) !important;
+    border-color:rgba(255,255,255,.055) !important;
+    color:#f3f8f7 !important;
+  }
+
+  body.crm-sidebar-layout header.top .app-nav button.active{
+    background:
+      linear-gradient(135deg,#0cb78e 0%,#078c70 100%) !important;
+
+    border-color:rgba(38,229,183,.22) !important;
+    color:#ffffff !important;
+
+    font-weight:650 !important;
+
+    box-shadow:
+      0 7px 18px rgba(0,143,113,.18),
+      inset 0 1px 0 rgba(255,255,255,.10) !important;
+  }
+
+  /* =======================================================
+     USER / THEME AREA
+     ======================================================= */
+
+  body.crm-sidebar-layout header.top .user-badge{
+    width:100% !important;
+
+    display:grid !important;
+    grid-template-columns:34px 1fr 32px !important;
+    align-items:center !important;
+    gap:7px !important;
+
+    margin-top:auto !important;
+    padding:15px 6px 0 !important;
+
+    border-top:1px solid rgba(255,255,255,.075) !important;
+  }
+
+  body.crm-sidebar-layout header.top .theme-toggle{
+    width:32px !important;
+    height:32px !important;
+    background:rgba(255,255,255,.055) !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+    color:#fff !important;
+  }
+
+  body.crm-sidebar-layout header.top .role-badge{
+    display:none !important;
+  }
+
+  body.crm-sidebar-layout header.top #user-name{
+    color:#edf5f3 !important;
+    font-size:10px !important;
+    font-weight:600 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+
+  body.crm-sidebar-layout header.top .avatar{
+    width:30px !important;
+    height:30px !important;
+    background:rgba(8,215,170,.13) !important;
+    color:#19dfb2 !important;
+    border:1px solid rgba(8,215,170,.16) !important;
+  }
+
+  body.crm-sidebar-layout header.top #logout-btn{
+    grid-column:1 / -1 !important;
+    width:100% !important;
+    min-height:34px !important;
+
+    margin-top:4px !important;
+    padding:0 10px !important;
+
+    background:rgba(255,255,255,.04) !important;
+    border:1px solid rgba(255,255,255,.07) !important;
+    color:#d4e1de !important;
+  }
+
+  /* =======================================================
+     MAIN CONTENT OFFSET
+     ======================================================= */
+
+  body.crm-sidebar-layout #app-shell{
+    min-height:100vh !important;
+    padding-left:205px !important;
+    background:#f4f7f6 !important;
+  }
+
+  body.crm-sidebar-layout #app-shell > main,
+  body.crm-sidebar-layout main{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    background:transparent !important;
+  }
+
+  body.crm-sidebar-layout .view{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+
+    padding-left:28px !important;
+    padding-right:28px !important;
+    padding-bottom:50px !important;
+  }
+
+  /* =======================================================
+     TOP BAR INSIDE ACTIVE VIEW
+     ======================================================= */
+
+  body.crm-sidebar-layout .view.active::before{
+    content:"MAMARIAM — DASHBOARD TEAM CRM   ·   Control Room" !important;
+
+    display:flex !important;
+    align-items:center !important;
+
+    width:auto !important;
+    min-height:64px !important;
+
+    margin:0 -28px 24px !important;
+    padding:0 28px !important;
+
+    background:#ffffff !important;
+    border-bottom:1px solid #e2e9e6 !important;
+
+    color:#172820 !important;
+
+    font-family:'Space Grotesk',sans-serif !important;
+    font-size:15px !important;
+    font-weight:700 !important;
+    letter-spacing:-.025em !important;
+
+    box-shadow:0 5px 16px rgba(29,50,42,.035) !important;
+  }
+
+  /* =======================================================
+     FORCE MAIN CONTENT TO CLEAN LIGHT STYLE
+     ======================================================= */
+
+  body.crm-sidebar-layout .form-card,
+  body.crm-sidebar-layout .hero,
+  body.crm-sidebar-layout .kpi-card,
+  body.crm-sidebar-layout .stat-card,
+  body.crm-sidebar-layout .library-stat,
+  body.crm-sidebar-layout .template-library-card,
+  body.crm-sidebar-layout .poster-performance-card,
+  body.crm-sidebar-layout .planning-summary-card,
+  body.crm-sidebar-layout .planning-form-card,
+  body.crm-sidebar-layout .planning-board-card,
+  body.crm-sidebar-layout .dashboard-v7-grid > *,
+  body.crm-sidebar-layout .report-embed-card{
+    background:#ffffff !important;
+    border-color:#dfe7e3 !important;
+
+    box-shadow:
+      0 8px 24px rgba(32,52,44,.045) !important;
+  }
+
+  body.crm-sidebar-layout h1,
+  body.crm-sidebar-layout h2,
+  body.crm-sidebar-layout h3,
+  body.crm-sidebar-layout .section-head h2,
+  body.crm-sidebar-layout .library-page-head h2,
+  body.crm-sidebar-layout .planning-head h2{
+    color:#172820 !important;
+  }
+
+  body.crm-sidebar-layout p,
+  body.crm-sidebar-layout .library-sub{
+    color:#667a72 !important;
+  }
+
+  body.crm-sidebar-layout input,
+  body.crm-sidebar-layout select,
+  body.crm-sidebar-layout textarea{
+    background:#fbfcfb !important;
+    border-color:#dce5e1 !important;
+    color:#1b2d25 !important;
+  }
+
+  body.crm-sidebar-layout input::placeholder,
+  body.crm-sidebar-layout textarea::placeholder{
+    color:#92a39c !important;
+  }
+
+  body.crm-sidebar-layout .tbl{
+    background:#ffffff !important;
+    border-color:#dfe7e3 !important;
+  }
+
+  body.crm-sidebar-layout .tbl thead th{
+    background:#f6f9f7 !important;
+    color:#6c7e77 !important;
+  }
+
+  body.crm-sidebar-layout .tbl tbody tr{
+    background:#ffffff !important;
+  }
+
+  body.crm-sidebar-layout .tbl tbody td{
+    color:#263930 !important;
+    border-bottom-color:#edf1ef !important;
+  }
+
+  body.crm-sidebar-layout .hint-chip{
+    background:#f5f8f7 !important;
+    border-color:#dfe7e3 !important;
+    color:#687b73 !important;
+  }
+
+  body.crm-sidebar-layout .btn-primary{
+    background:linear-gradient(135deg,#16be8d,#0ba57b) !important;
+    color:#fff !important;
+    border-color:#0b9e76 !important;
+  }
+
+  /* Wabot cards remain readable on the white workspace */
+  body.crm-sidebar-layout #view-wabotcontrol .wctrl-card,
+  body.crm-sidebar-layout #view-wabotcontrol .wctrl-transfer-card{
+    background:#ffffff !important;
+    border-color:#dfe7e3 !important;
+    color:#172820 !important;
+  }
+
+  body.crm-sidebar-layout #view-wabotcontrol .wctrl-readiness,
+  body.crm-sidebar-layout #view-wabotcontrol .wctrl-money > div,
+  body.crm-sidebar-layout #view-wabotcontrol .wctrl-meta,
+  body.crm-sidebar-layout #view-wabotcontrol .wctrl-mini span{
+    background:#f7faf8 !important;
+    border-color:#e1e9e5 !important;
+  }
+
+  /* Planning cards */
+  body.crm-sidebar-layout #view-planning .planning-item{
+    background:#ffffff !important;
+    border-color:#dfe7e3 !important;
+  }
+
+  body.crm-sidebar-layout #view-planning .planning-note{
+    background:#f7faf8 !important;
+    color:#52665e !important;
+  }
+
+  /* Template & poster cards */
+  body.crm-sidebar-layout .template-script-text,
+  body.crm-sidebar-layout .template-mini-kpi > div,
+  body.crm-sidebar-layout .poster-card-kpis > div{
+    background:#f7faf8 !important;
+    border-color:#e1e9e5 !important;
+    color:#34483f !important;
+  }
+
+  /* No dark page strip */
+  body.crm-sidebar-layout main,
+  body.crm-sidebar-layout .app-content,
+  body.crm-sidebar-layout .content-wrap{
+    background:transparent !important;
+  }
+}
+
+/* Keep top nav layout on smaller screens */
+@media (max-width:1099px){
+  body.crm-sidebar-layout header.top{
+    position:relative !important;
+    width:auto !important;
+    height:auto !important;
+  }
+
+  body.crm-sidebar-layout #app-shell{
+    padding-left:0 !important;
+  }
+}
