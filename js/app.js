@@ -4816,3 +4816,18 @@ document.querySelector('.app-nav button[data-view="planning"]')?.addEventListene
     renderPlanning();
   }
 });
+
+// ============================================================
+// SALES PAGES — salin link penuh untuk dikongsi
+// ============================================================
+document.querySelectorAll('.salespage-copy-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const fullUrl = window.location.origin + '/' + btn.dataset.path;
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      toast('Link disalin ✓ — ' + fullUrl);
+    } catch (err) {
+      toast('Gagal salin — browser tak sokong clipboard', true);
+    }
+  });
+});
