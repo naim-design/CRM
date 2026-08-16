@@ -45,6 +45,7 @@
         <button data-view="filter">Filter</button>
         <button data-view="todo">To-Do</button>
         <button data-view="recap">Recap Julai</button>
+        <button data-view="salespages">Sales Pages</button>
       </nav>
       <div class="user-badge">
         <button class="theme-toggle" id="theme-toggle" title="Tukar tema">🌙</button>
@@ -316,6 +317,26 @@
       <div class="section-head" style="padding-top:36px;"><h2>Recap Julai — Dashboard Keseluruhan</h2></div>
       <div class="recap-frame-wrap">
         <iframe src="reports/recap-keseluruhan.html" id="recap-iframe"></iframe>
+      </div>
+    </div>
+
+    <!-- ================= SALES PAGES ================= -->
+    <div id="view-salespages" class="view">
+      <div class="section-head" style="padding-top:36px;"><h2>Sales Pages</h2></div>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:20px;">Landing page untuk dikongsi terus kepada pelanggan via WhatsApp blast — klik "Salin Link" untuk dapatkan URL, atau "Lihat Penuh" untuk preview macam mana pelanggan nampak.</p>
+
+      <div class="report-embed-grid">
+        <div class="report-embed-card">
+          <div class="report-embed-title">Jus Mamariam — Peneman Ikhtiar, Hamil & Berpantang</div>
+          <div class="report-embed-preview" onclick="openReportModal('sales/jus-mamariam.html','Jus Mamariam — Sales Page')">
+            <iframe src="sales/jus-mamariam.html" loading="lazy"></iframe>
+            <div class="report-embed-overlay">Klik untuk lihat penuh</div>
+          </div>
+          <div style="display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line);">
+            <button class="btn btn-ghost salespage-copy-btn" data-path="sales/jus-mamariam.html" style="width:auto; padding:8px 14px; font-size:12px; flex:1;">🔗 Salin Link</button>
+            <button class="btn btn-primary" onclick="openReportModal('sales/jus-mamariam.html','Jus Mamariam — Sales Page')" style="width:auto; padding:8px 14px; font-size:12px; flex:1;">Lihat Penuh</button>
+          </div>
+        </div>
       </div>
     </div>
 
