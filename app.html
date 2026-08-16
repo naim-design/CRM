@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=planning-full-image-20260812">
+<link rel="stylesheet" href="css/app-extra.css?v=template-poster-intel-20260816">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -32,6 +32,7 @@
         <button data-view="input" class="active">Input Data</button>
         <button data-view="dashboard">Dashboard</button>
         <button data-view="poster">Poster</button>
+        <button data-view="template">Template</button>
         <button data-view="feedback">Feedback</button>
         <button data-view="laporan">Laporan</button>
         <button data-view="wabotlive">Wabot Live</button>
@@ -68,7 +69,10 @@
             <div class="field"><label>Tarikh</label><input type="date" id="entry-tarikh" required></div>
             <div class="field"><label>Masa Blasting</label><input type="time" id="entry-masa"></div>
             <div class="field"><label>Sumber / Source</label><input type="text" id="entry-source" placeholder="cth: Ads FB, Organic"></div>
-            <div class="field"><label>Nama Template</label><input type="text" id="entry-template" placeholder="cth: Promo Susu V2"></div>
+            <div class="field"><label>Nama Template</label>
+      <input type="text" id="entry-template" list="entry-template-list" placeholder="cth: Promo Susu V2">
+      <datalist id="entry-template-list"></datalist>
+    </div>
           </div>
           <div class="form-grid" style="margin-top:16px;">
             <div class="field"><label>Kategori Laporan</label>
@@ -271,16 +275,6 @@
         <div class="source-grid" id="source-grid"></div>
       </section>
 
-      <section id="template-section">
-        <div class="section-head">
-          <h2><span class="idx">04</span>Laporan Template</h2>
-          <span class="hint-chip" id="tmpl-count">0 template</span>
-        </div>
-        <table class="tbl">
-          <thead><tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
-          <tbody id="tmpl-body"></tbody>
-        </table>
-      </section>
 
       <!-- Kandungan tambahan khas ikut kategori (report/gambar rujukan) -->
       <section id="kategori-susu-extra" style="display:none;">
@@ -341,19 +335,230 @@
     </div>
 
     <!-- ================= POSTER ================= -->
+
+    <!-- ================= TEMPLATE ================= -->
+    <div id="view-template" class="view">
+      <div class="library-page-head">
+        <div>
+          <h2>Template & Skrip</h2>
+          <p>Simpan semua skrip blasting dan lihat template mana yang beri reply, buyer dan sales paling tinggi.</p>
+        </div>
+        <span class="hint-chip" id="template-library-count">0 template</span>
+      </div>
+
+      <section class="library-summary-grid">
+        <div class="library-stat">
+          <span>TOTAL TEMPLATE</span>
+          <strong id="tmpl-lib-total">0</strong>
+          <small>Dalam library</small>
+        </div>
+        <div class="library-stat">
+          <span>TEMPLATE ADA SALES</span>
+          <strong id="tmpl-lib-sales-count">0</strong>
+          <small>Generate buyer/sales</small>
+        </div>
+        <div class="library-stat">
+          <span>TOP SALES TEMPLATE</span>
+          <strong id="tmpl-lib-top-sales">–</strong>
+          <small id="tmpl-lib-top-sales-name">Belum ada data</small>
+        </div>
+        <div class="library-stat">
+          <span>TOP REPLY RATE</span>
+          <strong id="tmpl-lib-top-reply">–</strong>
+          <small id="tmpl-lib-top-reply-name">Belum ada data</small>
+        </div>
+      </section>
+
+      <section class="form-card template-add-card">
+        <div class="section-head">
+          <div>
+            <h2><span class="idx">01</span>Tambah Template / Skrip</h2>
+            <p class="library-sub">Boleh paste skrip terus atau upload screenshot skrip. Salah satu pun boleh.</p>
+          </div>
+        </div>
+
+        <form id="template-library-form" class="template-library-form">
+          <div class="field">
+            <label>Nama Template</label>
+            <input type="text" id="tmpl-lib-name" placeholder="cth: Susu Picky Eater PAS V3" required>
+          </div>
+
+          <div class="field">
+            <label>Projek</label>
+            <select id="tmpl-lib-project">
+              <option value="Projek Susu">Projek Susu</option>
+              <option value="Promo TikTok">Promo TikTok</option>
+              <option value="Database WS/Lead">Database WS/Lead</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+          </div>
+
+          <div class="field template-span-2">
+            <label>Skrip / Copywriting</label>
+            <textarea id="tmpl-lib-script" rows="7" placeholder="Paste skrip penuh dekat sini..."></textarea>
+          </div>
+
+          <div class="field template-span-2">
+            <label>Screenshot Skrip (optional)</label>
+            <label class="template-upload-box" for="tmpl-lib-file">
+              <input type="file" id="tmpl-lib-file" accept="image/png,image/jpeg,image/webp">
+              <span>＋</span>
+              <div>
+                <b>Upload gambar skrip</b>
+                <small>PNG, JPG, WEBP · auto compress</small>
+              </div>
+            </label>
+            <div id="tmpl-lib-preview-wrap" class="template-preview-wrap" style="display:none;">
+              <img id="tmpl-lib-preview" alt="Preview skrip">
+              <button type="button" id="tmpl-lib-remove-image">Buang Gambar</button>
+            </div>
+          </div>
+
+          <div class="field template-span-2">
+            <label>Nota / Angle</label>
+            <input type="text" id="tmpl-lib-note" placeholder="cth: Angle picky eater, hook ibu risau anak tak cukup nutrisi">
+          </div>
+
+          <div class="template-form-actions template-span-2">
+            <button type="submit" class="btn btn-primary" id="tmpl-lib-submit">Simpan Template</button>
+            <button type="button" class="btn btn-ghost" id="tmpl-lib-clear">Kosongkan</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="form-card">
+        <div class="library-toolbar">
+          <div>
+            <h2><span class="idx">02</span>Laporan Prestasi Template</h2>
+            <p class="library-sub">Laporan asal dari Dashboard dipindahkan ke sini.</p>
+          </div>
+          <div class="library-filter-grid">
+            <input type="date" id="tmpl-report-from">
+            <input type="date" id="tmpl-report-to">
+            <select id="tmpl-report-project">
+              <option value="">Semua Projek</option>
+              <option value="Projek Susu">Projek Susu</option>
+              <option value="Promo TikTok">Promo TikTok</option>
+              <option value="Database WS/Lead">Database WS/Lead</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="tbl">
+            <thead>
+              <tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos</th><th>ROAS</th></tr>
+            </thead>
+            <tbody id="template-report-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="library-toolbar">
+          <div>
+            <h2><span class="idx">03</span>Library Skrip</h2>
+            <p class="library-sub">Klik skrip untuk baca penuh atau rujuk screenshot.</p>
+          </div>
+          <div class="library-filter-grid two">
+            <select id="tmpl-library-project-filter">
+              <option value="">Semua Projek</option>
+              <option value="Projek Susu">Projek Susu</option>
+              <option value="Promo TikTok">Promo TikTok</option>
+              <option value="Database WS/Lead">Database WS/Lead</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Lain-lain">Lain-lain</option>
+            </select>
+            <input type="search" id="tmpl-library-search" placeholder="Cari nama / skrip / angle...">
+          </div>
+        </div>
+        <div id="template-library-grid" class="template-library-grid"></div>
+      </section>
+    </div>
+
     <div id="view-poster" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>Poster Blasting</h2></div>
-      <div class="form-card" style="margin-bottom:24px;">
+      <div class="library-page-head">
+        <div>
+          <h2>Poster Blasting</h2>
+          <p>Upload creative dan terus tengok poster mana yang paling banyak menghasilkan buyer dan sales.</p>
+        </div>
+        <span class="hint-chip" id="poster-count">0 poster</span>
+      </div>
+
+      <section class="library-summary-grid">
+        <div class="library-stat">
+          <span>TOTAL POSTER</span>
+          <strong id="poster-stat-total">0</strong>
+          <small>Creative dalam library</small>
+        </div>
+        <div class="library-stat">
+          <span>POSTER ADA SALES</span>
+          <strong id="poster-stat-sales-count">0</strong>
+          <small>Generate sales</small>
+        </div>
+        <div class="library-stat">
+          <span>TOP SALES POSTER</span>
+          <strong id="poster-stat-top-sales">–</strong>
+          <small id="poster-stat-top-sales-name">Belum ada data</small>
+        </div>
+        <div class="library-stat">
+          <span>TOP CONVERSION</span>
+          <strong id="poster-stat-top-conv">–</strong>
+          <small id="poster-stat-top-conv-name">Belum ada data</small>
+        </div>
+      </section>
+
+      <section class="form-card" style="margin-bottom:18px;">
+        <div class="section-head"><h2><span class="idx">01</span>Tambah Poster</h2></div>
         <form id="poster-form" class="form-grid two">
           <div class="field"><label>Nama Poster</label><input type="text" id="poster-name" placeholder="cth: Promo Susu Hazelnut V2" required></div>
           <div class="field"><label>Pilih Gambar</label><input type="file" id="poster-file" accept="image/*" required></div>
           <div class="form-actions"><button type="submit" class="btn btn-primary" id="poster-submit-btn">Upload Poster</button></div>
         </form>
-      </div>
-      <div class="table-controls"><span class="hint-chip" id="poster-count">0 poster</span></div>
-      <div id="poster-grid" class="poster-grid"></div>
-    </div>
+      </section>
 
+      <section class="form-card">
+        <div class="library-toolbar">
+          <div>
+            <h2><span class="idx">02</span>Laporan Prestasi Poster</h2>
+            <p class="library-sub">Ranking berdasarkan sales. Conversion, buyer, reply dan ROAS turut ditunjukkan.</p>
+          </div>
+          <div class="library-filter-grid">
+            <input type="date" id="poster-report-from">
+            <input type="date" id="poster-report-to">
+            <select id="poster-report-project">
+              <option value="">Semua Projek</option>
+              <option value="Projek Susu">Projek Susu</option>
+              <option value="Promo TikTok">Promo TikTok</option>
+              <option value="Database WS/Lead">Database WS/Lead</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="tbl">
+            <thead>
+              <tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos</th><th>ROAS</th></tr>
+            </thead>
+            <tbody id="poster-library-report-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="library-toolbar">
+          <div>
+            <h2><span class="idx">03</span>Poster Library</h2>
+            <p class="library-sub">Poster yang digunakan untuk blasting. Sales setiap poster dipaparkan pada card.</p>
+          </div>
+          <input type="search" id="poster-library-search" placeholder="Cari poster..." class="library-search-single">
+        </div>
+        <div id="poster-grid" class="poster-grid poster-library-grid"></div>
+      </section>
+    </div>
+    
     <!-- ================= FEEDBACK ================= -->
     <div id="view-feedback" class="view">
       <div class="section-head" style="padding-top:36px;"><h2>Feedback Pelanggan</h2></div>
@@ -1201,6 +1406,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=planning-firestore-poster-20260812"></script>
+<script src="js/app.js?v=template-poster-intel-20260816"></script>
 </body>
 </html>
