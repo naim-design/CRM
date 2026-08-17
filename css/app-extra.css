@@ -9815,3 +9815,313 @@ html:not([data-theme="light"]) body.crm-sidebar-layout .tbl tbody td{
     grid-template-columns:1fr !important;
   }
 }
+
+
+/* =========================================================
+   MAMARIAM CRM V8 — READABILITY + CLEAN TABLE SYSTEM
+   ========================================================= */
+
+/* ---- Global readability ---- */
+body.crm-sidebar-layout{
+  font-size:14px !important;
+}
+
+.crm-reference-title strong{
+  font-size:18px !important;
+}
+
+.crm-reference-title span{
+  font-size:10px !important;
+  min-height:24px !important;
+  padding:0 10px !important;
+}
+
+.crm-top-user-copy b{
+  font-size:11px !important;
+}
+
+.crm-top-user-copy small{
+  font-size:9px !important;
+}
+
+/* Sidebar text larger */
+@media(min-width:1100px){
+  body.crm-sidebar-layout header.top .app-nav button{
+    height:39px !important;
+    min-height:39px !important;
+    flex-basis:39px !important;
+    font-size:11.5px !important;
+    font-weight:550 !important;
+    padding-left:42px !important;
+  }
+
+  body.crm-sidebar-layout header.top .app-nav button::before{
+    left:13px !important;
+    width:18px !important;
+    font-size:15px !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand::before{
+    font-size:23px !important;
+  }
+}
+
+/* Main headings */
+body.crm-sidebar-layout .section-head h2,
+body.crm-sidebar-layout .library-page-head h2,
+body.crm-sidebar-layout .planning-head h2{
+  font-size:21px !important;
+  line-height:1.2 !important;
+}
+
+body.crm-sidebar-layout #view-input > .section-head h2{
+  font-size:18px !important;
+}
+
+/* Labels, descriptions and values */
+body.crm-sidebar-layout .field label{
+  font-size:10px !important;
+  font-weight:600 !important;
+}
+
+body.crm-sidebar-layout input,
+body.crm-sidebar-layout select,
+body.crm-sidebar-layout textarea{
+  font-size:12px !important;
+}
+
+body.crm-sidebar-layout p,
+body.crm-sidebar-layout .dash-v7-sub,
+body.crm-sidebar-layout .library-sub{
+  font-size:11px !important;
+  line-height:1.55 !important;
+}
+
+body.crm-sidebar-layout .hint-chip{
+  font-size:9.5px !important;
+}
+
+/* =========================================================
+   UNIVERSAL TABLE DESIGN
+   ========================================================= */
+
+body.crm-sidebar-layout .tbl{
+  width:100% !important;
+  border-collapse:separate !important;
+  border-spacing:0 !important;
+  table-layout:auto !important;
+
+  border:1px solid #dfe7e5 !important;
+  border-radius:13px !important;
+  overflow:hidden !important;
+
+  background:#fff !important;
+  box-shadow:0 5px 18px rgba(35,60,68,.035) !important;
+}
+
+/* Table header */
+body.crm-sidebar-layout .tbl thead th{
+  height:42px !important;
+  padding:0 13px !important;
+
+  background:#f4f8f7 !important;
+  border-bottom:1px solid #dde6e3 !important;
+
+  color:#58717c !important;
+
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:9px !important;
+  font-weight:600 !important;
+  letter-spacing:.055em !important;
+  text-transform:uppercase !important;
+
+  white-space:nowrap !important;
+  vertical-align:middle !important;
+}
+
+/* Table cells */
+body.crm-sidebar-layout .tbl tbody td{
+  min-height:48px !important;
+  padding:13px !important;
+
+  color:#233d47 !important;
+  border-bottom:1px solid #edf1f0 !important;
+
+  font-family:'Inter',sans-serif !important;
+  font-size:11.5px !important;
+  font-weight:500 !important;
+  line-height:1.4 !important;
+
+  vertical-align:middle !important;
+}
+
+body.crm-sidebar-layout .tbl tbody tr:last-child td{
+  border-bottom:0 !important;
+}
+
+/* subtle zebra, easier to track across wide tables */
+body.crm-sidebar-layout .tbl tbody tr:nth-child(even){
+  background:#fbfcfc !important;
+}
+
+body.crm-sidebar-layout .tbl tbody tr:nth-child(odd){
+  background:#ffffff !important;
+}
+
+body.crm-sidebar-layout .tbl tbody tr:hover{
+  background:#eef9f5 !important;
+}
+
+/* Numeric cells */
+body.crm-sidebar-layout .tbl .num{
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:11px !important;
+  font-weight:600 !important;
+  color:#183b43 !important;
+  white-space:nowrap !important;
+}
+
+/* First/name columns are stronger */
+body.crm-sidebar-layout .tbl .tname{
+  color:#153846 !important;
+  font-weight:700 !important;
+}
+
+/* Make old inline muted table text readable again */
+body.crm-sidebar-layout .tbl td[style*="font-size:12px"],
+body.crm-sidebar-layout .tbl td[style*="font-size:11px"]{
+  font-size:11.5px !important;
+}
+
+body.crm-sidebar-layout .tbl td[style*="color:var(--muted)"]{
+  color:#607983 !important;
+}
+
+/* Action buttons inside tables */
+body.crm-sidebar-layout .tbl .btn-ghost,
+body.crm-sidebar-layout .tbl button{
+  min-height:30px !important;
+  padding:0 10px !important;
+  border-radius:7px !important;
+
+  font-family:'Inter',sans-serif !important;
+  font-size:10px !important;
+  font-weight:600 !important;
+}
+
+/* Input Data entry table specifically */
+body.crm-sidebar-layout #entries-list-body td{
+  padding-top:13px !important;
+  padding-bottom:13px !important;
+}
+
+body.crm-sidebar-layout #entries-list-body .entry-edit-btn{
+  color:#087c61 !important;
+  background:#edf9f5 !important;
+  border-color:#cdebe0 !important;
+}
+
+body.crm-sidebar-layout #entries-list-body .entry-del-btn{
+  color:#c94d4d !important;
+  background:#fff4f4 !important;
+  border-color:#f0d5d5 !important;
+}
+
+/* Make table controls clean */
+body.crm-sidebar-layout .table-controls{
+  display:flex !important;
+  gap:8px !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+
+  margin-bottom:10px !important;
+  padding:10px !important;
+
+  border:1px solid #e1e8e6 !important;
+  border-radius:11px !important;
+  background:#fff !important;
+}
+
+/* Horizontal table wrappers */
+body.crm-sidebar-layout .table-scroll,
+body.crm-sidebar-layout .wabot-table-wrap{
+  width:100% !important;
+  overflow-x:auto !important;
+  border-radius:13px !important;
+}
+
+/* =========================================================
+   DARK MODE TABLES
+   ========================================================= */
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl{
+  background:#0f1d22 !important;
+  border-color:rgba(255,255,255,.075) !important;
+  box-shadow:0 6px 20px rgba(0,0,0,.10) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl thead th{
+  background:#0b181d !important;
+  color:#81979c !important;
+  border-bottom-color:rgba(255,255,255,.07) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl tbody tr:nth-child(odd){
+  background:#0f1d22 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl tbody tr:nth-child(even){
+  background:#112126 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl tbody tr:hover{
+  background:#142b2d !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl tbody td{
+  color:#dce7e5 !important;
+  border-bottom-color:rgba(255,255,255,.045) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl .tname{
+  color:#f2f8f6 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl .num{
+  color:#d8e8e4 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .tbl td[style*="color:var(--muted)"]{
+  color:#91a6aa !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #entries-list-body .entry-edit-btn{
+  color:#31d9ad !important;
+  background:rgba(8,215,170,.08) !important;
+  border-color:rgba(8,215,170,.20) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #entries-list-body .entry-del-btn{
+  color:#ff8b85 !important;
+  background:rgba(255,100,90,.06) !important;
+  border-color:rgba(255,100,90,.18) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .table-controls{
+  background:#0f1d22 !important;
+  border-color:rgba(255,255,255,.07) !important;
+}
+
+/* Responsive */
+@media(max-width:900px){
+  body.crm-sidebar-layout .tbl thead th{
+    padding-left:10px !important;
+    padding-right:10px !important;
+    font-size:8.5px !important;
+  }
+
+  body.crm-sidebar-layout .tbl tbody td{
+    padding:11px 10px !important;
+    font-size:10.5px !important;
+  }
+}
