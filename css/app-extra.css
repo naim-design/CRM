@@ -10229,3 +10229,123 @@ html:not([data-theme="light"]) #crm-visible-theme-toggle{
   color:#ffffff !important;
   border-color:rgba(255,255,255,.09) !important;
 }
+
+
+/* =========================================================
+   V10 — PROJECT TREND HEADER / LEGEND CONTRAST FIX
+   ========================================================= */
+
+/* LIGHT MODE */
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-card{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-name{
+  color:#17333f !important;
+  font-size:20px !important;
+  font-weight:700 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-summary{
+  color:#627b85 !important;
+  font-size:11.5px !important;
+  font-weight:500 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-summary b{
+  color:#17333f !important;
+  font-weight:700 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .trend-chip{
+  color:#526e78 !important;
+  background:#f5f8f7 !important;
+  border:1px solid #dfe7e5 !important;
+  border-radius:999px !important;
+  padding:6px 10px !important;
+  font-size:9.5px !important;
+  font-weight:600 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .trend-chip.active{
+  color:#087e64 !important;
+  background:#eaf8f3 !important;
+  border-color:#c9ebdf !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-top .hint-chip{
+  color:#526e78 !important;
+  background:#f5f8f7 !important;
+  border:1px solid #dce5e2 !important;
+  font-weight:600 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .trend-axis-text{
+  fill:#5f7882 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .trend-grid-line{
+  stroke:#e6ecea !important;
+}
+
+/* DARK MODE */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .project-trend-card{
+  background:#0f1d22 !important;
+  border-color:rgba(255,255,255,.075) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .project-trend-name{
+  color:#f3f8f7 !important;
+  font-size:20px !important;
+  font-weight:700 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .project-trend-summary{
+  color:#92a6aa !important;
+  font-size:11.5px !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .project-trend-summary b{
+  color:#eaf4f2 !important;
+  font-weight:700 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .trend-chip{
+  color:#a8b9bb !important;
+  background:#13242a !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  border-radius:999px !important;
+  padding:6px 10px !important;
+  font-size:9.5px !important;
+  font-weight:600 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .trend-chip.active{
+  color:#20ddb0 !important;
+  background:rgba(8,215,170,.09) !important;
+  border-color:rgba(8,215,170,.22) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .project-trend-top .hint-chip{
+  color:#a8b9bb !important;
+  background:#13242a !important;
+  border-color:rgba(255,255,255,.07) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .trend-axis-text{
+  fill:#91a6aa !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .trend-grid-line{
+  stroke:rgba(255,255,255,.075) !important;
+}
+
+/* Give the trend header a bit more breathing room */
+body.crm-sidebar-layout #view-dashboard .project-trend-card{
+  padding:20px 22px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .project-trend-top{
+  margin-bottom:2px !important;
+}
