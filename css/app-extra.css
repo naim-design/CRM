@@ -8691,3 +8691,407 @@ body.crm-sidebar-layout[data-theme="light"] .view.active::before{
     padding-left:4px !important;
   }
 }
+
+
+/* =========================================================
+   SIDEBAR CONTROL ROOM V6 — ANALYTICS / DATABASE / AI POLISH
+   Self-contained critical styles so these views do not depend
+   on base-extracted.css rendering correctly.
+   ========================================================= */
+
+body.crm-sidebar-layout{
+  font-family:'Inter',Arial,sans-serif !important;
+}
+
+body.crm-sidebar-layout .view{
+  font-family:'Inter',Arial,sans-serif !important;
+}
+
+body.crm-sidebar-layout .view h1,
+body.crm-sidebar-layout .view h2,
+body.crm-sidebar-layout .view h3{
+  font-family:'Space Grotesk','Inter',Arial,sans-serif !important;
+  font-weight:700 !important;
+}
+
+/* ---------- Universal section spacing ---------- */
+body.crm-sidebar-layout .view > .section-head{
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:space-between !important;
+  gap:16px !important;
+  flex-wrap:wrap !important;
+  margin-bottom:20px !important;
+}
+
+body.crm-sidebar-layout .view > .section-head h2{
+  margin:0 !important;
+  font-size:24px !important;
+  line-height:1.15 !important;
+}
+
+body.crm-sidebar-layout section{
+  padding-top:34px !important;
+}
+
+/* ---------- Critical KPI grid ---------- */
+body.crm-sidebar-layout .stat-row{
+  display:grid !important;
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  gap:12px !important;
+  margin-top:18px !important;
+}
+
+body.crm-sidebar-layout .stat-row.analytics-pro-mini-row{
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+}
+
+body.crm-sidebar-layout .stat-card{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:118px !important;
+  padding:17px 18px !important;
+  border-radius:15px !important;
+}
+
+body.crm-sidebar-layout .stat-card::before{
+  content:"" !important;
+  position:absolute !important;
+  left:0 !important;
+  top:0 !important;
+  right:0 !important;
+  height:2px !important;
+  background:linear-gradient(90deg,rgba(12,190,141,.6),rgba(12,190,141,.05)) !important;
+}
+
+body.crm-sidebar-layout .stat-card .label{
+  display:block !important;
+  margin:0 0 12px !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:9px !important;
+  font-weight:600 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+}
+
+body.crm-sidebar-layout .stat-card .value{
+  display:block !important;
+  font-family:'Space Grotesk','Inter',sans-serif !important;
+  font-size:29px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+}
+
+body.crm-sidebar-layout .stat-card .foot{
+  display:block !important;
+  margin-top:10px !important;
+  font-size:9px !important;
+  line-height:1.4 !important;
+}
+
+/* =========================================================
+   ANALYTICS PRO
+   ========================================================= */
+
+body.crm-sidebar-layout #view-analyticspro .section-head:first-child{
+  padding-top:28px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .analytics-pro-grid{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:16px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .analytics-pro-grid .form-card{
+  min-width:0 !important;
+  padding:18px !important;
+  border-radius:16px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .analytics-pro-grid .section-head{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  margin-bottom:13px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .analytics-pro-grid .section-head h2{
+  margin:0 !important;
+  font-size:15px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .apro-funnel{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:10px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .apro-funnel-row{
+  display:grid !important;
+  grid-template-columns:90px minmax(0,1fr) 110px !important;
+  gap:10px !important;
+  align-items:center !important;
+  font-size:10px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .apro-funnel-track,
+body.crm-sidebar-layout #view-analyticspro .apro-hour-bar{
+  overflow:hidden !important;
+  border-radius:999px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .apro-funnel-track{
+  height:20px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .apro-heatmap{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:8px 14px !important;
+}
+
+body.crm-sidebar-layout #view-analyticspro .apro-hour{
+  display:grid !important;
+  grid-template-columns:30px minmax(0,1fr) 30px !important;
+  gap:7px !important;
+  align-items:center !important;
+  font-size:9px !important;
+}
+
+/* =========================================================
+   DATABASE
+   ========================================================= */
+
+body.crm-sidebar-layout #view-contacts > .section-head:first-child{
+  padding-top:28px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .stat-row{
+  grid-template-columns:repeat(5,minmax(0,1fr)) !important;
+  margin-bottom:14px !important;
+}
+
+body.crm-sidebar-layout #view-contacts > section{
+  margin-top:0 !important;
+}
+
+body.crm-sidebar-layout #view-contacts > section > .section-head{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin-bottom:14px !important;
+}
+
+body.crm-sidebar-layout #view-contacts > section > .section-head h2{
+  margin:0 !important;
+  font-size:16px !important;
+}
+
+body.crm-sidebar-layout #view-contacts > section > .section-head .idx{
+  display:inline-flex !important;
+  margin-right:7px !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:9px !important;
+}
+
+body.crm-sidebar-layout #view-contacts > section > .tbl,
+body.crm-sidebar-layout #view-contacts > section > .form-card,
+body.crm-sidebar-layout #view-contacts > section > .table-controls{
+  border-radius:14px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .form-card{
+  padding:18px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .import-tabs{
+  display:flex !important;
+  gap:6px !important;
+  margin-bottom:14px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .import-tab{
+  width:auto !important;
+  min-height:34px !important;
+  padding:0 12px !important;
+  border-radius:8px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .form-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:12px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .form-grid.two{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+}
+
+body.crm-sidebar-layout #view-contacts .field label{
+  display:block !important;
+  margin-bottom:6px !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:8px !important;
+}
+
+body.crm-sidebar-layout #view-contacts .table-controls{
+  display:flex !important;
+  align-items:center !important;
+  gap:8px !important;
+  flex-wrap:wrap !important;
+}
+
+/* =========================================================
+   AI INSIGHT
+   ========================================================= */
+
+body.crm-sidebar-layout #view-aiinsight > .section-head:first-child{
+  padding-top:28px !important;
+}
+
+body.crm-sidebar-layout #view-aiinsight .stat-row{
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:12px !important;
+  margin:18px 0 18px !important;
+}
+
+body.crm-sidebar-layout #view-aiinsight > .form-card{
+  padding:20px !important;
+  border-radius:16px !important;
+}
+
+body.crm-sidebar-layout #view-aiinsight > .form-card .section-head{
+  margin-bottom:14px !important;
+}
+
+body.crm-sidebar-layout #view-aiinsight > .form-card .section-head h2{
+  margin:0 !important;
+  font-size:17px !important;
+}
+
+body.crm-sidebar-layout #view-aiinsight .insight-list{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:10px !important;
+}
+
+body.crm-sidebar-layout #view-aiinsight .insight-item{
+  display:grid !important;
+  grid-template-columns:36px minmax(0,1fr) !important;
+  gap:10px !important;
+  min-height:82px !important;
+  padding:13px !important;
+  border-radius:11px !important;
+  font-size:10px !important;
+  line-height:1.55 !important;
+}
+
+/* =========================================================
+   DARK THEME COLORS FOR THESE SECTIONS
+   ========================================================= */
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .stat-card{
+  background:linear-gradient(145deg,#122126,#0e1b20) !important;
+  border:1px solid rgba(255,255,255,.075) !important;
+  color:#edf5f3 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout .stat-card .label,
+html:not([data-theme="light"]) body.crm-sidebar-layout .stat-card .foot{
+  color:#809597 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-analyticspro .apro-funnel-track,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-analyticspro .apro-hour-bar{
+  background:#16272c !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-contacts .import-tab{
+  background:#0d191d !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  color:#a8b8b8 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-contacts .import-tab.active{
+  background:rgba(8,215,170,.10) !important;
+  border-color:rgba(8,215,170,.25) !important;
+  color:#18ddb0 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-aiinsight .insight-item{
+  background:#0d191d !important;
+  border:1px solid rgba(255,255,255,.06) !important;
+  color:#cbd8d5 !important;
+}
+
+/* =========================================================
+   LIGHT THEME COLORS
+   ========================================================= */
+
+[data-theme="light"] body.crm-sidebar-layout .stat-card{
+  background:#ffffff !important;
+  border:1px solid #dfe7e3 !important;
+  color:#172820 !important;
+  box-shadow:0 8px 22px rgba(31,52,44,.04) !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout .stat-card .label,
+[data-theme="light"] body.crm-sidebar-layout .stat-card .foot{
+  color:#6d8178 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-analyticspro .apro-funnel-track,
+[data-theme="light"] body.crm-sidebar-layout #view-analyticspro .apro-hour-bar{
+  background:#edf3f0 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-contacts .import-tab{
+  background:#f7faf8 !important;
+  border:1px solid #dfe7e3 !important;
+  color:#61766d !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-contacts .import-tab.active{
+  background:#e8f8f2 !important;
+  border-color:#c9ebde !important;
+  color:#087d5d !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-aiinsight .insight-item{
+  background:#f7faf8 !important;
+  border:1px solid #e1e9e5 !important;
+  color:#33463e !important;
+}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1250px){
+  body.crm-sidebar-layout .stat-row{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+
+  body.crm-sidebar-layout #view-contacts .stat-row{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:900px){
+  body.crm-sidebar-layout .stat-row,
+  body.crm-sidebar-layout .stat-row.analytics-pro-mini-row,
+  body.crm-sidebar-layout #view-aiinsight .stat-row{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  body.crm-sidebar-layout #view-analyticspro .analytics-pro-grid,
+  body.crm-sidebar-layout #view-aiinsight .insight-list{
+    grid-template-columns:1fr !important;
+  }
+
+  body.crm-sidebar-layout #view-contacts .form-grid,
+  body.crm-sidebar-layout #view-contacts .form-grid.two{
+    grid-template-columns:1fr !important;
+  }
+}
