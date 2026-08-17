@@ -642,19 +642,34 @@ function updateEntryLivePreview() {
   const read = Number(document.getElementById('entry-read').value || 0);
   const reply = Number(document.getElementById('entry-reply').value || 0);
   const buyer = Number(document.getElementById('entry-buyer').value || 0);
+  const sales = Number(document.getElementById('entry-sales').value || 0);
 
   const eur = costEUR(sent);
   const rm = costRM(sent);
-  document.getElementById('entry-cost-preview').textContent = `Kos: RM ${rm.toFixed(2)} (€${eur.toFixed(2)})`;
+
+  const costPreview = document.getElementById('entry-cost-preview');
+  if (costPreview) costPreview.textContent = `Kos: RM ${rm.toFixed(2)} (€${eur.toFixed(2)})`;
 
   const responRate = sent ? (read / sent * 100) : 0;
   const replyRate = sent ? (reply / sent * 100) : 0;
   const convRate = sent ? (buyer / sent * 100) : 0;
-  document.getElementById('live-respon-rate').textContent = responRate.toFixed(1) + '%';
-  document.getElementById('live-reply-rate').textContent = replyRate.toFixed(1) + '%';
-  document.getElementById('live-conv-rate').textContent = convRate.toFixed(2) + '%';
+
+  const setText = (id, text) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
+  };
+
+  setText('input-summary-sales', 'RM ' + sales.toLocaleString('en-MY', {minimumFractionDigits:2, maximumFractionDigits:2}));
+  setText('input-summary-sent', sent.toLocaleString('en-MY'));
+  setText('input-summary-buyer', buyer.toLocaleString('en-MY'));
+  setText('input-summary-cost', 'RM ' + rm.toFixed(2));
+  setText('input-summary-cost-eur', '€' + eur.toFixed(2));
+
+  setText('live-respon-rate', responRate.toFixed(1) + '% read rate');
+  setText('live-reply-rate', replyRate.toFixed(1) + '%');
+  setText('live-conv-rate', convRate.toFixed(2) + '%');
 }
-['entry-sent', 'entry-read', 'entry-reply', 'entry-buyer'].forEach(id => {
+['entry-sent', 'entry-read', 'entry-reply', 'entry-buyer', 'entry-sales'].forEach(id => {
   document.getElementById(id).addEventListener('input', updateEntryLivePreview);
 });
 
