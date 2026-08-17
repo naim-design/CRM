@@ -10606,3 +10606,203 @@ body.crm-sidebar-layout header.top .brand-logo-light{
 body.crm-sidebar-layout header.top .brand-logo-red{
   display:block !important;
 }
+
+
+/* =========================================================
+   V12 — INPUT DATA VISUAL CARDS + EXPLICIT UTILITI GROUP
+   Dashboard remains the formal reporting view.
+   ========================================================= */
+
+/* Explicit nav group label */
+@media(min-width:1100px){
+  body.crm-sidebar-layout .nav-group-label{
+    margin:20px 10px 7px !important;
+    padding-top:13px !important;
+    border-top:1px solid rgba(255,255,255,.07) !important;
+    color:#6f858b !important;
+    font-family:'IBM Plex Mono',monospace !important;
+    font-size:7.5px !important;
+    font-weight:600 !important;
+    letter-spacing:.12em !important;
+    text-transform:uppercase !important;
+  }
+
+  /* Disable the old pseudo UTILITI label so it doesn't duplicate */
+  body.crm-sidebar-layout .app-nav button[data-view="campaignmanager"]{
+    margin-top:0 !important;
+  }
+  body.crm-sidebar-layout .app-nav button[data-view="campaignmanager"]::after{
+    display:none !important;
+    content:none !important;
+  }
+}
+
+/* Input Data: operational/quick entry styling */
+body.crm-sidebar-layout #view-input .form-card{
+  padding:18px !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-head{
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:space-between !important;
+  gap:12px !important;
+  margin:18px 0 10px !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-eyebrow{
+  display:block !important;
+  margin-bottom:4px !important;
+  color:#0ba77a !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:7.5px !important;
+  font-weight:700 !important;
+  letter-spacing:.12em !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-head h3{
+  margin:0 !important;
+  font-size:15px !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-note{
+  color:#789099 !important;
+  font-size:9px !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-grid{
+  display:grid !important;
+  grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  gap:9px !important;
+  margin:0 0 14px !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-card{
+  position:relative !important;
+  overflow:hidden !important;
+  min-height:103px !important;
+  padding:13px !important;
+
+  display:flex !important;
+  align-items:flex-start !important;
+  justify-content:space-between !important;
+  gap:8px !important;
+
+  border-radius:12px !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-card > div{
+  min-width:0 !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-label{
+  display:block !important;
+  color:#617b86 !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:7.5px !important;
+  font-weight:600 !important;
+  letter-spacing:.06em !important;
+  text-transform:uppercase !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-card strong{
+  display:block !important;
+  margin-top:8px !important;
+  color:#17313d !important;
+  font-family:'Space Grotesk',sans-serif !important;
+  font-size:18px !important;
+  font-weight:700 !important;
+  line-height:1 !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-card small{
+  display:block !important;
+  margin-top:8px !important;
+  color:#81949b !important;
+  font-size:8px !important;
+  line-height:1.3 !important;
+}
+
+body.crm-sidebar-layout #view-input .input-quick-icon{
+  flex:0 0 42px !important;
+  width:42px !important;
+  height:42px !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+
+  border-radius:50% !important;
+
+  font-family:'Space Grotesk',sans-serif !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+
+/* icon tint by metric */
+body.crm-sidebar-layout #view-input .input-quick-card.sales .input-quick-icon{
+  background:#e5f7ef !important;color:#159a72 !important;
+}
+body.crm-sidebar-layout #view-input .input-quick-card.sent .input-quick-icon{
+  background:#e8f1ff !important;color:#2581e8 !important;
+}
+body.crm-sidebar-layout #view-input .input-quick-card.reply .input-quick-icon{
+  background:#fff3da !important;color:#f0a100 !important;
+}
+body.crm-sidebar-layout #view-input .input-quick-card.buyer .input-quick-icon{
+  background:#f0eaff !important;color:#845ee5 !important;
+}
+body.crm-sidebar-layout #view-input .input-quick-card.conversion .input-quick-icon{
+  background:#e8f7e9 !important;color:#54b55e !important;
+}
+body.crm-sidebar-layout #view-input .input-quick-card.cost .input-quick-icon{
+  background:#ffe9e9 !important;color:#ea6565 !important;
+}
+
+/* Light mode */
+html[data-theme="light"] body.crm-sidebar-layout #view-input .input-quick-card{
+  background:#ffffff !important;
+  border:1px solid #e0e8e5 !important;
+  box-shadow:0 6px 18px rgba(31,53,47,.04) !important;
+}
+
+/* Dark mode */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-input .input-quick-card{
+  background:#102126 !important;
+  border:1px solid rgba(255,255,255,.075) !important;
+  box-shadow:0 7px 18px rgba(0,0,0,.10) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-input .input-quick-card strong{
+  color:#f0f8f6 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-input .input-quick-label{
+  color:#76969d !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-input .input-quick-card small{
+  color:#8da3a7 !important;
+}
+
+/* Keep icon pastel in dark mode but slightly dimmer */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-input .input-quick-icon{
+  filter:saturate(.9) brightness(.85) !important;
+}
+
+@media(max-width:1250px){
+  body.crm-sidebar-layout #view-input .input-quick-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:700px){
+  body.crm-sidebar-layout #view-input .input-quick-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+
+  body.crm-sidebar-layout #view-input .input-quick-head{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+}
