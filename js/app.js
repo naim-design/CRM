@@ -732,6 +732,25 @@ async function deleteEntry(id) {
   }
 }
 
+
+// ============================================================
+// STAFF DISPLAY ALIAS
+// Display-only: Firestore original value is NOT changed.
+// ============================================================
+function displayStaffName(value){
+  const raw = String(value || '').trim();
+  const lower = raw.toLowerCase();
+
+  if (
+    lower === 'kaknorycloud@gmail.com' ||
+    lower === 'kaknorylcloud@gmail.com' ||
+    lower.includes('kaknorycloud@gmail.com') ||
+    lower.includes('kaknorylcloud@gmail.com')
+  ) return 'Fani';
+
+  return raw || '-';
+}
+
 function renderEntriesList() {
   const sorted = [...allEntries].sort((a, b) => (b.tarikh || '').localeCompare(a.tarikh || ''));
   const body = document.getElementById('entries-list-body');
@@ -742,7 +761,7 @@ function renderEntriesList() {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="tname">${en.tarikh || '-'}</td>
       <td style="font-size:12px;">${en.kategori || '-'}</td>
-      <td style="font-size:12px; color:var(--muted);">${en.staffName || '-'}</td>
+      <td style="font-size:12px; color:var(--muted);">${displayStaffName(en.staffName)}</td>
       <td style="font-size:12px;">${en.source || '-'}</td>
       <td style="font-size:12px;">${en.template || '-'}</td>
       <td style="font-size:11px; color:var(--muted);">${(en.wabotAccount || '-').split(' (')[0]}</td>
@@ -1787,7 +1806,7 @@ async function loadImportBatches() {
       tr.innerHTML = `<td style="font-size:12px;">${dateStr}</td>
         <td class="tname">${b.source || '-'}</td>
         <td class="num">${fmt(b.count || 0)}</td>
-        <td style="font-size:12px; color:var(--muted);">${b.createdBy || '-'}</td>
+        <td style="font-size:12px; color:var(--muted);">${displayStaffName(b.createdBy)}</td>
         <td style="text-align:right;">
           <button class="btn-ghost batch-del-btn" data-id="${d.id}" data-count="${b.count || 0}" style="width:auto; padding:5px 10px; font-size:11px; color:var(--coral); border-color:rgba(255,122,104,0.3);">🗑️ Padam Batch Ini</button>
         </td>`;
@@ -1864,7 +1883,7 @@ function renderTodoItem(container, t) {
     <div class="todo-check ${t.done ? 'checked' : ''}" data-id="${t.id}" data-done="${t.done}">${t.done ? '✓' : ''}</div>
     <div style="flex:1;">
       <div class="todo-text">${t.text}</div>
-      <div class="todo-meta">${t.staffName || ''}</div>
+      <div class="todo-meta">${displayStaffName(t.staffName || '')}</div>
     </div>
     <button class="todo-del" data-id="${t.id}">✕</button>`;
   item.querySelector('.todo-check').onclick = async () => {
@@ -2083,7 +2102,7 @@ function renderFeedback() {
       <div class="fb-body">
         <span class="fb-kategori">${f.kategori}</span>
         <div class="fb-text">${(f.text || '').replace(/</g, '&lt;')}</div>
-        <div class="fb-foot"><span>${f.createdBy || ''} · ${dateStr}</span>
+        <div class="fb-foot"><span>${displayStaffName(f.createdBy || '')} · ${dateStr}</span>
         <button class="fb-del" data-id="${f.id}">✕</button></div>
       </div>`;
     grid.appendChild(card);
@@ -2964,7 +2983,7 @@ function renderTopups() {
       <td style="font-size:12px; color:var(--muted);">${t.note || '-'}</td>
       <td class="num">€${(t.amountEUR || 0).toFixed(2)}</td>
       <td class="num">RM ${fmt((t.amountRM || 0).toFixed(2))}</td>
-      <td style="font-size:12px; color:var(--muted);">${t.createdBy || '-'}</td>`;
+      <td style="font-size:12px; color:var(--muted);">${displayStaffName(t.createdBy)}</td>`;
 
     body.appendChild(tr);
   });
@@ -3651,7 +3670,7 @@ function renderAnalyticsPro() {
   const staff = {};
 
   entries.forEach(e => {
-    const name = e.staffName || 'Tidak Diketahui';
+    const name = displayStaffName(e.staffName || 'Tidak Diketahui');
 
     if (!staff[name]) {
       staff[name] = {sent:0, reply:0, buyer:0, sales:0};
@@ -3773,7 +3792,7 @@ function campaignEntryLabel(en) {
   if (!en) return '';
   const name = en.template || en.source || en.kategori || 'Campaign CRM';
   const time = en.masa ? ` ${en.masa}` : '';
-  const staff = en.staffName ? ` • ${en.staffName}` : '';
+  const staff = en.staffName ? ` • ${displayStaffName(en.staffName)}` : '';
   return `${en.tarikh || '-'}${time} • ${name}${staff}`;
 }
 
@@ -4621,7 +4640,7 @@ function renderPlanning(){
           <div class="planning-meta-row">
             <span class="planning-meta-chip">Review ${planningEsc(p.reviewDate||'-')}</span>
             ${due}
-            <span class="planning-meta-chip">${planningEsc(p.createdBy||'-')}</span>
+            <span class="planning-meta-chip">${planningEsc(displayStaffName(p.createdBy||'-'))}</span>
           </div>
 
           <div class="planning-actions">
