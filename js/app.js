@@ -576,6 +576,7 @@ function startListeners() {
     // Render Senarai Entri FIRST so old data stays editable even if
     // another report/view has a UI error.
     renderEntriesList();
+    try{ renderReferenceDashboardWidgets(); }catch(e){ console.warn(e); }
 
     // Each secondary renderer is isolated. One broken/moved section
     // must never stop the rest of CRM from rendering.
@@ -5439,3 +5440,240 @@ async function refreshEntriesNow(){
 }
 
 document.getElementById('entries-reload-btn')?.addEventListener('click',refreshEntriesNow);
+
+
+// ============================================================
+// V14 REFERENCE DASHBOARD WIDGETS
+// ============================================================
+
+function refEsc(v){
+  return String(v ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function refRowsInCurrentDashboardScope(){
+  try{
+    return typeof filteredEntries === 'function' ? filteredEntries() : (allEntries || []);
+  }catch(_){
+    return allEntries || [];
+  }
+}
+
+function refLastNDaysRows(days){
+  const rows = refRowsInCurrentDashboardScope();
+  const end = new Date();
+  end.setHours(12,0,0,0);
+  const start = new Date(end);
+  start.setDate(end.getDate() - (days - 1));
+  const startStr = start.toISOString().slice(0,10);
+  const endStr = end.toISOString().slice(0,10);
+  return rows.filter(r => (!r.tarikh || (r.tarikh >= startStr && r.tarikh <= endStr)));
+}
+
+function renderRefTrend(){
+  const wrap = document.getElementById('ref-trend-chart');
+  if(!wrap) return;
+
+  const days = Number(document.getElementById('ref-trend-range')?.value || 7);
+  const rows = refLastNDaysRows(days);
+
+  const today = new Date();
+  today.setHours(12,0,0,0);
+
+  const points = [];
+  for(let i=days-1;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(today.getDate()-i);
+    const ds = d.toISOString().slice(0,10);
+    const dayRows = rows.filter(r => r.tarikh === ds);
+    points.push({
+      date: ds,
+      sales: dayRows.reduce((s,r)=>s+Number(r.sales||0),0),
+      sent: dayRows.reduce((s,r)=>s+Number(r.sent||0),0),
+      reply: dayRows.reduce((s,r)=>s+Number(r.reply||0),0),
+      buyer: dayRows.reduce((s,r)=>s+Number(r.buyer||0),0)
+    });
+  }
+
+  const W=760,H=230,L=46,R=18,T=18,B=34;
+  const pw=W-L-R, ph=H-T-B;
+  const maxVal=Math.max(1,...points.flatMap(p=>[p.sales,p.sent,p.reply,p.buyer]));
+  const x=i=>L+(points.length<=1?pw/2:i*(pw/(points.length-1)));
+  const y=v=>T+ph-(Number(v||0)/maxVal)*ph;
+
+  const colors={sales:'#20b88b',sent:'#2585ef',reply:'#efa611',buyer:'#8b62df'};
+
+  let grid='';
+  for(let i=0;i<4;i++){
+    const yy=T+i*(ph/3);
+    const val=maxVal-(i*(maxVal/3));
+    const label=val>=1000?(val/1000).toFixed(1)+'k':Math.round(val);
+    grid+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" class="ref-grid-line"/>`;
+    grid+=`<text x="${L-8}" y="${yy+4}" text-anchor="end" class="ref-axis-text">${label}</text>`;
+  }
+
+  let lines='';
+  ['sales','sent','reply','buyer'].forEach(k=>{
+    const pts=points.map((p,i)=>`${x(i)},${y(p[k])}`).join(' ');
+    lines+=`<polyline points="${pts}" fill="none" stroke="${colors[k]}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    points.forEach((p,i)=>{
+      lines+=`<circle cx="${x(i)}" cy="${y(p[k])}" r="3.2" fill="${colors[k]}"><title>${p.date}: ${k} ${p[k]}</title></circle>`;
+    });
+  });
+
+  let labels='';
+  const step=Math.max(1,Math.ceil(points.length/7));
+  points.forEach((p,i)=>{
+    if(i%step===0 || i===points.length-1){
+      const d=new Date(p.date+'T12:00:00');
+      labels+=`<text x="${x(i)}" y="${H-10}" text-anchor="middle" class="ref-axis-text">${d.getDate()}/${d.getMonth()+1}</text>`;
+    }
+  });
+
+  wrap.innerHTML=`<svg class="ref-trend-svg" viewBox="0 0 ${W} ${H}" role="img">${grid}${lines}${labels}</svg>`;
+}
+
+function refDetectChannel(source){
+  const s=String(source||'').toLowerCase();
+  if(s.includes('tiktok')) return 'TikTok';
+  if(s.includes('fb') || s.includes('facebook') || s.includes('ads')) return 'Ads FB';
+  if(s.includes('organic')) return 'Organic';
+  return 'Lain-lain';
+}
+
+function renderRefChannel(){
+  const donut=document.getElementById('ref-channel-donut');
+  const legend=document.getElementById('ref-channel-legend');
+  if(!donut || !legend) return;
+
+  const metric=document.getElementById('ref-channel-metric')?.value || 'sales';
+  const rows=refRowsInCurrentDashboardScope();
+
+  const data={'Ads FB':0,'Organic':0,'TikTok':0,'Lain-lain':0};
+
+  rows.forEach(r=>{
+    const channel=refDetectChannel(r.source);
+    data[channel]+=Number(r[metric]||0);
+  });
+
+  const total=Object.values(data).reduce((a,b)=>a+b,0);
+  const colors={'Ads FB':'#27af8b','Organic':'#cbece4','TikTok':'#ffc75f','Lain-lain':'#a981e8'};
+
+  let offset=0;
+  const segs=[];
+  const C=2*Math.PI*72;
+  Object.entries(data).forEach(([name,val])=>{
+    const frac=total?val/total:0;
+    const len=frac*C;
+    segs.push(`<circle cx="90" cy="90" r="72" fill="none" stroke="${colors[name]}" stroke-width="28"
+      stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 90 90)"/>`);
+    offset+=len;
+  });
+
+  if(!total){
+    segs.push(`<circle cx="90" cy="90" r="72" fill="none" stroke="#dceee8" stroke-width="28"/>`);
+  }
+
+  const metricLabel = metric==='sales'?'Total Sales':metric==='sent'?'Total Sent':'Total Buyer';
+  const centerVal = metric==='sales' ? 'RM '+Math.round(total).toLocaleString('en-MY') : Math.round(total).toLocaleString('en-MY');
+
+  donut.innerHTML=`<svg viewBox="0 0 180 180" class="ref-donut-svg">${segs.join('')}
+    <text x="90" y="84" text-anchor="middle" class="ref-donut-value">${refEsc(centerVal)}</text>
+    <text x="90" y="103" text-anchor="middle" class="ref-donut-label">${metricLabel}</text>
+  </svg>`;
+
+  legend.innerHTML=Object.entries(data).map(([name,val])=>{
+    const pct=total?(val/total*100):0;
+    const valTxt=metric==='sales'?'RM '+Math.round(val).toLocaleString('en-MY'):Math.round(val).toLocaleString('en-MY');
+    return `<div class="ref-channel-item">
+      <span class="ref-channel-color" style="background:${colors[name]}"></span>
+      <div><b>${name}</b><small>${valTxt} (${pct.toFixed(0)}%)</small></div>
+    </div>`;
+  }).join('');
+}
+
+function renderRefEntries(){
+  const body=document.getElementById('ref-entry-body');
+  const empty=document.getElementById('ref-entry-empty');
+  const count=document.getElementById('ref-entry-count');
+  if(!body || !empty || !count) return;
+
+  const rows=[...(allEntries||[])]
+    .sort((a,b)=>String(b.tarikh||'').localeCompare(String(a.tarikh||'')))
+    .slice(0,5);
+
+  count.textContent=(allEntries||[]).length+' entri';
+
+  body.innerHTML=rows.map(r=>`
+    <tr>
+      <td>${refEsc(r.tarikh||'-')}</td>
+      <td>${refEsc(r.template||'-')}</td>
+      <td>${refEsc(r.source||'-')}</td>
+      <td>${Number(r.sent||0).toLocaleString('en-MY')}</td>
+      <td>${Number(r.reply||0).toLocaleString('en-MY')}</td>
+      <td>${Number(r.buyer||0).toLocaleString('en-MY')}</td>
+      <td>${Number(r.sales||0)?'RM '+Number(r.sales||0).toLocaleString('en-MY'):'-'}</td>
+    </tr>
+  `).join('');
+
+  const has=rows.length>0;
+  body.closest('table').style.display=has?'table':'none';
+  empty.style.display=has?'none':'flex';
+}
+
+function renderRefTemplates(){
+  const list=document.getElementById('ref-template-list');
+  const empty=document.getElementById('ref-template-empty');
+  if(!list || !empty) return;
+
+  const map={};
+  (allEntries||[]).forEach(r=>{
+    const name=String(r.template||'').trim();
+    if(!name) return;
+    map[name]=(map[name]||0)+Number(r.sales||0);
+  });
+
+  const rows=Object.entries(map)
+    .filter(([,sales])=>sales>0)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,5);
+
+  list.innerHTML=rows.map(([name,sales],i)=>`
+    <div class="ref-template-row">
+      <span class="ref-template-rank">${i+1}</span>
+      <div class="ref-template-copy"><b>${refEsc(name)}</b><small>Sales terkumpul</small></div>
+      <strong>RM ${Number(sales).toLocaleString('en-MY')}</strong>
+    </div>
+  `).join('');
+
+  list.style.display=rows.length?'block':'none';
+  empty.style.display=rows.length?'none':'flex';
+}
+
+function renderReferenceDashboardWidgets(){
+  renderRefTrend();
+  renderRefChannel();
+  renderRefEntries();
+  renderRefTemplates();
+}
+
+document.getElementById('ref-trend-range')?.addEventListener('change',renderRefTrend);
+document.getElementById('ref-channel-metric')?.addEventListener('change',renderRefChannel);
+document.getElementById('ref-entry-refresh')?.addEventListener('click',()=>{
+  if(typeof refreshEntriesNow==='function'){
+    Promise.resolve(refreshEntriesNow()).finally(renderReferenceDashboardWidgets);
+  }else{
+    renderReferenceDashboardWidgets();
+  }
+});
+document.getElementById('ref-template-see-all')?.addEventListener('click',()=>{
+  document.querySelector('.app-nav button[data-view="template"]')?.click();
+});
+
+document.querySelector('.app-nav button[data-view="dashboard"]')?.addEventListener('click',()=>{
+  setTimeout(renderReferenceDashboardWidgets,0);
+});
