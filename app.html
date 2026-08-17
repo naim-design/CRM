@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v13-input-card-reference-20260817">
+<link rel="stylesheet" href="css/app-extra.css?v=v14-dashboard-reference-panels-20260817">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -314,7 +314,100 @@
         </div>
       </div>
 
-      <section class="dash-trend-section">
+      
+      <section class="ref-dashboard-grid-section">
+        <div class="ref-dashboard-grid">
+
+          <article class="ref-dash-panel ref-trend-panel">
+            <div class="ref-panel-head">
+              <div>
+                <h3>TREND HARIAN</h3>
+                <p>Prestasi harian (Sales, Sent, Reply, Buyer)</p>
+              </div>
+              <select id="ref-trend-range" aria-label="Trend range">
+                <option value="7">7 Hari Terakhir</option>
+                <option value="14">14 Hari Terakhir</option>
+                <option value="30">30 Hari Terakhir</option>
+              </select>
+            </div>
+            <div class="ref-legend-row">
+              <span><i class="sales"></i>Sales (RM)</span>
+              <span><i class="sent"></i>Sent</span>
+              <span><i class="reply"></i>Reply</span>
+              <span><i class="buyer"></i>Buyer</span>
+            </div>
+            <div id="ref-trend-chart" class="ref-chart-area"></div>
+          </article>
+
+          <article class="ref-dash-panel ref-channel-panel">
+            <div class="ref-panel-head">
+              <div>
+                <h3>PRESTASI MENGIKUT CHANNEL</h3>
+                <p>Perbandingan channel yang digunakan</p>
+              </div>
+              <select id="ref-channel-metric" aria-label="Channel metric">
+                <option value="sales">Sales (RM)</option>
+                <option value="sent">Sent</option>
+                <option value="buyer">Buyer</option>
+              </select>
+            </div>
+            <div class="ref-channel-body">
+              <div id="ref-channel-donut" class="ref-donut-wrap"></div>
+              <div id="ref-channel-legend" class="ref-channel-legend"></div>
+            </div>
+          </article>
+
+          <article class="ref-dash-panel ref-entry-panel">
+            <div class="ref-panel-head">
+              <div class="ref-panel-title-inline">
+                <h3>SENARAI ENTRI (TERKINI)</h3>
+                <span class="ref-mini-badge" id="ref-entry-count">0 entri</span>
+              </div>
+              <button type="button" class="ref-outline-btn" id="ref-entry-refresh">↻ Refresh Data</button>
+            </div>
+            <div class="ref-mini-table-wrap">
+              <table class="ref-mini-table">
+                <thead>
+                  <tr>
+                    <th>Tarikh</th>
+                    <th>Template</th>
+                    <th>Sumber</th>
+                    <th>Sent</th>
+                    <th>Reply</th>
+                    <th>Buyer</th>
+                    <th>Sales (RM)</th>
+                  </tr>
+                </thead>
+                <tbody id="ref-entry-body"></tbody>
+              </table>
+              <div id="ref-entry-empty" class="ref-empty-state">
+                <div class="ref-empty-icon">▣</div>
+                <strong>Belum ada data</strong>
+                <span>Tambah entri blasting pertama anda.</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="ref-dash-panel ref-template-panel">
+            <div class="ref-panel-head">
+              <div>
+                <h3>TOP TEMPLATE (SALES)</h3>
+                <p>Top 5 template mengikut jumlah sales</p>
+              </div>
+              <button type="button" class="ref-outline-btn" id="ref-template-see-all">Lihat Semua</button>
+            </div>
+            <div id="ref-template-list" class="ref-template-list"></div>
+            <div id="ref-template-empty" class="ref-empty-state">
+              <div class="ref-empty-icon star">✦</div>
+              <strong>Belum ada data template</strong>
+              <span>Data akan muncul selepas ada transaksi.</span>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+<section class="dash-trend-section">
         <div class="section-head dash-trend-head">
           <div>
             <h2><span class="idx">01</span>Trend Harian Mengikut Projek</h2>
@@ -1486,6 +1579,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v12-input-visual-utility-20260817"></script>
+<script src="js/app.js?v=v14-dashboard-reference-panels-20260817"></script>
 </body>
 </html>
