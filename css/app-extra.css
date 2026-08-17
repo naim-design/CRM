@@ -10125,3 +10125,107 @@ html:not([data-theme="light"]) body.crm-sidebar-layout .table-controls{
     font-size:10.5px !important;
   }
 }
+
+
+/* =========================================================
+   V9 — DASHBOARD KPI CONTRAST + VISIBLE THEME TOGGLE
+   ========================================================= */
+
+/* Visible theme button */
+#crm-visible-theme-toggle{
+  cursor:pointer !important;
+  font-size:15px !important;
+  font-family:'Inter',sans-serif !important;
+}
+
+/* ---------------- DARK MODE KPI CONTRAST ---------------- */
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-kpi-card{
+  background:#0f2025 !important;
+  border-color:rgba(255,255,255,.09) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-kpi-label{
+  color:#74a0a8 !important;
+}
+
+/* Critical fix: KPI values were too dark */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-kpi-value{
+  color:#f4fbf9 !important;
+  text-shadow:none !important;
+}
+
+/* Make Sales & positive financial KPI slightly accented */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-kpi-card[data-kpi="sales"] .dash-kpi-value{
+  color:#28dfb0 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-kpi-card[data-kpi="roi"] .dash-kpi-value,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-kpi-card[data-kpi="roas"] .dash-kpi-value{
+  color:#8ee8d0 !important;
+}
+
+/* Target / metadata contrast */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-target-meta,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-target-meta span{
+  color:#d5e4e1 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #stat-sessions{
+  color:#c4d5d2 !important;
+}
+
+/* Better track contrast */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-target-track{
+  background:#314247 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .dash-target-fill{
+  background:linear-gradient(90deg,#15d9a8,#08b98f) !important;
+}
+
+/* ---------------- LIGHT MODE KPI ---------------- */
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-card{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-label{
+  color:#617b86 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-value{
+  color:#16313e !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-card[data-kpi="sales"] .dash-kpi-value{
+  color:#087e64 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-target-meta,
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-target-meta span{
+  color:#4e6873 !important;
+}
+
+[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-target-track{
+  background:#e9efed !important;
+}
+
+/* Topbar must follow light/dark clearly */
+[data-theme="light"] .crm-reference-topbar{
+  background:#ffffff !important;
+  border-bottom-color:#e4eae8 !important;
+}
+
+[data-theme="light"] #crm-visible-theme-toggle{
+  background:#ffffff !important;
+  color:#17323d !important;
+  border-color:#dde6e3 !important;
+}
+
+html:not([data-theme="light"]) #crm-visible-theme-toggle{
+  background:#102126 !important;
+  color:#ffffff !important;
+  border-color:rgba(255,255,255,.09) !important;
+}
