@@ -457,7 +457,12 @@ function toast(msg, isError) {
 // ---- Theme toggle (dark/light) ----
 function applyThemeIcon() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  document.getElementById('theme-toggle').textContent = isLight ? '☀️' : '🌙';
+
+  const originalToggle = document.getElementById('theme-toggle');
+  if (originalToggle) originalToggle.textContent = isLight ? '☀️' : '🌙';
+
+  const visibleToggle = document.getElementById('crm-visible-theme-toggle');
+  if (visibleToggle) visibleToggle.textContent = isLight ? '☀️' : '🌙';
 }
 document.getElementById('theme-toggle').addEventListener('click', () => {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -470,6 +475,22 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
   }
   applyThemeIcon();
 });
+
+// Visible topbar theme button uses the same theme logic.
+document.getElementById('crm-visible-theme-toggle')?.addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+  if (isLight) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  }
+
+  applyThemeIcon();
+});
+
 applyThemeIcon();
 
 // ---- Auth guard ----
