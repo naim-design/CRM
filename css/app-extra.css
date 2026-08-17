@@ -10349,3 +10349,245 @@ body.crm-sidebar-layout #view-dashboard .project-trend-card{
 body.crm-sidebar-layout #view-dashboard .project-trend-top{
   margin-bottom:2px !important;
 }
+
+
+/* =========================================================
+   V11 — REAL MAMARIAM LOGO + TRUE LIGHT MODE
+   ========================================================= */
+
+/* Use the SAME Mamariam logo asset, recolored red. No fake text logo. */
+@media(min-width:1100px){
+  body.crm-sidebar-layout header.top .brand::before{
+    display:none !important;
+    content:none !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand-logo{
+    display:none !important;
+  }
+
+  body.crm-sidebar-layout header.top .brand-logo-red{
+    display:block !important;
+    width:132px !important;
+    max-width:132px !important;
+    height:auto !important;
+    object-fit:contain !important;
+  }
+}
+
+
+/* =========================================================
+   TRUE LIGHT MODE OVERRIDES
+   Theme attribute lives on <html data-theme="light">
+   ========================================================= */
+
+html[data-theme="light"] body.crm-sidebar-layout{
+  background:#f4f7f6 !important;
+  color:#16313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #app-shell,
+html[data-theme="light"] body.crm-sidebar-layout main,
+html[data-theme="light"] body.crm-sidebar-layout .view{
+  background:#f4f7f6 !important;
+  color:#16313d !important;
+}
+
+/* Topbar */
+html[data-theme="light"] .crm-reference-topbar{
+  background:#ffffff !important;
+  border-bottom-color:#e2e8e6 !important;
+  box-shadow:0 4px 16px rgba(30,52,60,.04) !important;
+}
+
+html[data-theme="light"] .crm-reference-title strong,
+html[data-theme="light"] .crm-top-user-copy b{
+  color:#15313d !important;
+}
+
+html[data-theme="light"] .crm-reference-title span{
+  background:#edf4f2 !important;
+  color:#56706c !important;
+}
+
+html[data-theme="light"] #crm-visible-theme-toggle,
+html[data-theme="light"] .crm-top-icon{
+  background:#ffffff !important;
+  color:#15313d !important;
+  border-color:#dde6e3 !important;
+}
+
+/* All major surfaces */
+html[data-theme="light"] body.crm-sidebar-layout .form-card,
+html[data-theme="light"] body.crm-sidebar-layout .hero,
+html[data-theme="light"] body.crm-sidebar-layout .kpi-card,
+html[data-theme="light"] body.crm-sidebar-layout .stat-card,
+html[data-theme="light"] body.crm-sidebar-layout .dash-kpi-card,
+html[data-theme="light"] body.crm-sidebar-layout .library-stat,
+html[data-theme="light"] body.crm-sidebar-layout .template-library-card,
+html[data-theme="light"] body.crm-sidebar-layout .poster-performance-card,
+html[data-theme="light"] body.crm-sidebar-layout .planning-summary-card,
+html[data-theme="light"] body.crm-sidebar-layout .planning-form-card,
+html[data-theme="light"] body.crm-sidebar-layout .planning-board-card,
+html[data-theme="light"] body.crm-sidebar-layout .report-embed-card,
+html[data-theme="light"] body.crm-sidebar-layout #view-planning .planning-item,
+html[data-theme="light"] body.crm-sidebar-layout #view-wabotcontrol .wctrl-card,
+html[data-theme="light"] body.crm-sidebar-layout #view-wabotcontrol .wctrl-transfer-card,
+html[data-theme="light"] body.crm-sidebar-layout .project-trend-card,
+html[data-theme="light"] body.crm-sidebar-layout .funnel-card{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+  color:#16313d !important;
+  box-shadow:0 8px 24px rgba(33,56,47,.045) !important;
+}
+
+/* Headings and text */
+html[data-theme="light"] body.crm-sidebar-layout h1,
+html[data-theme="light"] body.crm-sidebar-layout h2,
+html[data-theme="light"] body.crm-sidebar-layout h3,
+html[data-theme="light"] body.crm-sidebar-layout .section-head h2,
+html[data-theme="light"] body.crm-sidebar-layout .library-page-head h2,
+html[data-theme="light"] body.crm-sidebar-layout .planning-head h2{
+  color:#15313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout p,
+html[data-theme="light"] body.crm-sidebar-layout .dash-v7-sub,
+html[data-theme="light"] body.crm-sidebar-layout .library-sub{
+  color:#687f89 !important;
+}
+
+/* Inputs */
+html[data-theme="light"] body.crm-sidebar-layout input,
+html[data-theme="light"] body.crm-sidebar-layout select,
+html[data-theme="light"] body.crm-sidebar-layout textarea{
+  background:#ffffff !important;
+  color:#15313d !important;
+  border-color:#dbe4e4 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout input::placeholder,
+html[data-theme="light"] body.crm-sidebar-layout textarea::placeholder{
+  color:#94a4a6 !important;
+}
+
+/* Dashboard section itself must not remain dark */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dashboard-v7-hero,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard section{
+  background:transparent !important;
+  color:#15313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dashboard-v7-hero{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+}
+
+/* KPI */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-card{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-label{
+  color:#607984 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-value{
+  color:#15313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-kpi-card[data-kpi="sales"] .dash-kpi-value{
+  color:#087e64 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-target-meta,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-target-meta span,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #stat-sessions{
+  color:#556f79 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .dash-target-track{
+  background:#e8eeec !important;
+}
+
+/* Trend chart card */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-card{
+  background:#ffffff !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-name{
+  color:#17333f !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-summary{
+  color:#627b85 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .project-trend-summary b{
+  color:#17333f !important;
+}
+
+/* Generic stats */
+html[data-theme="light"] body.crm-sidebar-layout .stat-card .label,
+html[data-theme="light"] body.crm-sidebar-layout .stat-card .foot{
+  color:#68808a !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .stat-card .value{
+  color:#15313d !important;
+}
+
+/* Tables */
+html[data-theme="light"] body.crm-sidebar-layout .tbl{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .tbl thead th{
+  background:#f5f8f7 !important;
+  color:#607984 !important;
+  border-bottom-color:#dfe7e5 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .tbl tbody tr:nth-child(odd){
+  background:#ffffff !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .tbl tbody tr:nth-child(even){
+  background:#fbfcfc !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .tbl tbody td{
+  color:#29444e !important;
+  border-bottom-color:#edf1f0 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .tbl .tname{
+  color:#153846 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout .tbl .num{
+  color:#183b43 !important;
+}
+
+/* Planning / Template / Poster / AI / Database internals */
+html[data-theme="light"] body.crm-sidebar-layout #view-planning .planning-note,
+html[data-theme="light"] body.crm-sidebar-layout .template-script-text,
+html[data-theme="light"] body.crm-sidebar-layout .template-mini-kpi > div,
+html[data-theme="light"] body.crm-sidebar-layout .poster-card-kpis > div,
+html[data-theme="light"] body.crm-sidebar-layout #view-wabotcontrol .wctrl-readiness,
+html[data-theme="light"] body.crm-sidebar-layout #view-wabotcontrol .wctrl-money > div,
+html[data-theme="light"] body.crm-sidebar-layout #view-wabotcontrol .wctrl-meta,
+html[data-theme="light"] body.crm-sidebar-layout #view-wabotcontrol .wctrl-mini span{
+  background:#f7faf8 !important;
+  border-color:#e1e9e5 !important;
+  color:#3b5149 !important;
+}
+
+/* Ensure no dark backgrounds bleed through in light mode */
+html[data-theme="light"] body.crm-sidebar-layout [style*="background:#0"],
+html[data-theme="light"] body.crm-sidebar-layout [style*="background: #0"]{
+  background-color:#ffffff !important;
+}
