@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v11-1-red-logo-only-20260817">
+<link rel="stylesheet" href="css/app-extra.css?v=v12-input-visual-utility-20260817">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -39,6 +39,7 @@
         <button data-view="projection">Projection</button>
         <button data-view="planning">Planning</button>
         <button data-view="analyticspro">Analytics Pro</button>
+        <div class="nav-group-label">UTILITI</div>
         <button data-view="campaignmanager">Campaign Manager</button>
         <button data-view="aiinsight">AI Insight</button>
         <button data-view="contacts">Database</button>
@@ -133,11 +134,71 @@
           </div>
           <p style="font-size:11.5px; color:var(--muted-2); margin-top:6px;">💡 Kos blasting dikira automatik dari jumlah Sent (€0.0116/mesej) — tak perlu masukkan manual. Laporan Keseluruhan & Laporan Harian automatik terima semua entri, tak kira kategori.</p>
 
-          <div id="entry-live-stats" class="stat-row" style="margin-top:16px;">
-            <div class="stat-card"><div class="label">Respon Rate<br><small style="font-weight:400;">(Read/Sent)</small></div><div class="value" id="live-respon-rate" style="font-size:22px;">0.0%</div></div>
-            <div class="stat-card"><div class="label">Reply Rate<br><small style="font-weight:400;">(Reply/Sent)</small></div><div class="value" id="live-reply-rate" style="font-size:22px;">0.0%</div></div>
-            <div class="stat-card"><div class="label">Conversion Rate<br><small style="font-weight:400;">(Buyer/Sent)</small></div><div class="value" id="live-conv-rate" style="font-size:22px;">0.00%</div></div>
+          
+          <div class="input-quick-head">
+            <div>
+              <span class="input-quick-eyebrow">LIVE PREVIEW</span>
+              <h3>Ringkasan Entri Semasa</h3>
+            </div>
+            <span class="input-quick-note">Untuk semakan cepat sebelum Simpan Entri</span>
           </div>
+
+          <div id="entry-live-stats" class="input-quick-grid">
+            <div class="input-quick-card sales">
+              <div>
+                <span class="input-quick-label">Sales (RM)</span>
+                <strong id="input-summary-sales">RM 0.00</strong>
+                <small>Total sales yang dimasukkan</small>
+              </div>
+              <span class="input-quick-icon">RM</span>
+            </div>
+
+            <div class="input-quick-card sent">
+              <div>
+                <span class="input-quick-label">Sent</span>
+                <strong id="input-summary-sent">0</strong>
+                <small id="live-respon-rate">0.0% read rate</small>
+              </div>
+              <span class="input-quick-icon">↗</span>
+            </div>
+
+            <div class="input-quick-card reply">
+              <div>
+                <span class="input-quick-label">Reply Rate</span>
+                <strong id="live-reply-rate">0.0%</strong>
+                <small>Reply ÷ Sent</small>
+              </div>
+              <span class="input-quick-icon">···</span>
+            </div>
+
+            <div class="input-quick-card buyer">
+              <div>
+                <span class="input-quick-label">Buyer</span>
+                <strong id="input-summary-buyer">0</strong>
+                <small>Jumlah jadi buyer</small>
+              </div>
+              <span class="input-quick-icon">◎</span>
+            </div>
+
+            <div class="input-quick-card conversion">
+              <div>
+                <span class="input-quick-label">Conversion Rate</span>
+                <strong id="live-conv-rate">0.00%</strong>
+                <small>Buyer ÷ Sent</small>
+              </div>
+              <span class="input-quick-icon">↗</span>
+            </div>
+
+            <div class="input-quick-card cost">
+              <div>
+                <span class="input-quick-label">Kos (RM)</span>
+                <strong id="input-summary-cost">RM 0.00</strong>
+                <small id="input-summary-cost-eur">€0.00</small>
+              </div>
+              <span class="input-quick-icon">▣</span>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button type="submit" class="btn btn-primary" id="entry-submit-btn" style="width:auto; padding:11px 26px;">Simpan Entri</button>
             <button type="button" class="btn btn-ghost" id="entry-cancel-edit-btn" style="width:auto; padding:11px 26px; display:none;">Batal Edit</button>
@@ -1425,6 +1486,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v9-theme-kpi-20260817"></script>
+<script src="js/app.js?v=v12-input-visual-utility-20260817"></script>
 </body>
 </html>
