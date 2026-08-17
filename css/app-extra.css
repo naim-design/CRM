@@ -10591,3 +10591,18 @@ html[data-theme="light"] body.crm-sidebar-layout [style*="background:#0"],
 html[data-theme="light"] body.crm-sidebar-layout [style*="background: #0"]{
   background-color:#ffffff !important;
 }
+
+
+/* =========================================================
+   V11.1 — REMOVE OLD WHITE/BLACK SIDEBAR LOGO
+   Keep only assets/logo-red.png
+   ========================================================= */
+
+body.crm-sidebar-layout header.top .brand-logo-dark,
+body.crm-sidebar-layout header.top .brand-logo-light{
+  display:none !important;
+}
+
+body.crm-sidebar-layout header.top .brand-logo-red{
+  display:block !important;
+}
