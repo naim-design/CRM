@@ -5677,3 +5677,38 @@ document.getElementById('ref-template-see-all')?.addEventListener('click',()=>{
 document.querySelector('.app-nav button[data-view="dashboard"]')?.addEventListener('click',()=>{
   setTimeout(renderReferenceDashboardWidgets,0);
 });
+
+// V15 Planning: poster terus nampak, tanpa butang Lihat Poster
+function v15PlanningPosterPreview(){
+ const view=document.getElementById('view-planning'); if(!view)return;
+ [...view.querySelectorAll('a,button')].forEach(el=>{
+   const t=(el.textContent||'').trim().toLowerCase();
+   if(t==='lihat poster'||t==='view poster') el.style.display='none';
+ });
+ [...view.querySelectorAll('img')].forEach(img=>{
+   const s=(img.src||'').toLowerCase(), a=(img.alt||'').toLowerCase(),
+         c=(img.className||'').toString().toLowerCase(),
+         tx=(img.closest('article,div')?.textContent||'').toLowerCase();
+   if(c.includes('avatar')||c.includes('icon')) return;
+   if(a.includes('poster')||a.includes('creative')||c.includes('poster')||
+      c.includes('creative')||tx.includes('poster')||tx.includes('creative')){
+      const p=img.parentElement;
+      if(p) p.classList.add('planning-poster-direct');
+      img.title='Klik untuk lihat poster lebih besar';
+      if(!img.dataset.v15Zoom){
+        img.dataset.v15Zoom='1';
+        img.addEventListener('click',()=>window.open(img.src,'_blank','noopener,noreferrer'));
+      }
+   }
+ });
+}
+document.addEventListener('DOMContentLoaded',()=>{
+ const v=document.getElementById('view-planning');
+ if(v){
+   new MutationObserver(()=>requestAnimationFrame(v15PlanningPosterPreview))
+     .observe(v,{childList:true,subtree:true});
+   v15PlanningPosterPreview();
+ }
+});
+document.querySelector('.app-nav button[data-view="planning"]')?.addEventListener('click',
+ ()=>setTimeout(v15PlanningPosterPreview,100));
