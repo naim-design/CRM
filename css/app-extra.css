@@ -11334,3 +11334,263 @@ html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .ref-outl
 html:not([data-theme="light"]) #view-planning .planning-poster-direct{
  background:#0b171b!important;border-color:rgba(255,255,255,.08)!important;
 }
+
+
+/* =========================================================
+   V16 — DASHBOARD LIGHT MODE + SOURCE/FUNNEL LAYOUT FIX
+   ========================================================= */
+
+/* Dashboard page spacing */
+body.crm-sidebar-layout #view-dashboard{
+  padding-top:18px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard > section{
+  margin-top:22px !important;
+  padding-top:0 !important;
+}
+
+body.crm-sidebar-layout #view-dashboard > section > .section-head{
+  margin-bottom:12px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard > section > .section-head h2{
+  font-size:18px !important;
+  margin:0 !important;
+}
+
+/* ---------------- SOURCE / CHANNEL CARDS ---------------- */
+
+body.crm-sidebar-layout #view-dashboard .source-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:12px !important;
+  width:100% !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card{
+  min-width:0 !important;
+  min-height:118px !important;
+  padding:15px 16px !important;
+  border-radius:13px !important;
+  overflow:hidden !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .top-row{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  margin-bottom:14px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .name{
+  min-width:0 !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  white-space:nowrap !important;
+  font-family:'Space Grotesk',sans-serif !important;
+  font-size:13px !important;
+  font-weight:700 !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .tag{
+  flex:0 0 auto !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  min-height:24px !important;
+  padding:0 9px !important;
+  border-radius:999px !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:8px !important;
+  font-weight:600 !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .stats-line{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:10px !important;
+  margin-top:7px !important;
+  font-size:10px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .stats-line:last-child{
+  margin-top:10px !important;
+  padding-top:9px !important;
+  border-top:1px solid rgba(128,150,150,.16) !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .stats-line:last-child b{
+  font-size:13px !important;
+}
+
+/* Light */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-grid{
+  background:transparent !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card{
+  background:#ffffff !important;
+  border:1px solid #dfe7e5 !important;
+  box-shadow:0 7px 20px rgba(34,58,50,.045) !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card .name{
+  color:#17333f !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card .tag{
+  background:#eaf8f3 !important;
+  color:#118166 !important;
+  border:1px solid #caebdf !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card .stats-line{
+  color:#657d86 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card .stats-line b{
+  color:#17333f !important;
+}
+
+/* Dark */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card{
+  background:#0f1e23 !important;
+  border:1px solid rgba(255,255,255,.075) !important;
+  box-shadow:0 7px 20px rgba(0,0,0,.10) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card .name{
+  color:#eff7f5 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card .tag{
+  background:rgba(8,215,170,.08) !important;
+  color:#2bdcb0 !important;
+  border:1px solid rgba(8,215,170,.18) !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card .stats-line{
+  color:#94a9ad !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card .stats-line b{
+  color:#edf6f4 !important;
+}
+
+/* ---------------- FUNNEL ---------------- */
+
+body.crm-sidebar-layout #view-dashboard .funnel-card{
+  padding:18px !important;
+  border-radius:14px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard #funnel{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .funnel-stage{
+  display:grid !important;
+  grid-template-columns:92px minmax(0,1fr) 110px !important;
+  gap:12px !important;
+  align-items:center !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .funnel-stage .tick{
+  font-size:10px !important;
+  font-weight:600 !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .funnel-bar-track{
+  height:13px !important;
+  overflow:hidden !important;
+  border-radius:999px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .funnel-bar-fill{
+  height:100% !important;
+  border-radius:999px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .funnel-stage .nums{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  gap:8px !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:9px !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-card{
+  background:#ffffff !important;
+  border:1px solid #dfe7e5 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-stage .tick,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-stage .nums .n{
+  color:#29434c !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-stage .nums .r{
+  color:#71878f !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-bar-track{
+  background:#edf2f0 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .funnel-stage .tick,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .funnel-stage .nums .n{
+  color:#eaf4f2 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .funnel-stage .nums .r{
+  color:#8da3a7 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .funnel-bar-track{
+  background:#203238 !important;
+}
+
+/* ---------------- LIGHT MODE: stop pale-on-white text ---------------- */
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard{
+  background:#f4f7f6 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .section-head h2,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .section-head h3{
+  color:#17313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .empty-state{
+  color:#71878f !important;
+}
+
+/* Any old dashboard card that was forced white gets readable text */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .hero,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-card,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .report-embed-card,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card{
+  color:#17313d !important;
+}
+
+/* Responsive */
+@media(max-width:1200px){
+  body.crm-sidebar-layout #view-dashboard .source-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media(max-width:720px){
+  body.crm-sidebar-layout #view-dashboard .source-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  body.crm-sidebar-layout #view-dashboard .funnel-stage{
+    grid-template-columns:75px minmax(0,1fr) 85px !important;
+  }
+}
