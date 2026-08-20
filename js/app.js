@@ -2482,10 +2482,170 @@ document.getElementById('seg-search-btn').addEventListener('click', async () => 
       body.appendChild(tr);
     });
     if (!segLastResults.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada hasil untuk tapisan ni.</td></tr>';
+    renderSegSummary();
   } catch (err) {
     body.innerHTML = '<tr><td colspan="5" class="empty-state">Ralat: ' + err.message + '</td></tr>';
   }
 });
+
+
+function segHasTag(c, wanted){
+  const w=String(wanted||'').toLowerCase();
+  return Array.isArray(c.tags) && c.tags.some(t=>String(t||'').toLowerCase()===w);
+}
+
+function segResultSummary(rows=segLastResults){
+  let buyer=0, replied=0;
+  rows.forEach(c=>{
+    const status=String(c.status||'').toLowerCase();
+    const isBuyer=status==='buyer' || segHasTag(c,'buyer');
+    const isReply=status==='replied' || segHasTag(c,'dah reply') || segHasTag(c,'reply') || segHasTag(c,'replied');
+    if(isBuyer) buyer++;
+    if(isReply) replied++;
+  });
+  const total=rows.length;
+  const other=Math.max(0,total-buyer-replied);
+  return {total,buyer,replied,other};
+}
+
+function renderSegSummary(){
+  const s=segResultSummary();
+  const set=(id,v)=>{const el=document.getElementById(id); if(el) el.textContent=fmt(v);};
+  set('seg-buyer-count',s.buyer);
+  set('seg-reply-count',s.replied);
+  set('seg-other-count',s.other);
+}
+
+function segNumbersBy(kind){
+  return segLastResults
+    .filter(c=>{
+      const status=String(c.status||'').toLowerCase();
+      if(kind==='buyer') return status==='buyer' || segHasTag(c,'buyer');
+      if(kind==='reply') return status==='replied' || segHasTag(c,'dah reply') || segHasTag(c,'reply') || segHasTag(c,'replied');
+      return true;
+    })
+    .map(c=>String(c.phone||'').trim())
+    .filter(Boolean);
+}
+
+async function segCopyNumbers(kind){
+  const nums=segNumbersBy(kind);
+  if(!nums.length){
+    toast(kind==='buyer'?'Tiada nombor Buyer dalam hasil ini':'Tiada nombor Reply dalam hasil ini',true);
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(nums.join('\n'));
+    toast(fmt(nums.length)+' nombor '+(kind==='buyer'?'Buyer':'Reply')+' disalin ✓');
+  }catch(e){
+    toast('Gagal salin nombor',true);
+  }
+}
+
+let segSavedUnsub=null;
+
+function renderSegSavedCards(rows){
+  const wrap=document.getElementById('seg-saved-list');
+  if(!wrap) return;
+  if(!rows.length){
+    wrap.innerHTML='<div class="empty-state">Belum ada hasil filter disimpan.</div>';
+    return;
+  }
+  wrap.innerHTML=rows.map(r=>{
+    const d=r.createdAt&&r.createdAt.toDate?r.createdAt.toDate():null;
+    const date=d?d.toLocaleString('ms-MY'):(r.createdAtText||'-');
+    const filterText=[
+      r.filters?.status ? 'Status: '+r.filters.status : '',
+      r.filters?.source ? 'Sumber: '+r.filters.source : '',
+      r.filters?.batchLabel ? 'Batch: '+r.filters.batchLabel : '',
+      Array.isArray(r.filters?.tags)&&r.filters.tags.length ? 'Tag: '+r.filters.tags.join(', ') : ''
+    ].filter(Boolean).join(' • ') || 'Semua hasil';
+    return `<article class="seg-saved-card">
+      <div class="seg-saved-top">
+        <div>
+          <strong>${refEsc ? refEsc(r.name||'Hasil Filter') : (r.name||'Hasil Filter')}</strong>
+          <small>${date} • ${filterText}</small>
+        </div>
+        <button class="btn btn-ghost seg-delete-save" data-id="${r.id}">Padam</button>
+      </div>
+      <div class="seg-saved-kpis">
+        <div><span>Total</span><b>${fmt(r.total||0)}</b></div>
+        <div><span>Buyer</span><b>${fmt(r.buyer||0)}</b></div>
+        <div><span>Dah Reply</span><b>${fmt(r.replied||0)}</b></div>
+      </div>
+      <div class="seg-saved-actions">
+        <button class="btn btn-ghost seg-copy-saved" data-id="${r.id}" data-kind="buyer">📋 Copy Buyer</button>
+        <button class="btn btn-ghost seg-copy-saved" data-id="${r.id}" data-kind="reply">📋 Copy Reply</button>
+        <button class="btn btn-ghost seg-copy-saved" data-id="${r.id}" data-kind="all">📋 Copy Semua</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+function startSegSavedListener(){
+  if(segSavedUnsub) segSavedUnsub();
+  segSavedUnsub=db.collection('filterSaves').orderBy('createdAt','desc').limit(50).onSnapshot(snap=>{
+    const rows=snap.docs.map(d=>({id:d.id,...d.data()}));
+    window.__segSavedRows=rows;
+    renderSegSavedCards(rows);
+  },err=>toast('Ralat baca hasil filter disimpan: '+err.message,true));
+}
+
+document.getElementById('seg-save-result-btn')?.addEventListener('click',async()=>{
+  if(!segLastResults.length){toast('Cari/filter data dulu sebelum simpan',true);return;}
+  const summary=segResultSummary();
+  const status=document.getElementById('seg-filter-status')?.value||'';
+  const source=document.getElementById('seg-filter-source')?.value.trim()||'';
+  const batch=document.getElementById('seg-filter-batch');
+  const batchId=batch?.value||'';
+  const batchLabel=batchId ? (batch?.selectedOptions?.[0]?.textContent||'') : '';
+  const tags=getCheckedTags('seg-filter-tags');
+  const name=prompt('Nama simpanan filter ini:', status==='buyer'?'Buyer Retarget':status==='replied'?'Reply Retarget':'Filter Retarget');
+  if(name===null) return;
+  const buyerPhones=segNumbersBy('buyer');
+  const replyPhones=segNumbersBy('reply');
+  const allPhones=segNumbersBy('all');
+  try{
+    await db.collection('filterSaves').add({
+      name:(name||'Filter Retarget').trim(),
+      total:summary.total,
+      buyer:summary.buyer,
+      replied:summary.replied,
+      other:summary.other,
+      buyerPhones,
+      replyPhones,
+      allPhones,
+      filters:{status,source,batchId,batchLabel,tags},
+      createdBy:currentProfile?.name||currentUser?.email||'Staff',
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Hasil filter disimpan ✓');
+  }catch(err){toast('Gagal simpan hasil filter: '+err.message,true);}
+});
+
+document.getElementById('seg-copy-buyer-btn')?.addEventListener('click',()=>segCopyNumbers('buyer'));
+document.getElementById('seg-copy-reply-btn')?.addEventListener('click',()=>segCopyNumbers('reply'));
+
+document.getElementById('seg-saved-list')?.addEventListener('click',async e=>{
+  const copy=e.target.closest('.seg-copy-saved');
+  if(copy){
+    const row=(window.__segSavedRows||[]).find(r=>r.id===copy.dataset.id);
+    if(!row)return;
+    const kind=copy.dataset.kind;
+    const nums=kind==='buyer'?(row.buyerPhones||[]):kind==='reply'?(row.replyPhones||[]):(row.allPhones||[]);
+    if(!nums.length){toast('Tiada nombor dalam kategori ini',true);return;}
+    try{await navigator.clipboard.writeText(nums.join('\n'));toast(fmt(nums.length)+' nombor disalin ✓');}
+    catch(err){toast('Gagal salin nombor',true);}
+    return;
+  }
+  const del=e.target.closest('.seg-delete-save');
+  if(del){
+    if(!confirm('Padam rekod hasil filter ini?'))return;
+    try{await db.collection('filterSaves').doc(del.dataset.id).delete();toast('Rekod filter dipadam ✓');}
+    catch(err){toast('Gagal padam: '+err.message,true);}
+  }
+});
+
 
 // ---- Bulk Tag sebagai Buyer — paste nombor, padan dgn database, tanda status=buyer terus ----
 document.getElementById('seg-buyer-paste').addEventListener('input', () => {
@@ -2566,6 +2726,7 @@ document.getElementById('seg-buyer-tag-btn').addEventListener('click', async () 
       body.appendChild(tr);
     });
     if (!matched.length) body.innerHTML = '<tr><td colspan="5" class="empty-state">Tiada nombor yang padan dgn database.</td></tr>';
+    renderSegSummary();
 
     resultBox.textContent = `✓ ${fmt(matched.length)} nombor dijumpai & ditanda sebagai Buyer.` +
       (notFound.length ? `\n⚠️ ${fmt(notFound.length)} nombor TIDAK dijumpai dalam database:\n${notFound.join(', ')}` : '');
@@ -5712,3 +5873,5 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 document.querySelector('.app-nav button[data-view="planning"]')?.addEventListener('click',
  ()=>setTimeout(v15PlanningPosterPreview,100));
+
+document.addEventListener('DOMContentLoaded',()=>{ try{ startSegSavedListener(); }catch(e){ console.warn(e); } });
