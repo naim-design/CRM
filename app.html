@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v18-filter-saves">
+<link rel="stylesheet" href="css/app-extra.css?v=v20-dedupe-cumulative-buyers">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -1044,12 +1044,18 @@ Ahmad	60112223344"></textarea>
           <strong id="seg-other-count">0</strong>
           <small>Hasil selain Buyer / Reply</small>
         </div>
+        <div class="seg-summary-card unmatched">
+          <span>TIADA DALAM DATABASE</span>
+          <strong id="seg-unmatched-count">0</strong>
+          <small>Nombor paste yang tidak dijumpai</small>
+        </div>
       </div>
 
       <div class="seg-result-actions">
         <button class="btn btn-primary" id="seg-save-result-btn">💾 Simpan Hasil Filter</button>
         <button class="btn btn-ghost" id="seg-copy-buyer-btn">📋 Salin Nombor Buyer</button>
         <button class="btn btn-ghost" id="seg-copy-reply-btn">📋 Salin Nombor Reply</button>
+        <button class="btn btn-ghost" id="seg-copy-unmatched-btn">⚠️ Salin Nombor Tiada DB</button>
         <button class="btn btn-ghost" id="seg-copy-btn">📋 Salin Semua Nombor</button>
       </div>
 
@@ -1060,14 +1066,33 @@ Ahmad	60112223344"></textarea>
             <p>Rekodkan hasil retarget supaya senang semak semula berapa Buyer dan Dah Reply.</p>
           </div>
         </div>
+
+        <div class="seg-cumulative-strip">
+          <div class="seg-cumulative-card buyer">
+            <span>BUYER TERKUMPUL (UNIK)</span>
+            <strong id="seg-cumulative-buyers">0</strong>
+            <small>Nombor Buyer unik daripada semua hasil filter yang disimpan</small>
+          </div>
+          <div class="seg-cumulative-card saves">
+            <span>JUMLAH SIMPANAN</span>
+            <strong id="seg-cumulative-saves">0</strong>
+            <small>Berapa kali hasil filter disimpan</small>
+          </div>
+          <div class="seg-cumulative-card unmatched">
+            <span>TIADA DB TERKUMPUL (UNIK)</span>
+            <strong id="seg-cumulative-unmatched">0</strong>
+            <small>Nombor unik yang belum wujud dalam database</small>
+          </div>
+        </div>
+
         <div id="seg-saved-list" class="seg-saved-list">
           <div class="empty-state">Belum ada hasil filter disimpan.</div>
         </div>
       </section>
 
       <table class="tbl">
-        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th style="text-align:right;">Status</th></tr></thead>
-        <tbody id="seg-result-body"><tr><td colspan="5" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
+        <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th>Catatan</th><th style="text-align:right;">Status</th></tr></thead>
+        <tbody id="seg-result-body"><tr><td colspan="6" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
       </table>
     </div>
 
@@ -1613,6 +1638,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v18-filter-saves"></script>
+<script src="js/app.js?v=v20-dedupe-cumulative-buyers"></script>
 </body>
 </html>
