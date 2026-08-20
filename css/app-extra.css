@@ -11594,3 +11594,161 @@ html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card{
     grid-template-columns:75px minmax(0,1fr) 85px !important;
   }
 }
+
+
+/* =========================================================
+   V17 — FUNNEL + SOURCE CONTRAST FIX
+   Fix labels/numbers that were too pale to read.
+   ========================================================= */
+
+/* Section numbering / headings */
+body.crm-sidebar-layout #view-dashboard > section > .section-head h2,
+body.crm-sidebar-layout #view-dashboard > section > .section-head h2 .idx{
+  font-size:19px !important;
+  font-weight:750 !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard > section > .section-head h2{
+  color:#17313d !important;
+}
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard > section > .section-head h2 .idx{
+  color:#0aa77f !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard > section > .section-head h2{
+  color:#f0f8f6 !important;
+}
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard > section > .section-head h2 .idx{
+  color:#16ddb0 !important;
+}
+
+/* =========================================================
+   FUNNEL
+   ========================================================= */
+
+body.crm-sidebar-layout #view-dashboard .funnel-card{
+  padding:18px 18px !important;
+}
+
+/* Old/current funnel markup can vary, so cover all likely labels */
+body.crm-sidebar-layout #view-dashboard #funnel .tick,
+body.crm-sidebar-layout #view-dashboard #funnel .funnel-label,
+body.crm-sidebar-layout #view-dashboard #funnel .label,
+body.crm-sidebar-layout #view-dashboard .funnel-stage .tick{
+  font-size:11px !important;
+  font-weight:650 !important;
+  opacity:1 !important;
+}
+
+/* numbers / rates */
+body.crm-sidebar-layout #view-dashboard #funnel .n,
+body.crm-sidebar-layout #view-dashboard #funnel .r,
+body.crm-sidebar-layout #view-dashboard #funnel .funnel-value,
+body.crm-sidebar-layout #view-dashboard #funnel .funnel-rate,
+body.crm-sidebar-layout #view-dashboard .funnel-stage .nums{
+  font-size:10px !important;
+  font-weight:600 !important;
+  opacity:1 !important;
+}
+
+/* Light funnel text */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .tick,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .funnel-label,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .label,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-stage .tick{
+  color:#27434d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .n,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .funnel-value{
+  color:#17313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .r,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard #funnel .funnel-rate{
+  color:#647d86 !important;
+}
+
+/* Dark funnel text */
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .tick,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .funnel-label,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .label,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .funnel-stage .tick{
+  color:#dce9e6 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .n,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .funnel-value{
+  color:#f2f8f7 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .r,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard #funnel .funnel-rate{
+  color:#9cb0b3 !important;
+}
+
+/* Funnel tracks: stronger contrast */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .funnel-bar-track{
+  background:#e7eeeb !important;
+}
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .funnel-bar-track{
+  background:#1f343a !important;
+}
+
+/* =========================================================
+   SOURCE CARDS
+   ========================================================= */
+
+body.crm-sidebar-layout #view-dashboard .source-card{
+  min-height:135px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .name{
+  font-size:14px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .stats-line{
+  font-size:11px !important;
+}
+
+body.crm-sidebar-layout #view-dashboard .source-card .stats-line b{
+  font-size:12px !important;
+  font-weight:700 !important;
+}
+
+/* Cover raw source card text if markup doesn't use stats-line */
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card *{
+  color:#29434d;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card .name,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card b,
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card strong{
+  color:#17313d !important;
+}
+
+html[data-theme="light"] body.crm-sidebar-layout #view-dashboard .source-card .tag{
+  color:#087d61 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card *{
+  color:#b9cbcc;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card .name,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card b,
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card strong{
+  color:#eef7f5 !important;
+}
+
+html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .source-card .tag{
+  color:#31ddb2 !important;
+}
+
+/* Prevent accidental opacity inherited by dashboard detail text */
+body.crm-sidebar-layout #view-dashboard .funnel-card *,
+body.crm-sidebar-layout #view-dashboard .source-card *{
+  text-shadow:none !important;
+}
