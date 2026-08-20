@@ -11313,3 +11313,24 @@ html:not([data-theme="light"]) body.crm-sidebar-layout #view-dashboard .ref-outl
     grid-template-columns:1fr !important;
   }
 }
+
+/* V15 Planning poster direct preview */
+#view-planning .planning-poster-direct{
+ width:100%!important; min-height:300px!important; max-height:520px!important;
+ display:flex!important; align-items:center!important; justify-content:center!important;
+ overflow:hidden!important; border-radius:14px!important;
+ background:var(--surface-2,#f6f8f8)!important; border:1px solid var(--border,#e2e9e7)!important;
+}
+#view-planning .planning-poster-direct img{
+ width:100%!important; height:auto!important; max-height:520px!important;
+ object-fit:contain!important; object-position:center!important; display:block!important;
+ cursor:zoom-in!important;
+}
+@media(min-width:900px){
+ #view-planning .planning-grid,#view-planning .planning-list,#view-planning .plan-grid{
+   grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+}
+html:not([data-theme="light"]) #view-planning .planning-poster-direct{
+ background:#0b171b!important;border-color:rgba(255,255,255,.08)!important;
+}
