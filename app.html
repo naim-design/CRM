@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v17-funnel-source-contrast">
+<link rel="stylesheet" href="css/app-extra.css?v=v18-filter-saves">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -1023,13 +1023,47 @@ Ahmad	60112223344"></textarea>
         <input type="text" class="search-box" id="seg-filter-phone" placeholder="Atau taip terus nombor untuk cari 1 kontak..." style="max-width:320px;">
       </div>
 
-      <div class="stat-row" style="margin-top:18px;">
-        <div class="stat-card accent-mint"><div class="label">Hasil Dijumpai</div><div class="value" id="seg-result-count">–</div><div class="foot" id="seg-result-note">Papar sehingga 500 rekod pertama</div></div>
+      <div class="seg-filter-summary-grid" style="margin-top:18px;">
+        <div class="seg-summary-card total">
+          <span>HASIL DIJUMPAI</span>
+          <strong id="seg-result-count">–</strong>
+          <small id="seg-result-note">Papar sehingga 500 rekod pertama</small>
+        </div>
+        <div class="seg-summary-card buyer">
+          <span>BUYER</span>
+          <strong id="seg-buyer-count">0</strong>
+          <small>Kontak status / tag Buyer</small>
+        </div>
+        <div class="seg-summary-card reply">
+          <span>DAH REPLY</span>
+          <strong id="seg-reply-count">0</strong>
+          <small>Kontak yang pernah reply</small>
+        </div>
+        <div class="seg-summary-card other">
+          <span>LAIN-LAIN</span>
+          <strong id="seg-other-count">0</strong>
+          <small>Hasil selain Buyer / Reply</small>
+        </div>
       </div>
 
-      <div style="display:flex; justify-content:flex-end; margin:14px 0;">
-        <button class="btn btn-ghost" id="seg-copy-btn" style="width:auto; padding:9px 18px; font-size:12.5px;">📋 Salin Semua Nombor (hasil carian)</button>
+      <div class="seg-result-actions">
+        <button class="btn btn-primary" id="seg-save-result-btn">💾 Simpan Hasil Filter</button>
+        <button class="btn btn-ghost" id="seg-copy-buyer-btn">📋 Salin Nombor Buyer</button>
+        <button class="btn btn-ghost" id="seg-copy-reply-btn">📋 Salin Nombor Reply</button>
+        <button class="btn btn-ghost" id="seg-copy-btn">📋 Salin Semua Nombor</button>
       </div>
+
+      <section class="seg-saved-section">
+        <div class="section-head">
+          <div>
+            <h2><span class="idx">01</span> Hasil Filter Disimpan</h2>
+            <p>Rekodkan hasil retarget supaya senang semak semula berapa Buyer dan Dah Reply.</p>
+          </div>
+        </div>
+        <div id="seg-saved-list" class="seg-saved-list">
+          <div class="empty-state">Belum ada hasil filter disimpan.</div>
+        </div>
+      </section>
 
       <table class="tbl">
         <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th style="text-align:right;">Status</th></tr></thead>
@@ -1579,6 +1613,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v15-planning-direct"></script>
+<script src="js/app.js?v=v18-filter-saves"></script>
 </body>
 </html>
