@@ -11866,3 +11866,179 @@ html[data-theme="light"] #view-filter .seg-saved-kpis>div{background:#f7faf8!imp
  #view-filter .seg-filter-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
  #view-filter .seg-saved-list{grid-template-columns:1fr!important}
 }
+
+
+/* =========================================================
+   V19 — SIMPAN NOMBOR TIADA DALAM DATABASE
+   ========================================================= */
+#view-filter .seg-filter-summary-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+#view-filter .seg-summary-card.unmatched{
+  border-top:2px solid #ff6262!important;
+}
+#view-filter .seg-summary-card.unmatched strong{
+  color:#ff7a72!important;
+}
+
+#view-filter .seg-note-ok{
+  display:inline-flex!important;
+  align-items:center!important;
+  padding:4px 8px!important;
+  border-radius:999px!important;
+  background:rgba(22,196,148,.09)!important;
+  color:#26cba1!important;
+  font-size:8px!important;
+  font-weight:650!important;
+  white-space:nowrap!important;
+}
+#view-filter .seg-note-missing{
+  display:inline-flex!important;
+  align-items:center!important;
+  padding:4px 8px!important;
+  border-radius:999px!important;
+  background:rgba(255,93,83,.10)!important;
+  color:#ff8179!important;
+  font-size:8px!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+#view-filter .seg-unmatched-row{
+  background:rgba(255,93,83,.025)!important;
+}
+#view-filter .seg-missing-status{
+  background:rgba(255,93,83,.08)!important;
+  color:#ff8179!important;
+  border:1px solid rgba(255,93,83,.18)!important;
+}
+#view-filter .seg-saved-kpis{
+  grid-template-columns:repeat(4,1fr)!important;
+}
+#view-filter .seg-saved-kpis .unmatched{
+  border-color:rgba(255,93,83,.15)!important;
+}
+#view-filter .seg-saved-kpis .unmatched b{
+  color:#ff8179!important;
+}
+
+html[data-theme="light"] #view-filter .seg-note-ok{
+  background:#eaf8f3!important;color:#087d61!important;
+}
+html[data-theme="light"] #view-filter .seg-note-missing,
+html[data-theme="light"] #view-filter .seg-missing-status{
+  background:#fff1f0!important;color:#c94d47!important;border-color:#f1d4d1!important;
+}
+html[data-theme="light"] #view-filter .seg-unmatched-row{
+  background:#fffafa!important;
+}
+html[data-theme="light"] #view-filter .seg-summary-card.unmatched strong,
+html[data-theme="light"] #view-filter .seg-saved-kpis .unmatched b{
+  color:#c94d47!important;
+}
+
+@media(max-width:1200px){
+  #view-filter .seg-filter-summary-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:700px){
+  #view-filter .seg-filter-summary-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+
+/* =========================================================
+   V20 — DEDUPE + CUMULATIVE UNIQUE BUYER
+   ========================================================= */
+
+#view-filter .seg-cumulative-strip{
+  display:grid!important;
+  grid-template-columns:1.2fr .8fr 1fr!important;
+  gap:10px!important;
+  margin:0 0 14px!important;
+}
+
+#view-filter .seg-cumulative-card{
+  min-height:98px!important;
+  padding:14px 15px!important;
+  border-radius:13px!important;
+  background:#0f2025!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+}
+
+#view-filter .seg-cumulative-card span{
+  display:block!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:7.5px!important;
+  font-weight:700!important;
+  letter-spacing:.08em!important;
+  color:#7b959b!important;
+}
+
+#view-filter .seg-cumulative-card strong{
+  display:block!important;
+  margin-top:7px!important;
+  font-family:'Space Grotesk',sans-serif!important;
+  font-size:25px!important;
+  line-height:1!important;
+  color:#f2f9f7!important;
+}
+
+#view-filter .seg-cumulative-card small{
+  display:block!important;
+  margin-top:8px!important;
+  color:#8da3a7!important;
+  font-size:8.5px!important;
+}
+
+#view-filter .seg-cumulative-card.buyer{
+  border-left:3px solid #19d6aa!important;
+}
+#view-filter .seg-cumulative-card.buyer strong{
+  color:#29ddb2!important;
+}
+#view-filter .seg-cumulative-card.saves{
+  border-left:3px solid #9080f3!important;
+}
+#view-filter .seg-cumulative-card.unmatched{
+  border-left:3px solid #ff6961!important;
+}
+#view-filter .seg-cumulative-card.unmatched strong{
+  color:#ff8179!important;
+}
+
+/* Make summary 5 cards usable on desktop */
+#view-filter .seg-filter-summary-grid{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+
+html[data-theme="light"] #view-filter .seg-cumulative-card{
+  background:#fff!important;
+  border-color:#dfe7e5!important;
+  box-shadow:0 6px 18px rgba(35,60,52,.04)!important;
+}
+html[data-theme="light"] #view-filter .seg-cumulative-card span,
+html[data-theme="light"] #view-filter .seg-cumulative-card small{
+  color:#70868e!important;
+}
+html[data-theme="light"] #view-filter .seg-cumulative-card strong{
+  color:#17313d!important;
+}
+html[data-theme="light"] #view-filter .seg-cumulative-card.buyer strong{
+  color:#087d61!important;
+}
+html[data-theme="light"] #view-filter .seg-cumulative-card.unmatched strong{
+  color:#c94d47!important;
+}
+
+@media(max-width:1100px){
+  #view-filter .seg-cumulative-strip{
+    grid-template-columns:1fr 1fr!important;
+  }
+}
+@media(max-width:700px){
+  #view-filter .seg-cumulative-strip{
+    grid-template-columns:1fr!important;
+  }
+}
