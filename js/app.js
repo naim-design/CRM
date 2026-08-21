@@ -6056,3 +6056,20 @@ document.getElementById('seg-persistent-unmatched-list')?.addEventListener('clic
 document.addEventListener('DOMContentLoaded',()=>{
   try{ loadPersistentUnmatched(); }catch(e){ console.warn(e); }
 });
+
+
+// ============================================================
+// SALES PAGE LIVE — MAMARIAM CATALOG
+// ============================================================
+document.querySelectorAll('.salespage-copy-url-btn').forEach(btn=>{
+  btn.addEventListener('click', async ()=>{
+    const url=btn.dataset.url || '';
+    if(!url) return;
+    try{
+      await navigator.clipboard.writeText(url);
+      toast('Link sales page disalin ✓');
+    }catch(err){
+      toast('Gagal salin link', true);
+    }
+  });
+});
