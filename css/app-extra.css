@@ -12042,3 +12042,154 @@ html[data-theme="light"] #view-filter .seg-cumulative-card.unmatched strong{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* =========================================================
+   V21 — PERSISTENT UNMATCHED NUMBER POOL
+   ========================================================= */
+#view-filter .seg-unmatched-pool{
+  margin-top:16px!important;
+  padding:16px!important;
+  border-radius:14px!important;
+  background:#0f2025!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+}
+
+#view-filter .seg-unmatched-pool-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+}
+
+#view-filter .seg-pool-eyebrow{
+  display:block!important;
+  color:#ff7f78!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:7.5px!important;
+  font-weight:700!important;
+  letter-spacing:.10em!important;
+}
+
+#view-filter .seg-unmatched-pool-head h3{
+  margin:4px 0 0!important;
+  color:#f2f8f7!important;
+  font-size:15px!important;
+}
+
+#view-filter .seg-unmatched-pool-head p{
+  margin:5px 0 0!important;
+  color:#899fa3!important;
+  font-size:9px!important;
+}
+
+#view-filter .seg-unmatched-pool-actions{
+  display:flex!important;
+  gap:7px!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+}
+
+#view-filter .seg-unmatched-pool-actions .btn{
+  width:auto!important;
+  min-height:32px!important;
+  padding:0 10px!important;
+  font-size:8.5px!important;
+}
+
+#view-filter .seg-unmatched-pool-actions .danger{
+  color:#ff8179!important;
+  border-color:rgba(255,93,83,.18)!important;
+}
+
+#view-filter .seg-unmatched-pool-summary{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  margin-top:13px!important;
+  padding:8px 10px!important;
+  border-radius:9px!important;
+  background:#0b181c!important;
+  border:1px solid rgba(255,255,255,.055)!important;
+}
+
+#view-filter .seg-unmatched-pool-summary span{
+  color:#859a9f!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:7.5px!important;
+}
+
+#view-filter .seg-unmatched-pool-summary strong{
+  color:#ff8179!important;
+  font-size:18px!important;
+}
+
+#view-filter .seg-unmatched-number-list{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+  margin-top:12px!important;
+}
+
+#view-filter .seg-unmatched-number-row{
+  display:grid!important;
+  grid-template-columns:26px 1fr auto auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  min-width:0!important;
+  padding:8px 9px!important;
+  border-radius:9px!important;
+  background:#0b181c!important;
+  border:1px solid rgba(255,255,255,.05)!important;
+}
+
+#view-filter .seg-unmatched-number-row .num-index{
+  width:23px!important;
+  height:23px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+  background:rgba(255,93,83,.09)!important;
+  color:#ff8179!important;
+  font-size:8px!important;
+  font-weight:700!important;
+}
+
+#view-filter .seg-unmatched-number-row code{
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  color:#eef7f5!important;
+  font-size:10px!important;
+}
+
+#view-filter .seg-unmatched-number-row .btn{
+  width:auto!important;
+  min-height:27px!important;
+  padding:0 8px!important;
+  font-size:7.5px!important;
+}
+
+html[data-theme="light"] #view-filter .seg-unmatched-pool{
+  background:#fff!important;
+  border-color:#dfe7e5!important;
+  box-shadow:0 6px 18px rgba(35,60,52,.04)!important;
+}
+html[data-theme="light"] #view-filter .seg-unmatched-pool-head h3,
+html[data-theme="light"] #view-filter .seg-unmatched-number-row code{
+  color:#17313d!important;
+}
+html[data-theme="light"] #view-filter .seg-unmatched-pool-head p{
+  color:#71868e!important;
+}
+html[data-theme="light"] #view-filter .seg-unmatched-pool-summary,
+html[data-theme="light"] #view-filter .seg-unmatched-number-row{
+  background:#fff8f7!important;
+  border-color:#f0d9d6!important;
+}
+
+@media(max-width:900px){
+  #view-filter .seg-unmatched-number-list{
+    grid-template-columns:1fr!important;
+  }
+}
