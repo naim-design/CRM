@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v20-dedupe-cumulative-buyers">
+<link rel="stylesheet" href="css/app-extra.css?v=v21-persistent-unmatched">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -1088,6 +1088,27 @@ Ahmad	60112223344"></textarea>
         <div id="seg-saved-list" class="seg-saved-list">
           <div class="empty-state">Belum ada hasil filter disimpan.</div>
         </div>
+
+        <div class="seg-unmatched-pool">
+          <div class="seg-unmatched-pool-head">
+            <div>
+              <span class="seg-pool-eyebrow">PERSISTENT LIST</span>
+              <h3>Nombor Tiada Dalam Database</h3>
+              <p>Nombor ini kekal walaupun anda buat carian lain. Ia hanya hilang bila anda tekan Reset Senarai.</p>
+            </div>
+            <div class="seg-unmatched-pool-actions">
+              <button type="button" class="btn btn-ghost" id="seg-copy-persistent-unmatched">📋 Copy Semua</button>
+              <button type="button" class="btn btn-ghost danger" id="seg-reset-persistent-unmatched">Reset Senarai</button>
+            </div>
+          </div>
+          <div class="seg-unmatched-pool-summary">
+            <span>JUMLAH UNIK</span>
+            <strong id="seg-persistent-unmatched-count">0</strong>
+          </div>
+          <div id="seg-persistent-unmatched-list" class="seg-unmatched-number-list">
+            <div class="empty-state">Belum ada nombor tiada dalam database.</div>
+          </div>
+        </div>
       </section>
 
       <table class="tbl">
@@ -1638,6 +1659,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v20-dedupe-cumulative-buyers"></script>
+<script src="js/app.js?v=v21-persistent-unmatched"></script>
 </body>
 </html>
