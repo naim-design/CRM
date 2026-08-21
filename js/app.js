@@ -2425,6 +2425,55 @@ function renderHourOfDay() {
 // ============================================================
 let segLastResults = [];
 let segLastUnmatched = [];
+let segPersistentUnmatched = [];
+
+const SEG_UNMATCHED_STORAGE_KEY = 'crmPersistentUnmatchedPhonesV1';
+
+function loadPersistentUnmatched(){
+  try{
+    const raw=JSON.parse(localStorage.getItem(SEG_UNMATCHED_STORAGE_KEY)||'[]');
+    segPersistentUnmatched=segUniquePhones(Array.isArray(raw)?raw:[]);
+  }catch(_){
+    segPersistentUnmatched=[];
+  }
+  renderPersistentUnmatched();
+}
+
+function savePersistentUnmatchedLocal(){
+  try{
+    localStorage.setItem(SEG_UNMATCHED_STORAGE_KEY, JSON.stringify(segPersistentUnmatched));
+  }catch(_){}
+}
+
+function addPersistentUnmatched(values){
+  const merged=segUniquePhones([...(segPersistentUnmatched||[]), ...(values||[])]);
+  segPersistentUnmatched=merged;
+  savePersistentUnmatchedLocal();
+  renderPersistentUnmatched();
+}
+
+function renderPersistentUnmatched(){
+  const count=document.getElementById('seg-persistent-unmatched-count');
+  const list=document.getElementById('seg-persistent-unmatched-list');
+  if(count) count.textContent=fmt((segPersistentUnmatched||[]).length);
+  if(!list) return;
+
+  if(!(segPersistentUnmatched||[]).length){
+    list.innerHTML='<div class="empty-state">Belum ada nombor tiada dalam database.</div>';
+    return;
+  }
+
+  list.innerHTML=segPersistentUnmatched.map((p,i)=>`
+    <div class="seg-unmatched-number-row">
+      <span class="num-index">${i+1}</span>
+      <code>${p}</code>
+      <span class="seg-note-missing">⚠ Tiada dalam database</span>
+      <button type="button" class="btn btn-ghost seg-remove-unmatched" data-phone="${p}">Buang</button>
+    </div>
+  `).join('');
+}
+
+
 
 async function populateBatchSelect() {
   const sel = document.getElementById('seg-filter-batch');
@@ -2561,7 +2610,7 @@ function renderSegSummary(){
   set('seg-buyer-count',s.buyer);
   set('seg-reply-count',s.replied);
   set('seg-other-count',s.other);
-  set('seg-unmatched-count',(segLastUnmatched||[]).length);
+  set('seg-unmatched-count',segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]).length);
 }
 
 function segNumbersBy(kind){
@@ -2664,7 +2713,7 @@ function startSegSavedListener(){
 }
 
 document.getElementById('seg-save-result-btn')?.addEventListener('click',async()=>{
-  if(!segLastResults.length && !(segLastUnmatched||[]).length){toast('Cari/filter data dulu sebelum simpan',true);return;}
+  if(!segLastResults.length && !(segLastUnmatched||[]).length && !(segPersistentUnmatched||[]).length){toast('Cari/filter data dulu sebelum simpan',true);return;}
   const summary=segResultSummary();
   const status=document.getElementById('seg-filter-status')?.value||'';
   const source=document.getElementById('seg-filter-source')?.value.trim()||'';
@@ -2687,8 +2736,8 @@ document.getElementById('seg-save-result-btn')?.addEventListener('click',async()
       buyerPhones,
       replyPhones,
       allPhones,
-      unmatchedPhones:segUniquePhones(segLastUnmatched||[]),
-      unmatched:segUniquePhones(segLastUnmatched||[]).length,
+      unmatchedPhones:segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]),
+      unmatched:segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]).length,
       filters:{status,source,batchId,batchLabel,tags},
       createdBy:currentProfile?.name||currentUser?.email||'Staff',
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
@@ -2700,7 +2749,7 @@ document.getElementById('seg-save-result-btn')?.addEventListener('click',async()
 document.getElementById('seg-copy-buyer-btn')?.addEventListener('click',()=>segCopyNumbers('buyer'));
 document.getElementById('seg-copy-reply-btn')?.addEventListener('click',()=>segCopyNumbers('reply'));
 document.getElementById('seg-copy-unmatched-btn')?.addEventListener('click',async()=>{
-  const nums=[...(segLastUnmatched||[])];
+  const nums=segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]);
   if(!nums.length){toast('Tiada nombor yang tidak dijumpai',true);return;}
   try{
     await navigator.clipboard.writeText(nums.join('\n'));
@@ -2793,6 +2842,7 @@ document.getElementById('seg-buyer-tag-btn').addEventListener('click', async () 
     matched = segUniqueContacts(matched);
     const notFound = segUniquePhones(phones.filter(p => !foundOriginals.has(p)));
     segLastUnmatched = segUniquePhones(notFound);
+    addPersistentUnmatched(segLastUnmatched);
 
     // Terus papar hasil kat table Filter Database bawah (macam lepas tekan Cari)
     segLastResults = matched;
@@ -5972,3 +6022,37 @@ document.querySelector('.app-nav button[data-view="planning"]')?.addEventListene
  ()=>setTimeout(v15PlanningPosterPreview,100));
 
 document.addEventListener('DOMContentLoaded',()=>{ try{ startSegSavedListener(); }catch(e){ console.warn(e); } });
+
+
+document.getElementById('seg-copy-persistent-unmatched')?.addEventListener('click',async()=>{
+  const nums=segUniquePhones(segPersistentUnmatched||[]);
+  if(!nums.length){toast('Tiada nombor tiada DB untuk disalin',true);return;}
+  try{
+    await navigator.clipboard.writeText(nums.join('\n'));
+    toast(fmt(nums.length)+' nombor tiada DB disalin ✓');
+  }catch(err){toast('Gagal salin nombor',true);}
+});
+
+document.getElementById('seg-reset-persistent-unmatched')?.addEventListener('click',()=>{
+  if(!(segPersistentUnmatched||[]).length){toast('Senarai memang kosong',true);return;}
+  if(!confirm('Reset semua nombor Tiada Dalam Database yang disimpan sementara?')) return;
+  segPersistentUnmatched=[];
+  savePersistentUnmatchedLocal();
+  renderPersistentUnmatched();
+  renderSegSummary();
+  toast('Senarai Tiada DB direset ✓');
+});
+
+document.getElementById('seg-persistent-unmatched-list')?.addEventListener('click',e=>{
+  const btn=e.target.closest('.seg-remove-unmatched');
+  if(!btn) return;
+  const p=segNormalizePhone(btn.dataset.phone||'');
+  segPersistentUnmatched=segPersistentUnmatched.filter(x=>segNormalizePhone(x)!==p);
+  savePersistentUnmatchedLocal();
+  renderPersistentUnmatched();
+  renderSegSummary();
+});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  try{ loadPersistentUnmatched(); }catch(e){ console.warn(e); }
+});
