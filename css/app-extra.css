@@ -12193,3 +12193,160 @@ html[data-theme="light"] #view-filter .seg-unmatched-number-row{
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* =========================================================
+   V22 — SALES PAGE LIVE / LARGE PREVIEW
+   ========================================================= */
+#view-salespages{
+  padding-top:18px !important;
+}
+
+#view-salespages .salespages-head{
+  display:flex !important;
+  align-items:flex-end !important;
+  justify-content:space-between !important;
+  gap:16px !important;
+  margin-bottom:16px !important;
+}
+
+#view-salespages .salespages-head h2{
+  margin:0 !important;
+  font-size:24px !important;
+}
+
+#view-salespages .salespages-sub{
+  margin:6px 0 0 !important;
+  color:var(--muted) !important;
+  font-size:11px !important;
+}
+
+#view-salespages .salespages-open-live{
+  width:auto !important;
+  min-height:38px !important;
+  padding:0 14px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  text-decoration:none !important;
+}
+
+#view-salespages .salespage-feature-card{
+  width:100% !important;
+  max-width:none !important;
+  overflow:hidden !important;
+  border-radius:16px !important;
+  border:1px solid rgba(255,255,255,.075) !important;
+  background:#0f2025 !important;
+  box-shadow:0 10px 28px rgba(0,0,0,.10) !important;
+}
+
+#view-salespages .salespage-feature-top{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+  gap:14px !important;
+  padding:16px 18px !important;
+  border-bottom:1px solid rgba(255,255,255,.07) !important;
+}
+
+#view-salespages .salespage-feature-top h3{
+  margin:6px 0 0 !important;
+  font-size:17px !important;
+  color:#eef7f5 !important;
+}
+
+#view-salespages .salespage-feature-top p{
+  margin:4px 0 0 !important;
+  color:#82999d !important;
+  font-size:9px !important;
+}
+
+#view-salespages .salespage-live-badge{
+  display:inline-flex !important;
+  align-items:center !important;
+  min-height:23px !important;
+  padding:0 9px !important;
+  border-radius:999px !important;
+  background:rgba(8,215,170,.10) !important;
+  border:1px solid rgba(8,215,170,.20) !important;
+  color:#28d9ad !important;
+  font-family:'IBM Plex Mono',monospace !important;
+  font-size:7.5px !important;
+  font-weight:700 !important;
+  letter-spacing:.07em !important;
+}
+
+#view-salespages .salespage-feature-top .btn{
+  width:auto !important;
+  min-height:34px !important;
+  padding:0 12px !important;
+  font-size:9px !important;
+}
+
+#view-salespages .salespage-live-preview{
+  position:relative !important;
+  width:100% !important;
+  height:72vh !important;
+  min-height:680px !important;
+  max-height:900px !important;
+  background:#ffffff !important;
+  overflow:hidden !important;
+}
+
+#view-salespages .salespage-live-preview iframe{
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  border:0 !important;
+  background:#ffffff !important;
+}
+
+#view-salespages .salespage-feature-actions{
+  display:flex !important;
+  justify-content:flex-end !important;
+  gap:9px !important;
+  padding:13px 16px !important;
+  border-top:1px solid rgba(255,255,255,.07) !important;
+}
+
+#view-salespages .salespage-feature-actions .btn{
+  width:auto !important;
+  min-height:36px !important;
+  padding:0 14px !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  text-decoration:none !important;
+  font-size:9.5px !important;
+}
+
+/* Light mode */
+html[data-theme="light"] #view-salespages .salespage-feature-card{
+  background:#ffffff !important;
+  border-color:#dfe7e5 !important;
+  box-shadow:0 8px 24px rgba(35,60,52,.05) !important;
+}
+
+html[data-theme="light"] #view-salespages .salespage-feature-top,
+html[data-theme="light"] #view-salespages .salespage-feature-actions{
+  border-color:#e4eae8 !important;
+}
+
+html[data-theme="light"] #view-salespages .salespage-feature-top h3{
+  color:#17313d !important;
+}
+
+html[data-theme="light"] #view-salespages .salespage-feature-top p{
+  color:#70868e !important;
+}
+
+@media(max-width:900px){
+  #view-salespages .salespages-head{
+    align-items:flex-start !important;
+    flex-direction:column !important;
+  }
+
+  #view-salespages .salespage-live-preview{
+    height:70vh !important;
+    min-height:560px !important;
+  }
+}
