@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v22-salespage-live">
+<link rel="stylesheet" href="css/app-extra.css?v=v24-valid-reply-tracker">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -1011,6 +1011,97 @@ Ahmad	60112223344"></textarea>
       <div class="section-head" style="padding-top:36px;"><h2>Filter Database</h2></div>
       <p style="font-size:12.5px; color:var(--muted); margin-bottom:18px;">Cari & senaraikan kontak ikut status (Buyer, Dah Reply, dll) dan sumber — sesuai untuk buat senarai follow-up atau kempen susulan.</p>
 
+      <section class="reply-tracker-card">
+        <div class="reply-tracker-head">
+          <div>
+            <span class="reply-tracker-eyebrow">WHATSAPP REPLY TRACKER</span>
+            <h3>Valid Reply / Unique Replier</h3>
+            <p>Kira 1 nombor sekali sahaja untuk setiap blast. Auto-reply WhatsApp Business dan mesej emoji sahaja tidak dikira.</p>
+          </div>
+          <span class="reply-tracker-live" id="reply-tracker-status">Menunggu webhook</span>
+        </div>
+
+        <div class="reply-tracker-controls">
+          <div class="field">
+            <label>Tarikh Blast Dari</label>
+            <input type="date" id="reply-track-from">
+          </div>
+          <div class="field">
+            <label>Tarikh Blast Hingga</label>
+            <input type="date" id="reply-track-to">
+          </div>
+          <div class="field">
+            <label>Reply Window</label>
+            <select id="reply-track-window">
+              <option value="1">1 hari selepas blast</option>
+              <option value="3">3 hari selepas blast</option>
+              <option value="7" selected>7 hari selepas blast</option>
+              <option value="14">14 hari selepas blast</option>
+              <option value="30">30 hari selepas blast</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Paparan</label>
+            <select id="reply-track-buyer-filter">
+              <option value="all">Semua Valid Reply</option>
+              <option value="nonbuyer">Reply Belum Buyer</option>
+              <option value="buyer">Reply Dah Buyer</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-primary" id="reply-track-refresh">↻ Semak Reply</button>
+        </div>
+
+        <div class="reply-tracker-kpis">
+          <div class="reply-kpi valid">
+            <span>VALID REPLY (UNIK)</span>
+            <strong id="reply-valid-count">0</strong>
+            <small>1 nombor = 1 replier</small>
+          </div>
+          <div class="reply-kpi nonbuyer">
+            <span>REPLY BELUM BUYER</span>
+            <strong id="reply-nonbuyer-count">0</strong>
+            <small>Sesuai untuk retarget</small>
+          </div>
+          <div class="reply-kpi buyer">
+            <span>REPLY DAH BUYER</span>
+            <strong id="reply-buyer-count">0</strong>
+            <small>Dikecualikan jika pilih Belum Buyer</small>
+          </div>
+          <div class="reply-kpi ignored">
+            <span>AUTO / EMOJI DIABAIKAN</span>
+            <strong id="reply-ignored-count">0</strong>
+            <small>Tidak masuk valid reply</small>
+          </div>
+        </div>
+
+        <div class="reply-tracker-actions">
+          <button type="button" class="btn btn-primary" id="reply-copy-nonbuyer">📋 Copy Reply Belum Buyer</button>
+          <button type="button" class="btn btn-ghost" id="reply-copy-all">📋 Copy Semua Valid Reply</button>
+        </div>
+
+        <div class="reply-tracker-note">
+          <b>Valid reply:</b> customer membalas selepas mesej/blast keluar dalam tempoh Reply Window.
+          Reply seperti “nak”, “berminat”, “boleh COD?”, “dah tak mengandung”, soalan harga dan ayat sebenar customer dikira.
+        </div>
+
+        <div class="reply-tracker-table-wrap">
+          <table class="tbl reply-tracker-table">
+            <thead>
+              <tr>
+                <th>Nombor</th>
+                <th>Reply Terakhir</th>
+                <th>Mesej</th>
+                <th>Blast Dipadankan</th>
+                <th>Buyer</th>
+              </tr>
+            </thead>
+            <tbody id="reply-tracker-body">
+              <tr><td colspan="5" class="empty-state">Belum ada valid reply.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <div class="form-card" style="margin-bottom:18px;">
         <div class="field">
           <label>🏷️ Tag Bulk sebagai Buyer — Paste Nombor (satu nombor / baris, boleh sekali dengan nama)</label>
@@ -1683,6 +1774,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v22-salespage-live"></script>
+<script src="js/app.js?v=v24-valid-reply-tracker"></script>
 </body>
 </html>
