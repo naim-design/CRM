@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v24-valid-reply-tracker">
+<link rel="stylesheet" href="css/app-extra.css?v=v25-tiktok-leads-dashboard">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -30,6 +30,7 @@
       <nav class="app-nav">
         <button data-view="input" class="active">Input Data</button>
         <button data-view="dashboard">Dashboard</button>
+        <button data-view="tiktokleads">TikTok Leads</button>
         <button data-view="poster">Poster</button>
         <button data-view="template">Template</button>
         <button data-view="feedback">Feedback</button>
@@ -673,6 +674,112 @@
         </div>
         <div id="template-library-grid" class="template-library-grid"></div>
       </section>
+    </div>
+
+
+    <!-- ================= TIKTOK LEADS ================= -->
+    <div id="view-tiktokleads" class="view">
+      <div class="tt-leads-page">
+        <div class="tt-leads-hero">
+          <div>
+            <div class="eyebrow">TikTok Lead Magnet</div>
+            <h1>Dashboard TikTok Leads</h1>
+            <p>Pantau kos iklan, CTR, klik, result TikTok, nombor leads masuk dan creative mana paling efisien — siap untuk pembentangan kepada coach.</p>
+          </div>
+          <div class="tt-leads-hero-actions">
+            <button type="button" class="btn btn-primary" id="tt-open-entry">+ Input Data Iklan</button>
+            <button type="button" class="btn btn-ghost" id="tt-copy-summary">📋 Copy Ringkasan</button>
+          </div>
+        </div>
+
+        <section class="tt-filter-card">
+          <div class="tt-filter-grid">
+            <div class="field"><label>Dari</label><input type="date" id="tt-filter-from"></div>
+            <div class="field"><label>Hingga</label><input type="date" id="tt-filter-to"></div>
+            <div class="field"><label>Campaign</label><select id="tt-filter-campaign"><option value="">Semua Campaign</option></select></div>
+            <div class="field"><label>Creative</label><select id="tt-filter-creative"><option value="">Semua Creative</option></select></div>
+            <div class="tt-preset-wrap">
+              <button type="button" data-tt-range="today">Hari Ini</button>
+              <button type="button" data-tt-range="7">7 Hari</button>
+              <button type="button" data-tt-range="30">30 Hari</button>
+              <button type="button" data-tt-range="month">Bulan Ini</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="tt-kpi-grid">
+          <article class="tt-kpi"><span>TOTAL SPEND</span><strong id="tt-kpi-cost">RM 0.00</strong><small id="tt-kpi-days">0 hari data</small></article>
+          <article class="tt-kpi"><span>IMPRESSIONS</span><strong id="tt-kpi-impressions">0</strong><small>Jumlah paparan iklan</small></article>
+          <article class="tt-kpi"><span>CLICKS</span><strong id="tt-kpi-clicks">0</strong><small id="tt-kpi-cpc">CPC RM 0.00</small></article>
+          <article class="tt-kpi"><span>CTR</span><strong id="tt-kpi-ctr">0.00%</strong><small>Clicks ÷ impressions</small></article>
+          <article class="tt-kpi"><span>RESULT TIKTOK</span><strong id="tt-kpi-results">0</strong><small>Form / result direkod TikTok</small></article>
+          <article class="tt-kpi accent"><span>LEADS MASUK</span><strong id="tt-kpi-leads">0</strong><small id="tt-kpi-capture">0% daripada result</small></article>
+          <article class="tt-kpi accent2"><span>COST PER LEAD</span><strong id="tt-kpi-cpl">RM 0.00</strong><small>Kos ÷ nombor leads masuk</small></article>
+          <article class="tt-kpi"><span>TOP IKLAN</span><strong id="tt-kpi-top-ad">–</strong><small id="tt-kpi-top-ad-meta">Belum ada data</small></article>
+        </section>
+
+        <section class="tt-present-grid">
+          <article class="tt-panel tt-trend-panel">
+            <div class="tt-panel-head"><div><span class="tt-mini-label">PERFORMANCE TREND</span><h3>Trend Kos & Leads</h3></div><span class="hint-chip" id="tt-trend-label">0 hari</span></div>
+            <div id="tt-trend-chart" class="tt-chart-wrap"><div class="empty-state">Belum ada data TikTok Leads.</div></div>
+          </article>
+          <article class="tt-panel tt-insight-panel">
+            <div class="tt-panel-head"><div><span class="tt-mini-label">COACH SUMMARY</span><h3>Executive Summary</h3></div></div>
+            <div id="tt-coach-summary" class="tt-coach-summary">Masukkan data iklan untuk hasilkan ringkasan automatik.</div>
+          </article>
+        </section>
+
+        <section class="tt-panel">
+          <div class="tt-panel-head"><div><span class="tt-mini-label">CREATIVE PERFORMANCE</span><h3>Iklan Mana Yang Paling Okey?</h3><p>Ranking berdasarkan leads, CPL dan CTR. Satu creative boleh ada banyak input harian.</p></div></div>
+          <div id="tt-creative-cards" class="tt-creative-grid"><div class="empty-state">Belum ada creative direkod.</div></div>
+        </section>
+
+        <section class="tt-panel">
+          <div class="tt-panel-head"><div><span class="tt-mini-label">ADS LOG</span><h3>Senarai Iklan Yang Telah Dipost</h3></div><span class="hint-chip" id="tt-record-count">0 rekod</span></div>
+          <div class="tt-table-wrap">
+            <table class="tbl tt-table">
+              <thead><tr><th>Tarikh</th><th>Creative / Hook</th><th>Campaign</th><th>Kos</th><th>CTR</th><th>Clicks</th><th>Result</th><th>Leads</th><th>CPL</th><th>Prestasi</th><th>Tindakan</th></tr></thead>
+              <tbody id="tt-record-body"><tr><td colspan="11" class="empty-state">Belum ada data.</td></tr></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="tt-entry-panel" id="tt-entry-panel">
+          <div class="tt-panel-head">
+            <div><span class="tt-mini-label">INPUT / UPDATE DATA</span><h3 id="tt-form-title">Input Prestasi TikTok Leads</h3><p>Satu rekod = satu creative/ad untuk satu tarikh. Metrics boleh disalin terus daripada TikTok Ads Manager.</p></div>
+            <button type="button" class="btn btn-ghost" id="tt-close-entry">Tutup</button>
+          </div>
+          <form id="tt-leads-form">
+            <div class="tt-form-grid">
+              <div class="field"><label>Tarikh *</label><input type="date" id="tt-date" required></div>
+              <div class="field"><label>Campaign *</label><input type="text" id="tt-campaign" placeholder="Contoh: Ebook Nama Baby" required></div>
+              <div class="field"><label>Nama Creative / Ad *</label><input type="text" id="tt-ad-name" placeholder="Contoh: Video Hook Ibu Hamil V1" required></div>
+              <div class="field"><label>Angle / Hook</label><input type="text" id="tt-hook" placeholder="Contoh: Free 1000 Nama Baby"></div>
+
+              <div class="field"><label>Spend (RM) *</label><input type="number" id="tt-spend" min="0" step="0.01" value="0" required></div>
+              <div class="field"><label>Impressions</label><input type="number" id="tt-impressions" min="0" step="1" value="0"></div>
+              <div class="field"><label>Clicks *</label><input type="number" id="tt-clicks" min="0" step="1" value="0" required></div>
+              <div class="field"><label>Result TikTok</label><input type="number" id="tt-results" min="0" step="1" value="0"></div>
+              <div class="field"><label>Leads / Nombor Masuk *</label><input type="number" id="tt-leads" min="0" step="1" value="0" required></div>
+
+              <div class="field"><label>Status Iklan</label><select id="tt-status"><option value="Active">Active</option><option value="Paused">Paused</option><option value="Completed">Completed</option><option value="Testing">Testing</option></select></div>
+              <div class="field tt-span-2"><label>Link TikTok / Ads Library / Post</label><input type="url" id="tt-post-url" placeholder="https://..."></div>
+              <div class="field tt-span-2"><label>Screenshot Creative / Iklan</label><input type="file" id="tt-image" accept="image/*"><small>Optional. Gambar akan dikecilkan sebelum disimpan.</small></div>
+              <div class="field tt-span-2"><label>Nota</label><textarea id="tt-note" rows="3" placeholder="Contoh: Hook kuat, banyak leads selepas 8 malam..."></textarea></div>
+            </div>
+
+            <div class="tt-live-calc">
+              <span>CTR <b id="tt-live-ctr">0.00%</b></span>
+              <span>CPC <b id="tt-live-cpc">RM 0.00</b></span>
+              <span>CPL <b id="tt-live-cpl">RM 0.00</b></span>
+            </div>
+            <div class="tt-form-actions">
+              <button type="submit" class="btn btn-primary" id="tt-save-btn">Simpan Data TikTok</button>
+              <button type="button" class="btn btn-ghost" id="tt-reset-btn">Reset</button>
+            </div>
+          </form>
+        </section>
+      </div>
     </div>
 
     <div id="view-poster" class="view">
@@ -1774,6 +1881,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v24-valid-reply-tracker"></script>
+<script src="js/app.js?v=v25-tiktok-leads-dashboard"></script>
 </body>
 </html>
