@@ -48,6 +48,110 @@ function normalizePhone(v) {
   return s;
 }
 
+const AUTO_REPLY_PATTERNS = [
+  /terima kasih kerana (menghubungi|berminat|mesej)/i,
+  /terima kasih.*(?:hubungi|mesej).*(?:kami|admin)/i,
+  /anda akan (?:dilayan|dibalas|dihubungi)/i,
+  /akan (?:dilayan|dibalas|dihubungi).*(?:sebentar|secepat)/i,
+  /kami akan (?:membalas|reply|hubungi)/i,
+  /mesej anda telah (?:diterima|kami terima)/i,
+  /di luar waktu (?:operasi|perniagaan)/i,
+  /waktu operasi/i,
+  /away message/i,
+  /thank you for contacting/i,
+  /thanks for contacting/i,
+  /we(?:'|’)ll get back to you/i,
+  /we will get back to you/i,
+  /please wait.*(?:agent|admin)/i
+];
+
+function isEmojiOnlyMessage(value){
+  const t=String(value||'').trim();
+  if(!t) return false;
+  try{
+    const stripped=t
+      .replace(/\p{Extended_Pictographic}/gu,'')
+      .replace(/[\uFE0E\uFE0F\u200D]/g,'')
+      .replace(/[\s\p{P}\p{S}]/gu,'');
+    return stripped.length===0;
+  }catch(_){
+    return /^[\s\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF\uFE0F\u200D]+$/.test(t);
+  }
+}
+
+function incomingIgnoreReason(n){
+  const msg=String(n.message||'').trim();
+  if(!msg) return 'empty';
+  if(isEmojiOnlyMessage(msg)) return 'emoji';
+  if(AUTO_REPLY_PATTERNS.some(rx=>rx.test(msg))) return 'auto';
+  return '';
+}
+
+function timestampMillis(v){
+  if(!v) return 0;
+  if(typeof v.toMillis==='function') return v.toMillis();
+  if(typeof v.toDate==='function') return v.toDate().getTime();
+  if(typeof v==='number') return v>2e10?v:v*1000;
+  const d=new Date(v);
+  return Number.isNaN(d.getTime())?0:d.getTime();
+}
+
+async function findRecentOutgoing(db, phone, replyAt, windowDays=7){
+  if(!phone) return null;
+  const cutoff=replyAt.toMillis()-windowDays*86400000;
+
+  // Single-field where keeps deployment simple (no new composite index required).
+  const snap=await db.collection('wabotEvents').where('phone','==',phone).limit(250).get();
+  let best=null, bestMs=0;
+
+  snap.forEach(doc=>{
+    const e=doc.data()||{};
+    if(e.normalizedType!=='outgoing' && e.direction!=='outgoing') return;
+    const ms=timestampMillis(e.receivedAt||e.eventAt);
+    if(!ms || ms>replyAt.toMillis() || ms<cutoff) return;
+    if(ms>bestMs){bestMs=ms;best={id:doc.id,...e};}
+  });
+
+  return best;
+}
+
+async function persistValidReply(db, n, now){
+  if(n.normalizedType!=='incoming' || !n.phone) return {valid:false,reason:'not-incoming'};
+
+  const ignored=incomingIgnoreReason(n);
+  if(ignored) return {valid:false,reason:ignored};
+
+  const outgoing=await findRecentOutgoing(db,n.phone,now,7);
+  if(!outgoing) return {valid:false,reason:'no-recent-outgoing'};
+
+  // Same phone replying repeatedly to the same blast updates the same document.
+  const key=crypto.createHash('sha256')
+    .update(`${n.phone}|${outgoing.id}`)
+    .digest('hex')
+    .slice(0,40);
+
+  const ref=db.collection('validReplies').doc(key);
+  const snap=await ref.get();
+  const old=snap.exists?(snap.data()||{}):{};
+
+  const update={
+    phone:n.phone,
+    matchedOutgoingId:outgoing.id,
+    matchedOutgoingAt:outgoing.receivedAt||outgoing.eventAt||now,
+    campaign:outgoing.campaign||n.campaign||'',
+    script:outgoing.script||n.script||'',
+    instanceId:outgoing.instanceId||outgoing.instance_id||outgoing.instance||n.instanceId||'',
+    firstValidReplyAt:old.firstValidReplyAt||now,
+    lastValidReplyAt:now,
+    lastMessage:n.message||'',
+    validMessageCount:admin.firestore.FieldValue.increment(1),
+    updatedAt:now
+  };
+
+  await ref.set(update,{merge:true});
+  return {valid:true,replyId:key,outgoingId:outgoing.id};
+}
+
 function stableStringify(value) {
   if (value === null || typeof value !== 'object') return JSON.stringify(value);
   if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']';
@@ -89,7 +193,7 @@ function detect(payload) {
   return { eventName, status, normalizedType, direction, phone, instanceId, message, messageId, campaign, script, staff, account };
 }
 
-async function updateExistingContact(db, phone, normalizedType) {
+async function updateExistingContact(db, phone, normalizedType, validIncoming=false) {
   if (process.env.WABOT_UPDATE_EXISTING_CONTACTS !== 'true' || !phone) return;
   const variants = [...new Set([phone, phone.startsWith('60') ? '0'+phone.slice(2) : phone])];
   for (const variant of variants) {
@@ -98,7 +202,7 @@ async function updateExistingContact(db, phone, normalizedType) {
       const current = doc.data().status || 'pending';
       if (current === 'buyer') continue;
       let next = current;
-      if (normalizedType === 'incoming') next = 'replied';
+      if (normalizedType === 'incoming' && validIncoming) next = 'replied';
       else if (normalizedType === 'outgoing' && current === 'pending') next = 'blasted';
       if (next !== current) await doc.ref.update({ status:next, wabotAutoUpdatedAt:admin.firestore.FieldValue.serverTimestamp() });
     }
@@ -132,6 +236,13 @@ module.exports = async function handler(req, res) {
     };
     await ref.create(eventDoc);
 
+    let validReplyResult={valid:false};
+    try{
+      validReplyResult=await persistValidReply(db,n,now);
+    }catch(replyErr){
+      console.warn('Valid Reply Tracker:',replyErr.message);
+    }
+
     if (n.phone) {
       const cRef = db.collection('wabotContacts').doc(n.phone);
       const update = {
@@ -155,8 +266,8 @@ module.exports = async function handler(req, res) {
     if (incField) dailyUpdate[incField] = admin.firestore.FieldValue.increment(1);
     await dailyRef.set(dailyUpdate, { merge:true });
 
-    await updateExistingContact(db, n.phone, n.normalizedType);
-    return res.status(200).json({ ok:true, eventId, normalizedType:n.normalizedType, phone:n.phone || null });
+    await updateExistingContact(db, n.phone, n.normalizedType, !!validReplyResult.valid);
+    return res.status(200).json({ ok:true, eventId, normalizedType:n.normalizedType, phone:n.phone || null, validReply:!!validReplyResult.valid, validReplyReason:validReplyResult.reason||null });
   } catch (err) {
     console.error('Wabot webhook error:', err);
     return res.status(500).json({ ok:false, error:err.message });
