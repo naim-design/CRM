@@ -16,6 +16,10 @@ let allFeedback = [];
 let unsubFeedback = null;
 let allCampaignMappings = [];
 let unsubCampaignMappings = null;
+let allTikTokLeads = [];
+let unsubTikTokLeads = null;
+let editingTikTokLeadId = null;
+let tikTokLeadImageData = '';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -517,6 +521,7 @@ auth.onAuthStateChanged(async (user) => {
   startListeners();
   startTopupListener();
   startPlanningListener();
+  startTikTokLeadsListener();
   initWabotControlInputs();
   updateTopupVisibility();
 
@@ -538,7 +543,233 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); loadImportBatches(); }
     if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); populateBatchSelect(); }
+    if (btn.dataset.view === 'tiktokleads') { initTikTokLeadsView(); renderTikTokLeads(); }
   });
+});
+
+
+// ============================================================
+// TIKTOK LEADS — LEAD MAGNET PERFORMANCE DASHBOARD
+// ============================================================
+function ttNum(v){ return Number(v||0) || 0; }
+function ttMoney(v){ return 'RM ' + ttNum(v).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function ttPct(v){ return ttNum(v).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}) + '%'; }
+function ttEsc(v){ return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+function ttDateStr(row){
+  if(row.date) return String(row.date).slice(0,10);
+  if(row.createdAt?.toDate) return row.createdAt.toDate().toISOString().slice(0,10);
+  return '';
+}
+
+function ttMetrics(rows){
+  const spend=rows.reduce((s,r)=>s+ttNum(r.spend),0);
+  const impressions=rows.reduce((s,r)=>s+ttNum(r.impressions),0);
+  const clicks=rows.reduce((s,r)=>s+ttNum(r.clicks),0);
+  const results=rows.reduce((s,r)=>s+ttNum(r.results),0);
+  const leads=rows.reduce((s,r)=>s+ttNum(r.leads),0);
+  return {spend,impressions,clicks,results,leads,ctr:impressions?clicks/impressions*100:0,cpc:clicks?spend/clicks:0,cpl:leads?spend/leads:0,capture:results?leads/results*100:0};
+}
+
+function ttFilteredRows(){
+  const from=document.getElementById('tt-filter-from')?.value||'';
+  const to=document.getElementById('tt-filter-to')?.value||'';
+  const campaign=document.getElementById('tt-filter-campaign')?.value||'';
+  const creative=document.getElementById('tt-filter-creative')?.value||'';
+  return allTikTokLeads.filter(r=>{
+    const d=ttDateStr(r);
+    if(from && d<from) return false;
+    if(to && d>to) return false;
+    if(campaign && r.campaign!==campaign) return false;
+    if(creative && r.adName!==creative) return false;
+    return true;
+  });
+}
+
+function ttCreativeGroups(rows){
+  const map=new Map();
+  rows.forEach(r=>{
+    const key=String(r.adName||'Tanpa Nama').trim()||'Tanpa Nama';
+    if(!map.has(key)) map.set(key,[]);
+    map.get(key).push(r);
+  });
+  const groups=[...map.entries()].map(([name,items])=>{
+    const m=ttMetrics(items);
+    const latest=[...items].sort((a,b)=>ttDateStr(b).localeCompare(ttDateStr(a)))[0]||{};
+    return {name,items,...m,campaign:latest.campaign||'',hook:latest.hook||'',status:latest.status||'',postUrl:latest.postUrl||'',imageData:latest.imageData||''};
+  });
+  const maxLeads=Math.max(1,...groups.map(g=>g.leads));
+  const cpls=groups.filter(g=>g.leads>0).map(g=>g.cpl);
+  const medCpl=cpls.length ? [...cpls].sort((a,b)=>a-b)[Math.floor(cpls.length/2)] : 0;
+  const ctrs=groups.map(g=>g.ctr).filter(Boolean);
+  const medCtr=ctrs.length ? [...ctrs].sort((a,b)=>a-b)[Math.floor(ctrs.length/2)] : 0;
+  groups.forEach(g=>{
+    let score=(g.leads/maxLeads)*50;
+    if(g.leads>0 && medCpl>0) score+=Math.min(30,(medCpl/Math.max(g.cpl,.01))*20);
+    if(medCtr>0) score+=Math.min(20,(g.ctr/medCtr)*10);
+    g.score=score;
+  });
+  groups.sort((a,b)=>b.score-a.score || b.leads-a.leads || a.cpl-b.cpl);
+  groups.forEach((g,i)=>{
+    if(i===0 && g.leads>0) g.performance='Winner';
+    else if(g.leads>0 && (g.cpl<=medCpl || g.ctr>=medCtr)) g.performance='Okey';
+    else if(g.leads>0) g.performance='Pantau';
+    else g.performance='Belum Convert';
+  });
+  return groups;
+}
+
+function ttPerfClass(label){ return label==='Winner'?'winner':label==='Okey'?'good':label==='Pantau'?'watch':'weak'; }
+
+function ttSetRange(kind){
+  const today=new Date(), end=today.toISOString().slice(0,10);
+  let start=new Date(today);
+  if(kind==='today') start=today;
+  else if(kind==='7') start.setDate(today.getDate()-6);
+  else if(kind==='30') start.setDate(today.getDate()-29);
+  else if(kind==='month') start=new Date(today.getFullYear(),today.getMonth(),1);
+  const from=document.getElementById('tt-filter-from'), to=document.getElementById('tt-filter-to');
+  if(from) from.value=start.toISOString().slice(0,10);
+  if(to) to.value=end;
+  renderTikTokLeads();
+}
+
+function ttPopulateFilters(){
+  const campaignSel=document.getElementById('tt-filter-campaign'), creativeSel=document.getElementById('tt-filter-creative');
+  if(!campaignSel||!creativeSel) return;
+  const cc=campaignSel.value, cr=creativeSel.value;
+  const campaigns=[...new Set(allTikTokLeads.map(r=>r.campaign).filter(Boolean))].sort();
+  const creatives=[...new Set(allTikTokLeads.map(r=>r.adName).filter(Boolean))].sort();
+  campaignSel.innerHTML='<option value="">Semua Campaign</option>'+campaigns.map(v=>`<option>${ttEsc(v)}</option>`).join('');
+  creativeSel.innerHTML='<option value="">Semua Creative</option>'+creatives.map(v=>`<option>${ttEsc(v)}</option>`).join('');
+  if(campaigns.includes(cc)) campaignSel.value=cc;
+  if(creatives.includes(cr)) creativeSel.value=cr;
+}
+
+function ttTrendSvg(rows){
+  const map=new Map();
+  rows.forEach(r=>{
+    const d=ttDateStr(r); if(!d)return;
+    if(!map.has(d))map.set(d,{date:d,spend:0,leads:0});
+    const x=map.get(d); x.spend+=ttNum(r.spend); x.leads+=ttNum(r.leads);
+  });
+  const pts=[...map.values()].sort((a,b)=>a.date.localeCompare(b.date));
+  if(!pts.length)return '<div class="empty-state">Belum ada data untuk julat ini.</div>';
+  const w=760,h=250,padL=46,padR=20,padT=22,padB=38,plotW=w-padL-padR,plotH=h-padT-padB;
+  const maxLeads=Math.max(1,...pts.map(p=>p.leads)),maxSpend=Math.max(1,...pts.map(p=>p.spend));
+  const x=i=>padL+(pts.length===1?plotW/2:(i/(pts.length-1))*plotW);
+  const yL=v=>padT+plotH-(v/maxLeads)*plotH, yS=v=>padT+plotH-(v/maxSpend)*plotH;
+  const lp=pts.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+','+yL(p.leads).toFixed(1)).join(' ');
+  const sp=pts.map((p,i)=>(i?'L':'M')+x(i).toFixed(1)+','+yS(p.spend).toFixed(1)).join(' ');
+  const grid=[0,.25,.5,.75,1].map(t=>{const yy=padT+plotH-t*plotH;return `<line x1="${padL}" y1="${yy}" x2="${w-padR}" y2="${yy}" class="tt-grid-line"/>`;}).join('');
+  const labels=pts.map((p,i)=>{if(pts.length>10&&i%Math.ceil(pts.length/7)!==0&&i!==pts.length-1)return '';return `<text x="${x(i)}" y="${h-13}" text-anchor="middle" class="tt-axis-label">${p.date.slice(5)}</text>`;}).join('');
+  const dots=pts.map((p,i)=>`<circle cx="${x(i)}" cy="${yL(p.leads)}" r="3.5" class="tt-lead-dot"><title>${p.date}: ${p.leads} leads | ${ttMoney(p.spend)}</title></circle>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" class="tt-trend-svg">${grid}<path d="${sp}" class="tt-spend-line"/><path d="${lp}" class="tt-lead-line"/>${dots}${labels}<text x="${padL}" y="13" class="tt-legend spend">— Kos</text><text x="${padL+72}" y="13" class="tt-legend leads">— Leads</text></svg>`;
+}
+
+function renderTikTokLeads(){
+  if(!document.getElementById('view-tiktokleads'))return;
+  ttPopulateFilters();
+  const rows=ttFilteredRows(),m=ttMetrics(rows),groups=ttCreativeGroups(rows),top=groups[0];
+  const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  set('tt-kpi-cost',ttMoney(m.spend));set('tt-kpi-impressions',fmt(m.impressions));set('tt-kpi-clicks',fmt(m.clicks));set('tt-kpi-cpc','CPC '+ttMoney(m.cpc));
+  set('tt-kpi-ctr',ttPct(m.ctr));set('tt-kpi-results',fmt(m.results));set('tt-kpi-leads',fmt(m.leads));set('tt-kpi-capture',ttPct(m.capture)+' daripada result');
+  set('tt-kpi-cpl',ttMoney(m.cpl));set('tt-kpi-top-ad',top?.name||'–');set('tt-kpi-top-ad-meta',top?`${fmt(top.leads)} leads • CPL ${ttMoney(top.cpl)} • CTR ${ttPct(top.ctr)}`:'Belum ada data');
+  const days=[...new Set(rows.map(ttDateStr).filter(Boolean))];set('tt-kpi-days',fmt(days.length)+' hari data');set('tt-trend-label',fmt(days.length)+' hari');set('tt-record-count',fmt(rows.length)+' rekod');
+  const chart=document.getElementById('tt-trend-chart');if(chart)chart.innerHTML=ttTrendSvg(rows);
+
+  const coach=document.getElementById('tt-coach-summary');
+  if(coach){
+    if(!rows.length)coach.innerHTML='<div class="empty-state">Masukkan data iklan untuk hasilkan ringkasan automatik.</div>';
+    else{
+      const winner=groups[0],weak=groups[groups.length-1];
+      coach.innerHTML=`<div class="tt-summary-line"><span>Spend</span><b>${ttMoney(m.spend)}</b></div><div class="tt-summary-line"><span>Leads diperoleh</span><b>${fmt(m.leads)}</b></div><div class="tt-summary-line"><span>Purata CPL</span><b>${ttMoney(m.cpl)}</b></div><div class="tt-summary-line"><span>CTR keseluruhan</span><b>${ttPct(m.ctr)}</b></div><div class="tt-summary-callout"><span>Iklan terbaik setakat ini</span><strong>${ttEsc(winner?.name||'–')}</strong><small>${winner?`${fmt(winner.leads)} leads pada CPL ${ttMoney(winner.cpl)}.`:'Belum ada data.'}</small></div>${groups.length>1?`<p class="tt-summary-foot">Untuk pembentangan: scale / hasilkan variasi daripada <b>${ttEsc(winner.name)}</b>. Creative yang perlu diperhatikan: <b>${ttEsc(weak.name)}</b>.</p>`:''}`;
+    }
+  }
+
+  const wrap=document.getElementById('tt-creative-cards');
+  if(wrap)wrap.innerHTML=groups.length?groups.map((g,i)=>`<article class="tt-creative-card ${i===0&&g.leads>0?'top':''}"><div class="tt-creative-media">${g.imageData?`<img src="${g.imageData}" alt="${ttEsc(g.name)}">`:`<div class="tt-creative-placeholder">TikTok Ad<br><span>#${i+1}</span></div>`}</div><div class="tt-creative-body"><div class="tt-creative-rank"><span>#${i+1}</span><b class="tt-perf-pill ${ttPerfClass(g.performance)}">${g.performance}</b></div><h4>${ttEsc(g.name)}</h4><p>${ttEsc(g.hook||g.campaign||'Tiada hook direkod')}</p><div class="tt-creative-metrics"><span><small>Leads</small><b>${fmt(g.leads)}</b></span><span><small>CPL</small><b>${ttMoney(g.cpl)}</b></span><span><small>CTR</small><b>${ttPct(g.ctr)}</b></span><span><small>Spend</small><b>${ttMoney(g.spend)}</b></span></div>${g.postUrl?`<a href="${ttEsc(g.postUrl)}" target="_blank" rel="noopener" class="tt-post-link">Buka Iklan ↗</a>`:''}</div></article>`).join(''):'<div class="empty-state">Belum ada creative direkod.</div>';
+
+  const body=document.getElementById('tt-record-body');
+  if(body){
+    const perfMap=new Map(groups.map(g=>[g.name,g.performance]));
+    const sorted=[...rows].sort((a,b)=>ttDateStr(b).localeCompare(ttDateStr(a)));
+    body.innerHTML=sorted.length?sorted.map(r=>{const rm=ttMetrics([r]),perf=perfMap.get(r.adName)||'Pantau';return `<tr><td>${ttEsc(ttDateStr(r)||'-')}</td><td class="tt-ad-cell"><b>${ttEsc(r.adName||'-')}</b><small>${ttEsc(r.hook||'')}</small>${r.postUrl?`<a href="${ttEsc(r.postUrl)}" target="_blank" rel="noopener">Lihat ↗</a>`:''}</td><td>${ttEsc(r.campaign||'-')}</td><td>${ttMoney(r.spend)}</td><td>${ttPct(rm.ctr)}</td><td>${fmt(r.clicks)}</td><td>${fmt(r.results)}</td><td><b>${fmt(r.leads)}</b></td><td>${ttMoney(rm.cpl)}</td><td><span class="tt-perf-pill ${ttPerfClass(perf)}">${perf}</span></td><td class="tt-actions-cell"><button type="button" class="tt-action-btn" onclick="editTikTokLead('${r.id}')">Edit</button><button type="button" class="tt-action-btn danger" onclick="deleteTikTokLead('${r.id}')">Padam</button></td></tr>`;}).join(''):'<tr><td colspan="11" class="empty-state">Belum ada data.</td></tr>';
+  }
+}
+
+function startTikTokLeadsListener(){
+  if(unsubTikTokLeads)return;
+  unsubTikTokLeads=db.collection('tiktokLeads').onSnapshot(snap=>{allTikTokLeads=snap.docs.map(d=>({id:d.id,...d.data()}));allTikTokLeads.sort((a,b)=>ttDateStr(b).localeCompare(ttDateStr(a)));renderTikTokLeads();},err=>toast('Ralat baca TikTok Leads: '+err.message,true));
+}
+
+function initTikTokLeadsView(){
+  const d=document.getElementById('tt-date');if(d&&!d.value)d.value=todayStr();
+  const from=document.getElementById('tt-filter-from'),to=document.getElementById('tt-filter-to');
+  if(from&&!from.value){const now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),1);from.value=start.toISOString().slice(0,10);}
+  if(to&&!to.value)to.value=todayStr();
+}
+
+function ttUpdateLiveCalc(){
+  const spend=ttNum(document.getElementById('tt-spend')?.value),impressions=ttNum(document.getElementById('tt-impressions')?.value),clicks=ttNum(document.getElementById('tt-clicks')?.value),leads=ttNum(document.getElementById('tt-leads')?.value);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('tt-live-ctr',ttPct(impressions?clicks/impressions*100:0));set('tt-live-cpc',ttMoney(clicks?spend/clicks:0));set('tt-live-cpl',ttMoney(leads?spend/leads:0));
+}
+
+function resetTikTokLeadForm(){
+  editingTikTokLeadId=null;tikTokLeadImageData='';
+  document.getElementById('tt-leads-form')?.reset();
+  const d=document.getElementById('tt-date');if(d)d.value=todayStr();
+  const st=document.getElementById('tt-status');if(st)st.value='Active';
+  ['tt-spend','tt-impressions','tt-clicks','tt-results','tt-leads'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  const title=document.getElementById('tt-form-title');if(title)title.textContent='Input Prestasi TikTok Leads';
+  const save=document.getElementById('tt-save-btn');if(save)save.textContent='Simpan Data TikTok';
+  ttUpdateLiveCalc();
+}
+
+async function editTikTokLead(id){
+  const r=allTikTokLeads.find(x=>x.id===id);if(!r)return;
+  editingTikTokLeadId=id;tikTokLeadImageData=r.imageData||'';
+  const fields={'tt-date':ttDateStr(r),'tt-campaign':r.campaign||'','tt-ad-name':r.adName||'','tt-hook':r.hook||'','tt-spend':ttNum(r.spend),'tt-impressions':ttNum(r.impressions),'tt-clicks':ttNum(r.clicks),'tt-results':ttNum(r.results),'tt-leads':ttNum(r.leads),'tt-status':r.status||'Active','tt-post-url':r.postUrl||'','tt-note':r.note||''};
+  Object.entries(fields).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
+  document.getElementById('tt-form-title').textContent='Edit Prestasi TikTok Leads';document.getElementById('tt-save-btn').textContent='Update Data TikTok';document.getElementById('tt-entry-panel')?.classList.add('open');ttUpdateLiveCalc();document.getElementById('tt-entry-panel')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function deleteTikTokLead(id){
+  const r=allTikTokLeads.find(x=>x.id===id);if(!r||!confirm(`Padam rekod "${r.adName||'TikTok Lead'}" pada ${ttDateStr(r)}?`))return;
+  try{await db.collection('tiktokLeads').doc(id).delete();toast('Rekod TikTok Leads dipadam ✓');}catch(err){toast('Gagal padam: '+err.message,true);}
+}
+
+async function ttCopySummary(){
+  const rows=ttFilteredRows();if(!rows.length){toast('Tiada data TikTok Leads untuk diringkaskan',true);return;}
+  const m=ttMetrics(rows),groups=ttCreativeGroups(rows),top=groups[0],from=document.getElementById('tt-filter-from')?.value||'-',to=document.getElementById('tt-filter-to')?.value||'-';
+  const text=['TIKTOK LEADS — PERFORMANCE SUMMARY',`Tempoh: ${from} hingga ${to}`,`Total Spend: ${ttMoney(m.spend)}`,`Impressions: ${fmt(m.impressions)}`,`Clicks: ${fmt(m.clicks)}`,`CTR: ${ttPct(m.ctr)}`,`Result TikTok: ${fmt(m.results)}`,`Leads / Nombor Masuk: ${fmt(m.leads)}`,`Cost Per Lead: ${ttMoney(m.cpl)}`,`CPC: ${ttMoney(m.cpc)}`,top?`Top Creative: ${top.name} — ${fmt(top.leads)} leads, CPL ${ttMoney(top.cpl)}, CTR ${ttPct(top.ctr)}`:''].filter(Boolean).join('\n');
+  try{await navigator.clipboard.writeText(text);toast('Ringkasan TikTok Leads disalin ✓');}catch(err){toast('Gagal salin ringkasan',true);}
+}
+
+document.getElementById('tt-open-entry')?.addEventListener('click',()=>{document.getElementById('tt-entry-panel')?.classList.add('open');document.getElementById('tt-entry-panel')?.scrollIntoView({behavior:'smooth',block:'start'});});
+document.getElementById('tt-close-entry')?.addEventListener('click',()=>document.getElementById('tt-entry-panel')?.classList.remove('open'));
+document.getElementById('tt-reset-btn')?.addEventListener('click',resetTikTokLeadForm);
+document.getElementById('tt-copy-summary')?.addEventListener('click',ttCopySummary);
+document.querySelectorAll('[data-tt-range]').forEach(btn=>btn.addEventListener('click',()=>ttSetRange(btn.dataset.ttRange)));
+['tt-filter-from','tt-filter-to','tt-filter-campaign','tt-filter-creative'].forEach(id=>document.getElementById(id)?.addEventListener('change',renderTikTokLeads));
+['tt-spend','tt-impressions','tt-clicks','tt-leads'].forEach(id=>document.getElementById(id)?.addEventListener('input',ttUpdateLiveCalc));
+
+document.getElementById('tt-image')?.addEventListener('change',async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  try{tikTokLeadImageData=await compressImageToBase64(file,700,0.68);toast('Screenshot creative sedia untuk disimpan ✓');}catch(err){toast('Gagal proses gambar: '+err.message,true);}
+});
+
+document.getElementById('tt-leads-form')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const save=document.getElementById('tt-save-btn');if(save)save.disabled=true;
+  try{
+    const payload={date:document.getElementById('tt-date').value,campaign:document.getElementById('tt-campaign').value.trim(),adName:document.getElementById('tt-ad-name').value.trim(),hook:document.getElementById('tt-hook').value.trim(),spend:ttNum(document.getElementById('tt-spend').value),impressions:ttNum(document.getElementById('tt-impressions').value),clicks:ttNum(document.getElementById('tt-clicks').value),results:ttNum(document.getElementById('tt-results').value),leads:ttNum(document.getElementById('tt-leads').value),status:document.getElementById('tt-status').value,postUrl:document.getElementById('tt-post-url').value.trim(),note:document.getElementById('tt-note').value.trim(),imageData:tikTokLeadImageData||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:currentUser?.email||''};
+    if(!payload.date||!payload.campaign||!payload.adName)throw new Error('Tarikh, Campaign dan Nama Creative diperlukan.');
+    if(editingTikTokLeadId){await db.collection('tiktokLeads').doc(editingTikTokLeadId).update(payload);toast('Data TikTok Leads dikemaskini ✓');}
+    else{payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();payload.createdBy=currentUser?.email||'';await db.collection('tiktokLeads').add(payload);toast('Data TikTok Leads disimpan ✓');}
+    resetTikTokLeadForm();document.getElementById('tt-entry-panel')?.classList.remove('open');
+  }catch(err){toast('Gagal simpan TikTok Leads: '+err.message,true);}finally{if(save)save.disabled=false;}
 });
 
 // ---- Realtime listeners ----
