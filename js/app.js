@@ -2420,6 +2420,324 @@ function renderHourOfDay() {
   });
 });
 
+
+// ============================================================
+// VALID REPLY TRACKER
+// - Ignore WhatsApp Business auto replies
+// - Ignore emoji-only replies
+// - Require a previous outgoing/blast within reply window
+// - Dedupe by phone + matched outgoing/blast
+// ============================================================
+let allValidReplies = [];
+let unsubValidReplies = null;
+let replyTrackerRows = [];
+let replyTrackerBuyerSet = new Set();
+
+const REPLY_AUTO_PATTERNS = [
+  /terima kasih kerana (menghubungi|berminat|mesej)/i,
+  /terima kasih.*(?:hubungi|mesej).*(?:kami|admin)/i,
+  /anda akan (?:dilayan|dibalas|dihubungi)/i,
+  /akan (?:dilayan|dibalas|dihubungi).*(?:sebentar|secepat)/i,
+  /kami akan (?:membalas|reply|hubungi)/i,
+  /mesej anda telah (?:diterima|kami terima)/i,
+  /di luar waktu (?:operasi|perniagaan)/i,
+  /waktu operasi/i,
+  /away message/i,
+  /thank you for contacting/i,
+  /thanks for contacting/i,
+  /we(?:'|’)ll get back to you/i,
+  /we will get back to you/i,
+  /please wait.*(?:agent|admin)/i
+];
+
+function replyMessageText(e){
+  const vals=[e?.message,e?.text,e?.body,e?.content];
+  for(const v of vals){
+    if(typeof v==='string' && v.trim()) return v.trim();
+    if(v && typeof v==='object'){
+      for(const k of ['text','body','caption','content','message']){
+        if(typeof v[k]==='string' && v[k].trim()) return v[k].trim();
+      }
+    }
+  }
+  return '';
+}
+
+function replyIsEmojiOnly(text){
+  const t=String(text||'').trim();
+  if(!t) return false;
+  try{
+    const stripped=t
+      .replace(/\p{Extended_Pictographic}/gu,'')
+      .replace(/[\uFE0E\uFE0F\u200D]/g,'')
+      .replace(/[\s\p{P}\p{S}]/gu,'');
+    return stripped.length===0;
+  }catch(_){
+    return /^[\s\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF\uFE0F\u200D]+$/.test(t);
+  }
+}
+
+function replyIgnoreReason(e){
+  const text=replyMessageText(e);
+  if(!text) return 'empty';
+  if(replyIsEmojiOnly(text)) return 'emoji';
+  if(REPLY_AUTO_PATTERNS.some(rx=>rx.test(text))) return 'auto';
+  return '';
+}
+
+function replyPhone(v){
+  let d=String(v||'').replace(/\D/g,'');
+  if(!d) return '';
+  if(d.startsWith('0') && d.length>8) d='60'+d.slice(1);
+  return d;
+}
+
+function replyEventTime(e){
+  return wabotDate(e?.eventAt) || wabotDate(e?.receivedAt);
+}
+
+function buildRecentValidReplies(events, windowDays=7){
+  const useful=(events||[]).filter(isUsefulWabotEvent);
+  const outgoingByPhone=new Map();
+
+  useful.forEach(e=>{
+    if(wabotEventKind(e)!=='outgoing') return;
+    const phone=replyPhone(e.phone||e.to||e.from);
+    const d=replyEventTime(e);
+    if(!phone || !d) return;
+    if(!outgoingByPhone.has(phone)) outgoingByPhone.set(phone,[]);
+    outgoingByPhone.get(phone).push({...e,__date:d});
+  });
+
+  outgoingByPhone.forEach(rows=>rows.sort((a,b)=>b.__date-a.__date));
+
+  const map=new Map();
+  let ignored=0;
+
+  useful.forEach(e=>{
+    if(wabotEventKind(e)!=='incoming') return;
+    const phone=replyPhone(e.phone||e.from||e.to);
+    const rd=replyEventTime(e);
+    if(!phone || !rd) return;
+
+    const reason=replyIgnoreReason(e);
+    if(reason){ ignored++; return; }
+
+    const cutoff=rd.getTime()-windowDays*86400000;
+    const outgoing=(outgoingByPhone.get(phone)||[]).find(o=>
+      o.__date.getTime()<=rd.getTime() && o.__date.getTime()>=cutoff
+    );
+    if(!outgoing) return;
+
+    const outId=outgoing.id || outgoing.messageId || outgoing.message_id ||
+      `${phone}_${outgoing.__date.getTime()}`;
+    const key=phone+'|'+outId;
+    const old=map.get(key);
+    const msg=replyMessageText(e);
+    if(!old){
+      map.set(key,{
+        id:'recent_'+key,
+        phone,
+        firstValidReplyAt:rd,
+        lastValidReplyAt:rd,
+        lastMessage:msg,
+        validMessageCount:1,
+        matchedOutgoingId:outId,
+        matchedOutgoingAt:outgoing.__date,
+        campaign:outgoing.campaign||e.campaign||'',
+        script:outgoing.script||outgoing.template||e.script||e.template||'',
+        instanceId:outgoing.instanceId||outgoing.instance_id||outgoing.instance||e.instanceId||e.instance_id||e.instance||'',
+        source:'recent-events'
+      });
+    }else{
+      old.validMessageCount=(old.validMessageCount||1)+1;
+      if(rd>old.lastValidReplyAt){
+        old.lastValidReplyAt=rd;
+        old.lastMessage=msg;
+      }
+    }
+  });
+
+  return {rows:[...map.values()],ignored};
+}
+
+function mergeValidReplyRows(serverRows,recentRows){
+  const map=new Map();
+  [...(serverRows||[]),...(recentRows||[])].forEach(r=>{
+    const phone=replyPhone(r.phone);
+    const outId=r.matchedOutgoingId||r.outgoingEventId||'unknown';
+    const key=phone+'|'+outId;
+    if(!phone) return;
+
+    const old=map.get(key);
+    if(!old){ map.set(key,{...r,phone}); return; }
+
+    const oldD=replyEventTime({eventAt:old.lastValidReplyAt});
+    const newD=replyEventTime({eventAt:r.lastValidReplyAt});
+    if(newD && (!oldD || newD>oldD)){
+      map.set(key,{...old,...r,phone});
+    }
+  });
+  return [...map.values()];
+}
+
+function replyBlastDateInRange(row){
+  const from=document.getElementById('reply-track-from')?.value||'';
+  const to=document.getElementById('reply-track-to')?.value||'';
+  const d=replyEventTime({eventAt:row.matchedOutgoingAt});
+  if(!d) return true;
+  const ds=d.toISOString().slice(0,10);
+  if(from && ds<from) return false;
+  if(to && ds>to) return false;
+  return true;
+}
+
+function replyPhoneVariants(phone){
+  const d=replyPhone(phone);
+  if(!d) return [];
+  const s=new Set([d]);
+  if(d.startsWith('60')) s.add('0'+d.slice(2));
+  else if(d.startsWith('0')) s.add('60'+d.slice(1));
+  return [...s];
+}
+
+async function loadReplyBuyerSet(phones){
+  const normalized=[...new Set((phones||[]).map(replyPhone).filter(Boolean))];
+  const buyerSet=new Set();
+
+  // Query up to 10 canonical numbers at once; each can create max 2 variants.
+  for(let i=0;i<normalized.length;i+=10){
+    const chunk=normalized.slice(i,i+10);
+    const variants=[...new Set(chunk.flatMap(replyPhoneVariants))].slice(0,30);
+    if(!variants.length) continue;
+    try{
+      const snap=await db.collection('contacts').where('phone','in',variants).get();
+      snap.forEach(doc=>{
+        const c=doc.data()||{};
+        const isBuyer=String(c.status||'').toLowerCase()==='buyer' ||
+          (Array.isArray(c.tags)&&c.tags.some(t=>String(t||'').toLowerCase()==='buyer'));
+        if(isBuyer) buyerSet.add(replyPhone(c.phone));
+      });
+    }catch(err){
+      console.warn('Reply Tracker buyer lookup:',err.message);
+    }
+  }
+
+  return buyerSet;
+}
+
+function replyUniqueByPhone(rows){
+  const map=new Map();
+  (rows||[]).forEach(r=>{
+    const p=replyPhone(r.phone);
+    if(!p) return;
+    const old=map.get(p);
+    const rd=replyEventTime({eventAt:r.lastValidReplyAt});
+    const od=old?replyEventTime({eventAt:old.lastValidReplyAt}):null;
+    if(!old || (rd && (!od || rd>od))) map.set(p,r);
+  });
+  return [...map.values()];
+}
+
+async function renderReplyTracker(){
+  const body=document.getElementById('reply-tracker-body');
+  if(!body) return;
+
+  const windowDays=Number(document.getElementById('reply-track-window')?.value||7);
+  const recent=buildRecentValidReplies(allWabotEvents,windowDays);
+  let rows=mergeValidReplyRows(allValidReplies,recent.rows).filter(replyBlastDateInRange);
+
+  // Same customer may reply multiple times / to multiple events. Main KPI = unique phone.
+  const unique=replyUniqueByPhone(rows);
+  replyTrackerBuyerSet=await loadReplyBuyerSet(unique.map(r=>r.phone));
+
+  const buyerFilter=document.getElementById('reply-track-buyer-filter')?.value||'all';
+  const shown=unique.filter(r=>{
+    const isBuyer=replyTrackerBuyerSet.has(replyPhone(r.phone));
+    if(buyerFilter==='buyer') return isBuyer;
+    if(buyerFilter==='nonbuyer') return !isBuyer;
+    return true;
+  });
+
+  replyTrackerRows=unique;
+
+  const buyers=unique.filter(r=>replyTrackerBuyerSet.has(replyPhone(r.phone))).length;
+  const nonbuyers=unique.length-buyers;
+
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=fmt(v);};
+  set('reply-valid-count',unique.length);
+  set('reply-buyer-count',buyers);
+  set('reply-nonbuyer-count',nonbuyers);
+  set('reply-ignored-count',recent.ignored);
+
+  const status=document.getElementById('reply-tracker-status');
+  if(status) status.textContent=`${fmt(unique.length)} unique valid reply`;
+
+  if(!shown.length){
+    body.innerHTML='<tr><td colspan="5" class="empty-state">Tiada valid reply untuk filter ini.</td></tr>';
+    return;
+  }
+
+  body.innerHTML=shown
+    .sort((a,b)=>{
+      const ad=replyEventTime({eventAt:a.lastValidReplyAt});
+      const bd=replyEventTime({eventAt:b.lastValidReplyAt});
+      return (bd?.getTime()||0)-(ad?.getTime()||0);
+    })
+    .map(r=>{
+      const phone=replyPhone(r.phone);
+      const replyD=replyEventTime({eventAt:r.lastValidReplyAt});
+      const blastD=replyEventTime({eventAt:r.matchedOutgoingAt});
+      const buyer=replyTrackerBuyerSet.has(phone);
+      const blastLabel=[r.campaign,r.script].filter(Boolean).join(' • ') || (blastD?blastD.toLocaleString('ms-MY'):'Blast terdahulu');
+      return `<tr>
+        <td class="tname" style="font-family:'IBM Plex Mono';">${wabotEsc(phone)}</td>
+        <td>${replyD?replyD.toLocaleString('ms-MY'):'-'}</td>
+        <td>${wabotEsc(r.lastMessage||'-')}</td>
+        <td><small>${wabotEsc(blastLabel)}</small></td>
+        <td><span class="reply-buyer-pill ${buyer?'yes':'no'}">${buyer?'Buyer':'Belum Buyer'}</span></td>
+      </tr>`;
+    }).join('');
+}
+
+async function copyReplyPhones(nonbuyerOnly){
+  if(!replyTrackerRows.length){
+    await renderReplyTracker();
+  }
+  let rows=replyUniqueByPhone(replyTrackerRows);
+  if(nonbuyerOnly) rows=rows.filter(r=>!replyTrackerBuyerSet.has(replyPhone(r.phone)));
+  const phones=[...new Set(rows.map(r=>replyPhone(r.phone)).filter(Boolean))];
+  if(!phones.length){toast('Tiada nombor reply untuk disalin',true);return;}
+  try{
+    await navigator.clipboard.writeText(phones.join('\n'));
+    toast(fmt(phones.length)+' nombor reply unik disalin ✓');
+  }catch(err){toast('Gagal salin nombor reply',true);}
+}
+
+function startValidReplyListener(){
+  if(unsubValidReplies) return;
+  unsubValidReplies=db.collection('validReplies').orderBy('lastValidReplyAt','desc').limit(2000).onSnapshot(snap=>{
+    allValidReplies=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderReplyTracker();
+  },err=>{
+    console.warn('Valid Reply listener:',err.message);
+    // Recent wabotEvents still gives a fallback view.
+    renderReplyTracker();
+  });
+}
+
+document.getElementById('reply-track-refresh')?.addEventListener('click',renderReplyTracker);
+['reply-track-from','reply-track-to','reply-track-window','reply-track-buyer-filter'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('change',renderReplyTracker);
+});
+document.getElementById('reply-copy-nonbuyer')?.addEventListener('click',()=>copyReplyPhones(true));
+document.getElementById('reply-copy-all')?.addEventListener('click',()=>copyReplyPhones(false));
+document.querySelector('.app-nav button[data-view="filter"]')?.addEventListener('click',()=>{
+  startValidReplyListener();
+  setTimeout(renderReplyTracker,100);
+});
+
+
 // ============================================================
 // FILTER / SEGMENTASI DATABASE — cari ikut status (Buyer, Reply, dll) + sumber + batch
 // ============================================================
@@ -3416,6 +3734,7 @@ function startWabotListener() {
   unsubWabotEvents = db.collection('wabotEvents').orderBy('receivedAt','desc').limit(1000).onSnapshot(snap => {
     allWabotEvents = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     renderWabotModules();
+    if(document.getElementById('view-filter')?.classList.contains('active')) renderReplyTracker();
   }, err => {
     const s=document.getElementById('wabot-live-status'); if(s) s.textContent='Belum aktif / tiada permission';
     console.warn('Wabot listener:', err.message);
@@ -3423,7 +3742,7 @@ function startWabotListener() {
 }
 // start after auth has exposed the app
 const _originalStartListeners = startListeners;
-startListeners = function(){ _originalStartListeners(); startWabotListener(); };
+startListeners = function(){ _originalStartListeners(); startWabotListener(); startValidReplyListener(); };
 
 function wabotCounts() {
   const c = {
@@ -3716,49 +4035,25 @@ function normalizeWabotPhone(v) {
 
 function wabotAudienceStats(events) {
   const contacted = new Set();
-  const repliers = new Set();
-  const validRepliers = new Set();
-  const replyMessages = new Set();
-
-  events
-    .filter(isUsefulWabotEvent)
-    .forEach(e => {
-      const k = wabotEventKind(e);
-      const phone = normalizeWabotPhone(e.phone || e.to || e.from);
-      const d = wabotDate(e.eventAt) || wabotDate(e.receivedAt);
-
-      if (k === 'outgoing' && phone) {
-        contacted.add(phone);
-      }
-
-      if (k === 'incoming') {
-        if (phone) repliers.add(phone);
-        replyMessages.add(
-          e.messageId ||
-          e.message_id ||
-          `${phone || '-'}_${d ? d.getTime() : ''}_${typeof e.message === 'string' ? e.message : ''}`
-        );
-      }
-    });
-
-  repliers.forEach(phone => {
-    if (contacted.has(phone)) validRepliers.add(phone);
+  (events||[]).filter(isUsefulWabotEvent).forEach(e=>{
+    if(wabotEventKind(e)==='outgoing'){
+      const p=replyPhone(e.phone||e.to||e.from);
+      if(p) contacted.add(p);
+    }
   });
 
-  const uniqueContacted = contacted.size;
-  const uniqueRepliers = repliers.size;
-  const validReplyCustomers = validRepliers.size;
-  const replyMessageCount = replyMessages.size;
-  const replyRate = uniqueContacted
-    ? (validReplyCustomers / uniqueContacted * 100)
-    : 0;
+  const valid=buildRecentValidReplies(events,7);
+  const uniqueValid=replyUniqueByPhone(valid.rows);
+  const replyMessages=valid.rows.reduce((s,r)=>s+Number(r.validMessageCount||1),0);
+  const uniqueContacted=contacted.size;
+  const validReplyCustomers=uniqueValid.length;
 
   return {
     uniqueContacted,
-    uniqueRepliers,
+    uniqueRepliers: validReplyCustomers,
     validReplyCustomers,
-    replyMessages: replyMessageCount,
-    replyRate
+    replyMessages,
+    replyRate: uniqueContacted ? validReplyCustomers/uniqueContacted*100 : 0
   };
 }
 
