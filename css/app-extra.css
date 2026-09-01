@@ -12350,3 +12350,214 @@ html[data-theme="light"] #view-salespages .salespage-feature-top p{
     min-height:560px !important;
   }
 }
+
+
+/* =========================================================
+   V24 — VALID REPLY / UNIQUE REPLIER TRACKER
+   ========================================================= */
+#view-filter .reply-tracker-card{
+  margin-bottom:20px!important;
+  padding:18px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+  background:#0f2025!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.08)!important;
+}
+
+#view-filter .reply-tracker-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+}
+
+#view-filter .reply-tracker-eyebrow{
+  color:#20d8ad!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:7.5px!important;
+  font-weight:700!important;
+  letter-spacing:.11em!important;
+}
+
+#view-filter .reply-tracker-head h3{
+  margin:5px 0 0!important;
+  color:#eef7f5!important;
+  font-size:18px!important;
+}
+
+#view-filter .reply-tracker-head p{
+  margin:6px 0 0!important;
+  max-width:760px!important;
+  color:#8ca2a6!important;
+  font-size:10px!important;
+  line-height:1.5!important;
+}
+
+#view-filter .reply-tracker-live{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:27px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  background:rgba(8,215,170,.09)!important;
+  border:1px solid rgba(8,215,170,.18)!important;
+  color:#27ddb1!important;
+  font-size:8px!important;
+  white-space:nowrap!important;
+}
+
+#view-filter .reply-tracker-controls{
+  display:grid!important;
+  grid-template-columns:1fr 1fr 1.15fr 1.15fr auto!important;
+  gap:10px!important;
+  align-items:end!important;
+  margin-top:16px!important;
+}
+
+#view-filter .reply-tracker-controls label{
+  display:block!important;
+  margin-bottom:5px!important;
+  color:#82999e!important;
+  font-size:8px!important;
+}
+
+#view-filter .reply-tracker-controls input,
+#view-filter .reply-tracker-controls select{
+  min-height:36px!important;
+  font-size:10px!important;
+}
+
+#view-filter .reply-tracker-controls .btn{
+  width:auto!important;
+  min-height:36px!important;
+  padding:0 13px!important;
+  font-size:9px!important;
+}
+
+#view-filter .reply-tracker-kpis{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:9px!important;
+  margin-top:14px!important;
+}
+
+#view-filter .reply-kpi{
+  min-height:102px!important;
+  padding:14px!important;
+  border-radius:12px!important;
+  background:#0b181c!important;
+  border:1px solid rgba(255,255,255,.055)!important;
+}
+
+#view-filter .reply-kpi span{
+  display:block!important;
+  color:#789197!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:7.5px!important;
+  font-weight:700!important;
+  letter-spacing:.07em!important;
+}
+
+#view-filter .reply-kpi strong{
+  display:block!important;
+  margin-top:8px!important;
+  color:#f1f8f6!important;
+  font-family:'Space Grotesk',sans-serif!important;
+  font-size:25px!important;
+}
+
+#view-filter .reply-kpi small{
+  display:block!important;
+  margin-top:7px!important;
+  color:#80969b!important;
+  font-size:8px!important;
+}
+
+#view-filter .reply-kpi.valid{border-top:2px solid #20d8ad!important}
+#view-filter .reply-kpi.nonbuyer{border-top:2px solid #56a9ff!important}
+#view-filter .reply-kpi.buyer{border-top:2px solid #9d82ee!important}
+#view-filter .reply-kpi.ignored{border-top:2px solid #f0ac51!important}
+
+#view-filter .reply-tracker-actions{
+  display:flex!important;
+  justify-content:flex-end!important;
+  gap:8px!important;
+  flex-wrap:wrap!important;
+  margin-top:13px!important;
+}
+#view-filter .reply-tracker-actions .btn{
+  width:auto!important;
+  min-height:35px!important;
+  padding:0 12px!important;
+  font-size:9px!important;
+}
+
+#view-filter .reply-tracker-note{
+  margin-top:12px!important;
+  padding:10px 12px!important;
+  border-radius:9px!important;
+  background:rgba(8,215,170,.045)!important;
+  border:1px solid rgba(8,215,170,.10)!important;
+  color:#9bb0b3!important;
+  font-size:9px!important;
+  line-height:1.5!important;
+}
+
+#view-filter .reply-tracker-table-wrap{
+  margin-top:13px!important;
+  overflow-x:auto!important;
+}
+#view-filter .reply-tracker-table td{
+  font-size:10px!important;
+}
+#view-filter .reply-tracker-table td:nth-child(3){
+  max-width:360px!important;
+  white-space:normal!important;
+}
+
+#view-filter .reply-buyer-pill{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:23px!important;
+  padding:0 8px!important;
+  border-radius:999px!important;
+  font-size:8px!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+#view-filter .reply-buyer-pill.yes{
+  color:#ae94ff!important;background:rgba(157,130,238,.10)!important;border:1px solid rgba(157,130,238,.18)!important;
+}
+#view-filter .reply-buyer-pill.no{
+  color:#55c9ff!important;background:rgba(63,165,255,.08)!important;border:1px solid rgba(63,165,255,.17)!important;
+}
+
+html[data-theme="light"] #view-filter .reply-tracker-card{
+  background:#fff!important;
+  border-color:#dfe7e5!important;
+  box-shadow:0 7px 22px rgba(35,60,52,.045)!important;
+}
+html[data-theme="light"] #view-filter .reply-tracker-head h3,
+html[data-theme="light"] #view-filter .reply-kpi strong{
+  color:#17313d!important;
+}
+html[data-theme="light"] #view-filter .reply-tracker-head p,
+html[data-theme="light"] #view-filter .reply-kpi small{
+  color:#71878f!important;
+}
+html[data-theme="light"] #view-filter .reply-kpi{
+  background:#f8faf9!important;
+  border-color:#e2e9e6!important;
+}
+html[data-theme="light"] #view-filter .reply-tracker-note{
+  background:#f0faf6!important;color:#59736d!important;border-color:#d9eee6!important;
+}
+
+@media(max-width:1100px){
+  #view-filter .reply-tracker-controls{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  #view-filter .reply-tracker-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:650px){
+  #view-filter .reply-tracker-controls,
+  #view-filter .reply-tracker-kpis{grid-template-columns:1fr!important}
+}
