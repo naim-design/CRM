@@ -521,7 +521,6 @@ auth.onAuthStateChanged(async (user) => {
   startListeners();
   startTopupListener();
   startPlanningListener();
-  startTikTokLeadsListener();
   initWabotControlInputs();
   updateTopupVisibility();
 
@@ -543,7 +542,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); loadImportBatches(); }
     if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); populateBatchSelect(); }
-    if (btn.dataset.view === 'tiktokleads') { initTikTokLeadsView(); renderTikTokLeads(); }
+    if (btn.dataset.view === 'tiktokleads') { startTikTokLeadsListener(); initTikTokLeadsView(); renderTikTokLeads(); }
   });
 });
 
