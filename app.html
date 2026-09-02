@@ -30,6 +30,7 @@
       <nav class="app-nav">
         <button data-view="input" class="active">Input Data</button>
         <button data-view="dashboard">Dashboard</button>
+        <button data-view="pageanalytics">Page Analytics</button>
         <button data-view="tiktokleads">TikTok Leads</button>
         <button data-view="poster">Poster</button>
         <button data-view="template">Template</button>
@@ -480,6 +481,67 @@
       </section>
     </div>
 
+    <!-- ================= PAGE ANALYTICS ================= -->
+    <div id="view-pageanalytics" class="view">
+      <div class="section-head" style="padding-top:36px;">
+        <div>
+          <h2>Page Analytics</h2>
+          <p class="salespages-sub">Tracking lawatan &amp; tingkah laku scroll sales page Jus Mamariam — live dari Firestore.</p>
+        </div>
+      </div>
+
+  <div class="spa-filters">
+    <button data-spa-range="today">Hari Ini</button>
+    <button data-spa-range="7" class="active">7 Hari</button>
+    <button data-spa-range="30">30 Hari</button>
+    <button data-spa-range="all">Semua</button>
+  </div>
+  <div class="spa-status" id="spa-status">Memuatkan data...</div>
+
+  <div class="dash-kpi-grid" style="margin-bottom:18px;">
+    <div class="stat-card accent-mint"><div class="label">Jumlah Lawatan</div><div class="value" id="spa-kpi-sessions">–</div></div>
+    <div class="stat-card"><div class="label">Pelawat Unik</div><div class="value" id="spa-kpi-visitors">–</div></div>
+    <div class="stat-card"><div class="label">Purata Masa Baca</div><div class="value" id="spa-kpi-time">–</div></div>
+    <div class="stat-card accent-amber"><div class="label">Kadar Scroll Habis</div><div class="value" id="spa-kpi-complete">–</div></div>
+  </div>
+
+  <div class="spa-panel">
+    <h3>Corong Scroll (Scroll Funnel)</h3>
+    <p class="spa-sub">Peratus lawatan yang sampai ke setiap tahap scroll dalam page.</p>
+    <div id="spa-funnel-bars"></div>
+  </div>
+
+  <div class="spa-panel">
+    <h3>Ramai Berhenti Kat Mana</h3>
+    <p class="spa-sub">Seksyen paling jauh yang dicapai sebelum pelawat tinggalkan page (drop-off point).</p>
+    <div id="spa-dropoff-bars"></div>
+  </div>
+
+  <div class="spa-two-col">
+    <div class="spa-panel">
+      <h3>Titik Scroll Laju (Skip)</h3>
+      <p class="spa-sub">Seksyen mana pelawat paling kerap scroll laju — kemungkinan skip / tak baca.</p>
+      <div id="spa-skip-bars"></div>
+    </div>
+    <div class="spa-panel">
+      <h3>Peranti</h3>
+      <p class="spa-sub">Mobile vs Desktop.</p>
+      <div id="spa-device-bars"></div>
+    </div>
+  </div>
+
+  <div class="spa-panel">
+    <h3>Lawatan Terkini</h3>
+    <p class="spa-sub">20 session terbaru.</p>
+    <div class="table-scroll">
+      <table id="spa-recent-table">
+        <thead><tr><th>Masa</th><th>Peranti</th><th>Scroll Max</th><th>Masa Baca</th><th>Berhenti Kat</th><th>Habis?</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+    </div>
+
     <!-- ================= RECAP JUN ================= -->
     <div id="view-recap" class="view">
       <div class="section-head" style="padding-top:36px;"><h2>Recap Julai — Dashboard Keseluruhan</h2></div>
@@ -530,6 +592,7 @@
          rel="noopener noreferrer">Lihat Penuh ↗</a>
     </div>
   </div>
+
 </div>
 
 <!-- ================= POSTER ================= -->
@@ -1882,5 +1945,6 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js?v=v25-tiktok-leads-dashboard"></script>
+<script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
