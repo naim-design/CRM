@@ -1375,6 +1375,9 @@ function renderMonthlyContactDashboard(){
     set('monthly-capacity-note','Belum ada total contact');
     set('monthly-cost-2x-note','Kos jika seluruh database diblast 2 kali');
     set('monthly-contact-period','Bulan semasa');
+    const monthlyTargets=getDashTargets();
+    set('monthly-sales-target','RM '+Number(monthlyTargets.sales||30000).toLocaleString('en-MY'));
+    set('monthly-roi-target',Number(monthlyTargets.roi||7.08).toFixed(2)+'x');
     const alert=document.getElementById('monthly-frequency-alert');
     if(alert){alert.className='monthly-frequency-alert neutral';alert.textContent='Masukkan Total Contact di Input Data untuk aktifkan kiraan frequency bulanan.';}
     return;
@@ -1387,6 +1390,9 @@ function renderMonthlyContactDashboard(){
   set('monthly-cost-2x','RM '+costRM(g.maxSent).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}));
   set('monthly-cost-2x-note',g.totalContact?`${fmt(g.maxSent)} mesej × €${RATE_EUR_PER_SENT.toFixed(4)} × RM${EUR_TO_MYR.toFixed(2)}`:'Kos jika seluruh database diblast 2 kali');
   set('monthly-contact-period',monthLabelMs(g.key));
+  const monthlyTargets=getDashTargets();
+  set('monthly-sales-target','RM '+Number(monthlyTargets.sales||30000).toLocaleString('en-MY'));
+  set('monthly-roi-target',Number(monthlyTargets.roi||7.08).toFixed(2)+'x');
   const alert=document.getElementById('monthly-frequency-alert');
   if(alert){
     if(!g.totalContact){alert.className='monthly-frequency-alert neutral';alert.textContent='Total Contact bulan ini belum dimasukkan.';}
