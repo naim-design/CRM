@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v31-monthly-target-cards">
+<link rel="stylesheet" href="css/app-extra.css?v=v33-sortable-all-tables">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -218,7 +218,7 @@
           <h2><span class="idx">•</span>Senarai Entri (Edit / Padam)</h2>
           <div style="display:flex;gap:7px;align-items:center;"><span class="hint-chip" id="entries-list-count">0 entri</span><button type="button" class="btn btn-ghost" id="entries-reload-btn" style="width:auto;padding:7px 10px;font-size:9px;">Refresh Data</button></div>
         </div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>Tarikh</th><th>Kategori</th><th>Staff</th><th>Sumber</th><th>Template</th><th>Wabot</th><th>Sent</th><th>Sales</th><th style="text-align:right;">Tindakan</th></tr></thead>
           <tbody id="entries-list-body"></tbody>
         </table>
@@ -378,7 +378,7 @@
             <span class="hint-chip" id="dash-weekly-count">0 minggu</span>
           </div>
           <div class="dash-weekly-table-wrap">
-            <table class="tbl dash-weekly-table">
+            <table class="tbl dash-weekly-table sortable-table">
               <thead><tr><th>Minggu</th><th>Tempoh</th><th>Blast</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Sales</th><th>Kos</th><th>ROI</th><th>ROAS</th></tr></thead>
               <tbody id="dash-weekly-body"><tr><td colspan="11" class="empty-state">Tiada data mingguan lagi.</td></tr></tbody>
             </table>
@@ -515,7 +515,7 @@
             <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah Topup</button>
           </form>
         </div>
-        <table class="tbl" style="margin-top:14px;">
+        <table class="tbl sortable-table" style="margin-top:14px;">
           <thead><tr><th>Tarikh</th><th>Nombor Official</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
           <tbody id="topup-history-body"></tbody>
         </table>
@@ -789,7 +789,7 @@
         </div>
 
         <div class="table-scroll">
-          <table class="tbl">
+          <table class="tbl sortable-table">
             <thead>
               <tr><th>#</th><th>Template</th><th>Sesi</th><th>Sent</th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos</th><th>ROAS</th></tr>
             </thead>
@@ -881,7 +881,7 @@
         <section class="tt-panel">
           <div class="tt-panel-head"><div><span class="tt-mini-label">ADS LOG</span><h3>Senarai Iklan Yang Telah Dipost</h3></div><span class="hint-chip" id="tt-record-count">0 rekod</span></div>
           <div class="tt-table-wrap">
-            <table class="tbl tt-table">
+            <table class="tbl tt-table sortable-table">
               <thead><tr><th>Tarikh</th><th>Creative / Hook</th><th>Campaign</th><th>Kos</th><th>CTR</th><th>Clicks</th><th>Result</th><th>Leads</th><th>CPL</th><th>Prestasi</th><th>Tindakan</th></tr></thead>
               <tbody id="tt-record-body"><tr><td colspan="11" class="empty-state">Belum ada data.</td></tr></tbody>
             </table>
@@ -986,7 +986,7 @@
           </div>
         </div>
         <div class="table-scroll">
-          <table class="tbl">
+          <table class="tbl sortable-table">
             <thead>
               <tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos</th><th>ROAS</th></tr>
             </thead>
@@ -1045,6 +1045,8 @@
 
     <!-- ================= LAPORAN ================= -->
     <div id="view-laporan" class="view">
+      <div class="sort-global-hint">↕ Klik tajuk kolum untuk susun ASC / DESC</div>
+
       <div class="section-head" style="padding-top:36px;"><h2>Laporan</h2></div>
       <div class="table-controls">
         <div class="field" style="margin:0;"><label>Dari</label><input type="date" id="lap-filter-from"></div>
@@ -1059,7 +1061,7 @@
 
       <section>
         <div class="section-head"><h2><span class="idx">01</span>Laporan Harian</h2></div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>Tarikh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate<br><small>(Respon)</small></th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (€)</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="daily-body"></tbody>
         </table>
@@ -1071,7 +1073,7 @@
           <h2><span class="idx">02</span>Database & Frequency Bulanan</h2>
           <span class="hint-chip" id="monthly-report-count">0 bulan</span>
         </div>
-        <table class="tbl monthly-db-report-table">
+        <table class="tbl monthly-db-report-table sortable-table">
           <thead>
             <tr>
               <th>Bulan</th>
@@ -1093,7 +1095,7 @@
           <h2><span class="idx">03</span>Laporan Mingguan</h2>
           <span class="hint-chip" id="weekly-report-count">0 minggu</span>
         </div>
-        <table class="tbl weekly-report-table">
+        <table class="tbl weekly-report-table sortable-table">
           <thead><tr><th>Minggu</th><th>Tempoh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th><th>ROAS</th></tr></thead>
           <tbody id="weekly-report-body"></tbody>
         </table>
@@ -1104,7 +1106,7 @@
           <h2><span class="idx">04</span>Prestasi Poster</h2>
           <span class="hint-chip" id="poster-perf-count">0 poster</span>
         </div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>#</th><th>Poster</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="poster-perf-body"></tbody>
         </table>
@@ -1115,7 +1117,7 @@
           <h2><span class="idx">05</span>Prestasi Akaun WABOT</h2>
           <span class="hint-chip" id="wabot-perf-count">0 akaun</span>
         </div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>#</th><th>Akaun WABOT</th><th>Sesi</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROAS</th></tr></thead>
           <tbody id="wabot-perf-body"></tbody>
         </table>
@@ -1123,7 +1125,7 @@
 
       <section>
         <div class="section-head"><h2><span class="idx">05</span>Prestasi Ikut Hari</h2></div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>Hari</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
           <tbody id="dayofweek-body"></tbody>
         </table>
@@ -1134,7 +1136,7 @@
           <h2><span class="idx">06</span>Prestasi Ikut Waktu</h2>
           <span class="hint-chip">Berdasarkan entri yang ada Masa Blasting diisi</span>
         </div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>Waktu</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
           <tbody id="hourofday-body"></tbody>
         </table>
@@ -1173,7 +1175,7 @@
 
       <section>
         <div class="section-head"><h2><span class="idx">01</span>Ikut Sumber</h2></div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>Sumber</th><th>Total</th><th>Dah Blast</th><th>Belum Blast</th></tr></thead>
           <tbody id="source-stat-body"></tbody>
         </table>
@@ -1225,7 +1227,7 @@ Ahmad	60112223344"></textarea>
           <h2><span class="idx">•</span>Sejarah Import</h2>
           <span class="hint-chip" id="batch-count">0 batch</span>
         </div>
-        <table class="tbl">
+        <table class="tbl sortable-table">
           <thead><tr><th>Tarikh & Masa</th><th>Sumber</th><th>Bilangan</th><th>Oleh</th><th style="text-align:right;">Tindakan</th></tr></thead>
           <tbody id="batch-body"></tbody>
         </table>
@@ -1277,7 +1279,7 @@ Ahmad	60112223344"></textarea>
           <button class="btn btn-danger" id="bulk-delete-all-btn" style="width:auto; padding:8px 16px; font-size:12px;">🗑️ Padam SEMUA hasil tapisan</button>
         </div>
         <div id="bulk-all-progress" style="display:none; font-size:12px; color:var(--mint); margin-top:8px; font-family:'IBM Plex Mono';"></div>
-        <table class="tbl" style="margin-top:10px;">
+        <table class="tbl sortable-table" style="margin-top:10px;">
           <thead><tr><th style="width:30px;"><input type="checkbox" id="select-all-contacts"></th><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th>Status</th><th style="text-align:right;">Tindakan</th></tr></thead>
           <tbody id="contact-body"></tbody>
         </table>
@@ -1370,7 +1372,7 @@ Ahmad	60112223344"></textarea>
         </div>
 
         <div class="reply-tracker-table-wrap">
-          <table class="tbl reply-tracker-table">
+          <table class="tbl reply-tracker-table sortable-table">
             <thead>
               <tr>
                 <th>Nombor</th>
@@ -1511,7 +1513,7 @@ Ahmad	60112223344"></textarea>
         </div>
       </section>
 
-      <table class="tbl">
+      <table class="tbl sortable-table">
         <thead><tr><th>Nama</th><th>Nombor</th><th>Sumber</th><th>Tag</th><th>Catatan</th><th style="text-align:right;">Status</th></tr></thead>
         <tbody id="seg-result-body"><tr><td colspan="6" class="empty-state">Pilih tapisan & tekan "Cari" untuk mula.</td></tr></tbody>
       </table>
@@ -1798,7 +1800,7 @@ Ahmad	60112223344"></textarea>
           <h2><span class="idx">HIST</span>Transfer History</h2>
         </div>
         <div class="wabot-table-wrap">
-          <table class="tbl">
+          <table class="tbl sortable-table">
             <thead><tr><th>Tarikh</th><th>Dari</th><th>Ke</th><th>Amaun</th><th>Nota</th><th>Oleh</th><th>Tindakan</th></tr></thead>
             <tbody id="wctrl-transfer-body"></tbody>
           </table>
@@ -1808,7 +1810,7 @@ Ahmad	60112223344"></textarea>
       <div class="form-card" style="margin-top:18px;">
         <div class="section-head" style="margin-bottom:10px;"><h2><span class="idx">META</span>Mapping Meta & Login</h2></div>
         <div class="wabot-table-wrap">
-          <table class="tbl"><thead><tr><th>Nombor Official</th><th>Wabot</th><th>Daily Limit</th><th>Meta / WABA</th><th>Login Google</th><th>Chrome Profile</th><th>Template</th></tr></thead><tbody id="wctrl-meta-body"></tbody></table>
+          <table class="tbl sortable-table"><thead><tr><th>Nombor Official</th><th>Wabot</th><th>Daily Limit</th><th>Meta / WABA</th><th>Login Google</th><th>Chrome Profile</th><th>Template</th></tr></thead><tbody id="wctrl-meta-body"></tbody></table>
         </div>
       </div>
     </div>
@@ -1865,7 +1867,7 @@ Ahmad	60112223344"></textarea>
           <span class="hint-chip" id="wabot-event-count">0 event</span>
         </div>
         <div class="wabot-table-wrap">
-          <table class="tbl">
+          <table class="tbl sortable-table">
             <thead><tr><th>Masa</th><th>Event</th><th>Direction</th><th>Nombor</th><th>Mesej / Status</th><th>Instance</th></tr></thead>
             <tbody id="wabot-events-body"><tr><td colspan="6" class="empty-state">Belum ada event webhook.</td></tr></tbody>
           </table>
@@ -1925,22 +1927,22 @@ Ahmad	60112223344"></textarea>
       <div class="analytics-pro-grid" style="margin-top:20px;">
         <div class="form-card">
           <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">03</span>Live Reply</h2><span class="hint-chip" id="apro-live-reply-count">0 reply</span></div>
-          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Masa</th><th>Nombor</th><th>Mesej</th><th>Campaign</th><th>Instance</th></tr></thead><tbody id="apro-live-replies"><tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr></tbody></table></div>
+          <div class="wabot-table-wrap"><table class="tbl sortable-table"><thead><tr><th>Masa</th><th>Nombor</th><th>Mesej</th><th>Campaign</th><th>Instance</th></tr></thead><tbody id="apro-live-replies"><tr><td colspan="5" class="empty-state">Belum ada reply.</td></tr></tbody></table></div>
         </div>
         <div class="form-card">
           <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">04</span>Performance Akaun Wabot</h2></div>
-          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Akaun / Instance</th><th>Sent</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Read</th><th>Failed</th></tr></thead><tbody id="apro-account-body"></tbody></table></div>
+          <div class="wabot-table-wrap"><table class="tbl sortable-table"><thead><tr><th>Akaun / Instance</th><th>Sent</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Read</th><th>Failed</th></tr></thead><tbody id="apro-account-body"></tbody></table></div>
         </div>
       </div>
 
       <div class="analytics-pro-grid" style="margin-top:20px;">
         <div class="form-card">
           <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">05</span>Performance Script A/B/C</h2></div>
-          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Script / Template</th><th>Sent</th><th>Unique Contacted</th><th>Unique Reply</th><th>Reply Rate</th><th>Read</th></tr></thead><tbody id="apro-script-body"></tbody></table></div>
+          <div class="wabot-table-wrap"><table class="tbl sortable-table"><thead><tr><th>Script / Template</th><th>Sent</th><th>Unique Contacted</th><th>Unique Reply</th><th>Reply Rate</th><th>Read</th></tr></thead><tbody id="apro-script-body"></tbody></table></div>
         </div>
         <div class="form-card">
           <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">06</span>Performance Staff</h2></div>
-          <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Staff</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Sales</th></tr></thead><tbody id="apro-staff-body"></tbody></table></div>
+          <div class="wabot-table-wrap"><table class="tbl sortable-table"><thead><tr><th>Staff</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Sales</th></tr></thead><tbody id="apro-staff-body"></tbody></table></div>
         </div>
       </div>
     </div>
@@ -1970,7 +1972,7 @@ Ahmad	60112223344"></textarea>
 
       <div class="form-card">
         <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">01</span>Campaign Tracking</h2><span class="hint-chip" id="campaign-count">0 campaign</span></div>
-        <div class="wabot-table-wrap"><table class="tbl"><thead><tr><th>Campaign</th><th>Mapping / Confidence</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Buyer</th><th>Sales</th><th>Conversion Rate</th><th>ROAS</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="15" class="empty-state">Belum ada campaign metadata / padanan CRM.</td></tr></tbody></table></div>
+        <div class="wabot-table-wrap"><table class="tbl sortable-table"><thead><tr><th>Campaign</th><th>Mapping / Confidence</th><th>Sent</th><th>Delivery Rate</th><th>Read Rate</th><th>Unique Contacted</th><th>Valid Reply</th><th>Reply Rate</th><th>Reply Msg</th><th>Buyer</th><th>Sales</th><th>Conversion Rate</th><th>ROAS</th><th>Failed</th><th>Best Hour</th></tr></thead><tbody id="campaign-body"><tr><td colspan="15" class="empty-state">Belum ada campaign metadata / padanan CRM.</td></tr></tbody></table></div>
       </div>
       <div class="form-card" style="margin-top:20px;">
         <div class="section-head" style="margin-bottom:12px;"><h2><span class="idx">02</span>Struktur Nama Disyorkan</h2></div>
@@ -2059,7 +2061,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v31-monthly-target-cards"></script>
+<script src="js/app.js?v=v33-sortable-all-tables"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
