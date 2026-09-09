@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v25-tiktok-leads-dashboard">
+<link rel="stylesheet" href="css/app-extra.css?v=v27-weekly-ygrow">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -99,7 +99,7 @@
           <div class="form-grid" style="margin-top:16px;">
             <div class="field"><label>Kategori Laporan</label>
               <select id="entry-kategori">
-                <option>Projek Susu</option>
+                <option>Projek Susu</option><option>Projek Susu YGROW</option>
                 <option>Promo TikTok</option>
                 <option>Database WS/Lead</option>
                 <option>Projek Leads Ikhtiar (NaimFani)</option>
@@ -252,7 +252,7 @@
           <div class="field" style="margin:0;"><label>Projek</label>
             <select id="filter-kategori" class="filter-box">
               <option value="">Semua Projek</option>
-              <option>Projek Susu</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+              <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
             </select>
           </div>
         </div>
@@ -310,6 +310,30 @@
             <div id="stat-cost-eur" style="display:none;">€0.00</div>
           </div>
         </div>
+
+        <section class="dash-weekly-section">
+          <div class="dash-weekly-head">
+            <div>
+              <div class="eyebrow">Weekly View</div>
+              <h3>Prestasi Mingguan</h3>
+              <p>Data digabungkan Isnin–Ahad berdasarkan filter Dashboard semasa.</p>
+            </div>
+            <span class="hint-chip" id="dash-weekly-count">0 minggu</span>
+          </div>
+          <div class="dash-weekly-table-wrap">
+            <table class="tbl dash-weekly-table">
+              <thead><tr><th>Minggu</th><th>Tempoh</th><th>Blast</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Sales</th><th>Kos</th><th>ROI</th><th>ROAS</th></tr></thead>
+              <tbody id="dash-weekly-body"><tr><td colspan="11" class="empty-state">Tiada data mingguan lagi.</td></tr></tbody>
+            </table>
+          </div>
+          <div id="ygrow-target-strip" class="ygrow-target-strip" style="display:none;">
+            <div><span>TARGET 5 HARI</span><strong>RM1,000 Sales</strong></div>
+            <div><span>ROI TARGET</span><strong>8x</strong></div>
+            <div><span>HARGA / KOTAK</span><strong>RM59</strong></div>
+            <div><span>ANGGARAN KOTAK</span><strong>17 kotak</strong></div>
+            <div><span>PURATA SALES / HARI</span><strong>RM200</strong></div>
+          </div>
+        </section>
 
         <div style="display:none;">
           <span id="stat-respon-rate">0.0%</span>
@@ -647,7 +671,7 @@
           <div class="field">
             <label>Projek</label>
             <select id="tmpl-lib-project">
-              <option value="Projek Susu">Projek Susu</option>
+              <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
               <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
@@ -699,7 +723,7 @@
             <input type="date" id="tmpl-report-to">
             <select id="tmpl-report-project">
               <option value="">Semua Projek</option>
-              <option value="Projek Susu">Projek Susu</option>
+              <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
               <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
@@ -726,7 +750,7 @@
           <div class="library-filter-grid two">
             <select id="tmpl-library-project-filter">
               <option value="">Semua Projek</option>
-              <option value="Projek Susu">Projek Susu</option>
+              <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
               <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
@@ -897,7 +921,7 @@
             <input type="date" id="poster-report-to">
             <select id="poster-report-project">
               <option value="">Semua Projek</option>
-              <option value="Projek Susu">Projek Susu</option>
+              <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
               <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
@@ -971,7 +995,7 @@
         <div class="field" style="margin:0;"><label>Kategori Laporan</label>
           <select id="lap-filter-kategori" class="filter-box">
             <option value="">Semua (Keseluruhan)</option>
-            <option>Projek Susu</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+            <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
           </select>
         </div>
       </div>
@@ -986,7 +1010,18 @@
 
       <section>
         <div class="section-head">
-          <h2><span class="idx">02</span>Prestasi Poster</h2>
+          <h2><span class="idx">02</span>Laporan Mingguan</h2>
+          <span class="hint-chip" id="weekly-report-count">0 minggu</span>
+        </div>
+        <table class="tbl weekly-report-table">
+          <thead><tr><th>Minggu</th><th>Tempoh</th><th>Bil. Blast</th><th>Sent</th><th>Read Rate</th><th>Reply Rate</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Kos (RM)</th><th>ROI</th><th>ROAS</th></tr></thead>
+          <tbody id="weekly-report-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">03</span>Prestasi Poster</h2>
           <span class="hint-chip" id="poster-perf-count">0 poster</span>
         </div>
         <table class="tbl">
@@ -997,7 +1032,7 @@
 
       <section>
         <div class="section-head">
-          <h2><span class="idx">03</span>Prestasi Akaun WABOT</h2>
+          <h2><span class="idx">04</span>Prestasi Akaun WABOT</h2>
           <span class="hint-chip" id="wabot-perf-count">0 akaun</span>
         </div>
         <table class="tbl">
@@ -1007,7 +1042,7 @@
       </section>
 
       <section>
-        <div class="section-head"><h2><span class="idx">04</span>Prestasi Ikut Hari</h2></div>
+        <div class="section-head"><h2><span class="idx">05</span>Prestasi Ikut Hari</h2></div>
         <table class="tbl">
           <thead><tr><th>Hari</th><th>Bil. Blast</th><th>Sent</th><th>Buyer</th><th>Conversion</th><th>Sales</th><th>Avg Sales/Blast</th></tr></thead>
           <tbody id="dayofweek-body"></tbody>
@@ -1016,7 +1051,7 @@
 
       <section>
         <div class="section-head">
-          <h2><span class="idx">05</span>Prestasi Ikut Waktu</h2>
+          <h2><span class="idx">06</span>Prestasi Ikut Waktu</h2>
           <span class="hint-chip">Berdasarkan entri yang ada Masa Blasting diisi</span>
         </div>
         <table class="tbl">
@@ -1517,7 +1552,7 @@ Ahmad	60112223344"></textarea>
             <label>Projek</label>
             <select id="plan-project" required>
               <option value="">-- Pilih Projek --</option>
-              <option value="Projek Susu">Projek Susu</option>
+              <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
               <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
@@ -1615,7 +1650,7 @@ Ahmad	60112223344"></textarea>
           <div class="planning-board-controls">
             <select id="planning-project-filter">
               <option value="">Semua Projek</option>
-              <option value="Projek Susu">Projek Susu</option>
+              <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
               <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
@@ -1944,7 +1979,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v25-tiktok-leads-dashboard"></script>
+<script src="js/app.js?v=v27-weekly-ygrow"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
