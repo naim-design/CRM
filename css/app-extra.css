@@ -12927,3 +12927,98 @@ html[data-theme="light"] .pkg-history-kpis article{background:#f7faf9}
 
 /* V38 — Top KPI cards in Pakej Analisis removed */
 #view-packageanalysis .pkg-kpi-grid{display:none!important;}
+
+
+/* =========================================================
+   V39 — YGROW Follow Up 5 Hari inside Dashboard
+   ========================================================= */
+.ygrow-flow-dashboard{
+  margin:18px 0 28px;
+}
+.ygrow-flow-dashboard-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px 20px;
+  border:1px solid var(--line);
+  border-radius:15px 15px 0 0;
+  background:
+    radial-gradient(circle at 92% 10%,rgba(32,216,173,.10),transparent 18rem),
+    linear-gradient(135deg,rgba(17,38,43,.98),rgba(12,31,35,.98));
+}
+.ygrow-flow-dashboard-head h2{
+  margin:5px 0 5px;
+  color:#eef7f5;
+  font-size:20px;
+  letter-spacing:-.35px;
+}
+.ygrow-flow-dashboard-head p{
+  margin:0;
+  max-width:820px;
+  color:#8da1a5;
+  font-size:9.5px;
+  line-height:1.55;
+}
+.ygrow-flow-full-btn{
+  width:auto!important;
+  flex:0 0 auto;
+  padding:10px 14px!important;
+  font-size:9px!important;
+}
+.ygrow-flow-embed-card{
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-top:0;
+  border-radius:0 0 15px 15px;
+  background:#fff;
+  box-shadow:0 12px 34px rgba(5,25,30,.055);
+}
+.ygrow-flow-embed-toolbar{
+  min-height:42px;
+  padding:8px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid var(--line);
+  background:#f8fbfa;
+}
+.ygrow-flow-embed-toolbar span{
+  color:#637b80;
+  font-size:8.5px;
+  font-weight:650;
+}
+.ygrow-flow-embed-toolbar button{
+  width:auto!important;
+  white-space:nowrap;
+}
+.ygrow-flow-dashboard-frame{
+  display:block;
+  width:100%;
+  min-height:900px;
+  border:0;
+  background:#f6f3ee;
+}
+html[data-theme="light"] .ygrow-flow-dashboard-head{
+  background:
+    radial-gradient(circle at 92% 10%,rgba(11,117,104,.08),transparent 18rem),
+    linear-gradient(135deg,#ffffff,#f5faf8);
+}
+html[data-theme="light"] .ygrow-flow-dashboard-head h2{
+  color:#17313d;
+}
+html[data-theme="light"] .ygrow-flow-dashboard-head p{
+  color:#71878c;
+}
+@media(max-width:760px){
+  .ygrow-flow-dashboard-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .ygrow-flow-full-btn{width:100%!important}
+  .ygrow-flow-embed-toolbar{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
