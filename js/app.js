@@ -1076,7 +1076,7 @@ const DASH_TARGETS_DEFAULT = {
   conversion: 1,
   reply: 50,
   roas: 10,
-  roi: 10,
+  roi: 7.08,
   cost: 1650,
   buyer: 100,
   sent: 10000
@@ -1371,7 +1371,9 @@ function renderMonthlyContactDashboard(){
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   if(!g){
     set('monthly-total-contact','0');set('monthly-total-sent','0');set('monthly-frequency','0.00x');set('monthly-send-capacity','0');
+    set('monthly-cost-2x','RM 0.00');
     set('monthly-capacity-note','Belum ada total contact');
+    set('monthly-cost-2x-note','Kos jika seluruh database diblast 2 kali');
     set('monthly-contact-period','Bulan semasa');
     const alert=document.getElementById('monthly-frequency-alert');
     if(alert){alert.className='monthly-frequency-alert neutral';alert.textContent='Masukkan Total Contact di Input Data untuk aktifkan kiraan frequency bulanan.';}
@@ -1382,6 +1384,8 @@ function renderMonthlyContactDashboard(){
   set('monthly-frequency',g.frequency.toFixed(2)+'x');
   set('monthly-send-capacity',fmt(g.remaining));
   set('monthly-capacity-note',g.totalContact?`Had 2x = ${fmt(g.maxSent)} mesej`:'Belum ada total contact');
+  set('monthly-cost-2x','RM '+costRM(g.maxSent).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}));
+  set('monthly-cost-2x-note',g.totalContact?`${fmt(g.maxSent)} mesej × €${RATE_EUR_PER_SENT.toFixed(4)} × RM${EUR_TO_MYR.toFixed(2)}`:'Kos jika seluruh database diblast 2 kali');
   set('monthly-contact-period',monthLabelMs(g.key));
   const alert=document.getElementById('monthly-frequency-alert');
   if(alert){
@@ -1397,7 +1401,7 @@ function renderMonthlyDatabaseReport(){
   const groups=monthlyDatabaseGroups(lapFilteredEntries());
   const count=document.getElementById('monthly-report-count');
   if(count)count.textContent=`${groups.length} bulan`;
-  if(!groups.length){body.innerHTML='<tr><td colspan="7" class="empty-state">Tiada data bulanan lagi.</td></tr>';return;}
+  if(!groups.length){body.innerHTML='<tr><td colspan="8" class="empty-state">Tiada data bulanan lagi.</td></tr>';return;}
   body.innerHTML=groups.map(g=>{
     const cls=g.status==='Lebih 2x'?'danger':g.status==='Hampir 2x'?'warn':g.status==='Okey'?'good':'neutral';
     return `<tr>
@@ -1407,6 +1411,7 @@ function renderMonthlyDatabaseReport(){
       <td class="num"><b>${g.frequency.toFixed(2)}x</b></td>
       <td class="num">${fmt(g.maxSent)}</td>
       <td class="num">${fmt(g.remaining)}</td>
+      <td class="num">RM ${costRM(g.maxSent).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td><span class="monthly-status-pill ${cls}">${g.status}</span></td>
     </tr>`;
   }).join('');
