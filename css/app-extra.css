@@ -12868,3 +12868,59 @@ html[data-theme="light"] .pkg-panel,html[data-theme="light"] .pkg-entry-panel,ht
 .pkg-sales-table{min-width:850px}
 .pkg-sales-table td b{color:var(--mint)}
 .pkg-sales-note{margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(32,216,173,.05);color:var(--muted-2);font-size:8px;line-height:1.5;border:1px solid rgba(32,216,173,.09)}
+
+/* V36 — Pakej modal + image upload */
+.pkg-modal-backdrop{
+  display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(3,12,15,.68);backdrop-filter:blur(6px);
+  padding:28px;overflow:auto;
+}
+.pkg-modal-backdrop.open{display:flex;align-items:flex-start;justify-content:center}
+.pkg-modal-backdrop .pkg-entry-panel{
+  display:block!important;width:min(1050px,96vw);max-height:none;margin:auto;
+  box-shadow:0 24px 70px rgba(0,0,0,.28);background:#0f2025;
+}
+html[data-theme="light"] .pkg-modal-backdrop .pkg-entry-panel{background:#fff}
+.pkg-image-upload{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pkg-image-upload input[type=file]{max-width:320px;font-size:9px}
+.pkg-image-preview-wrap{
+  width:130px;height:100px;border-radius:10px;overflow:hidden;
+  border:1px dashed rgba(128,150,155,.32);display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.08)
+}
+.pkg-image-preview-wrap img{width:100%;height:100%;object-fit:cover;display:none}
+.pkg-image-preview-wrap span{font-size:8px;color:var(--muted-2)}
+.pkg-field-help{display:block;margin-top:6px;color:var(--muted-2);font-size:8px}
+.pkg-thumb-cell{width:58px;min-width:58px}
+.pkg-thumb{width:48px;height:48px;object-fit:cover;border-radius:7px;border:1px solid rgba(128,150,155,.18)}
+.pkg-no-image{color:var(--muted-2)}
+.pkg-insight-image{width:100%;height:145px;object-fit:cover;border-radius:9px;margin-bottom:10px;border:1px solid rgba(128,150,155,.12)}
+@media(max-width:700px){
+  .pkg-modal-backdrop{padding:8px}
+  .pkg-modal-backdrop .pkg-entry-panel{width:100%;margin:8px auto}
+  .pkg-image-upload{align-items:flex-start;flex-direction:column}
+}
+
+/* V37 — Historical package analysis */
+.pkg-history-head{align-items:flex-end}
+.pkg-history-filter{min-width:190px}
+.pkg-history-filter label{display:block;margin-bottom:5px;color:var(--muted-2);font-size:8px}
+.pkg-history-filter select{width:100%;font-size:9px}
+.pkg-history-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 13px}
+.pkg-history-kpis article{padding:11px;border-radius:9px;background:rgba(0,0,0,.08);border:1px solid rgba(128,150,155,.12)}
+.pkg-history-kpis span{display:block;color:var(--muted-2);font-family:'IBM Plex Mono',monospace;font-size:7px}
+.pkg-history-kpis strong{display:block;margin-top:5px;font-size:17px;color:var(--text)}
+.pkg-history-kpis small{display:block;margin-top:4px;color:var(--muted-2);font-size:7.5px}
+.pkg-history-summary-table{min-width:820px}
+.pkg-history-details{margin-top:12px}
+.pkg-history-details summary{cursor:pointer;color:var(--mint);font-size:9px;font-weight:700;padding:8px 0}
+.pkg-history-detail-table{min-width:1150px}
+.pkg-confidence{display:inline-flex;padding:3px 6px;border-radius:999px;font-size:7px;font-weight:700;white-space:nowrap}
+.pkg-confidence.high,.pkg-confidence.tagged{color:#22d9af;background:rgba(34,217,175,.09)}
+.pkg-confidence.medium{color:#e5b85c;background:rgba(229,184,92,.09)}
+.pkg-confidence.review{color:#e47f7f;background:rgba(228,127,127,.09)}
+.pkg-reason{max-width:300px;white-space:normal!important;color:var(--muted-2);line-height:1.4}
+.pkg-history-warning{margin-top:10px;padding:9px 11px;border-radius:8px;background:rgba(229,184,92,.06);border:1px solid rgba(229,184,92,.12);color:var(--muted-2);font-size:8px;line-height:1.5}
+html[data-theme="light"] .pkg-history-kpis article{background:#f7faf9}
+@media(max-width:900px){.pkg-history-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pkg-history-head{align-items:flex-start;flex-direction:column}.pkg-history-filter{width:100%}}
+@media(max-width:520px){.pkg-history-kpis{grid-template-columns:1fr}}
