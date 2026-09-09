@@ -2310,8 +2310,34 @@ function updateTopupVisibility() {
   const susuExtra = document.getElementById('kategori-susu-extra');
   if (susuExtra) susuExtra.style.display = (kategori === 'Projek Susu' || kategori === 'Projek Susu YGROW') ? 'block' : 'none';
 
+  const ygrowFlow = document.getElementById('kategori-ygrow-flow');
+  if (ygrowFlow) {
+    const showYgrowFlow = kategori === 'Projek Susu YGROW';
+    ygrowFlow.style.display = showYgrowFlow ? 'block' : 'none';
+    if (showYgrowFlow) setTimeout(() => resizeYgrowFlowFrame(document.getElementById('ygrow-flow-dashboard-frame')), 120);
+  }
+
   const leadsExtra = document.getElementById('kategori-naimfani-extra');
   if (leadsExtra) leadsExtra.style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
+}
+
+
+// ---- YGROW presentation flow embedded inside Dashboard ----
+function resizeYgrowFlowFrame(frame) {
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument || frame.contentWindow?.document;
+    if (!doc) return;
+    const h = Math.max(
+      doc.body?.scrollHeight || 0,
+      doc.documentElement?.scrollHeight || 0,
+      900
+    );
+    frame.style.height = Math.min(Math.max(h + 8, 900), 6200) + 'px';
+  } catch (err) {
+    // Same-origin report should resize normally; fallback keeps presentation usable.
+    frame.style.height = '1800px';
+  }
 }
 
 // ---- Report full-view modal ----
