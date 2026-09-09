@@ -12686,3 +12686,21 @@ html[data-theme="light"] .monthly-contact-kpi strong{color:#17313d}
 
 @media(max-width:1000px){.monthly-contact-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.monthly-contact-kpis{grid-template-columns:1fr}}
+
+
+/* V29 — Monthly 2x projected blasting cost */
+.monthly-contact-kpis{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+}
+.monthly-contact-kpi.cost2x{
+  border-top:2px solid #7f8cff!important;
+}
+@media(max-width:1200px){
+  .monthly-contact-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:850px){
+  .monthly-contact-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+  .monthly-contact-kpis{grid-template-columns:1fr!important}
+}
