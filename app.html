@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v38-remove-package-kpis">
+<link rel="stylesheet" href="css/app-extra.css?v=v39-ygrow-flow-dashboard">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -573,6 +573,41 @@
               <div class="report-embed-overlay">Klik untuk lihat penuh</div>
             </div>
           </div>
+        </div>
+      </section>
+
+
+      <section id="kategori-ygrow-flow" class="ygrow-flow-dashboard" style="display:none;">
+        <div class="ygrow-flow-dashboard-head">
+          <div>
+            <div class="eyebrow">YGROW • PRESENTATION FLOW</div>
+            <h2>Flow Follow Up 5 Hari — Poster + Template</h2>
+            <p>Flow lengkap customer journey YGROW untuk presentation. Bila Dashboard dipilih kepada Projek Susu YGROW, bahagian ini akan muncul automatik di bawah dashboard.</p>
+          </div>
+          <button type="button"
+                  class="btn btn-primary ygrow-flow-full-btn"
+                  onclick="openReportModal('reports/ygrow-follow-up-5-hari.html','YGROW Follow Up 5 Hari — Poster + Template')">
+            Buka Presentation Penuh ↗
+          </button>
+        </div>
+
+        <div class="ygrow-flow-embed-card">
+          <div class="ygrow-flow-embed-toolbar">
+            <span>Customer Journey: D1 Qualify → D2 Awareness → D3 Product → D4 Offer → D5 Closing</span>
+            <button type="button"
+                    class="ref-outline-btn"
+                    onclick="openReportModal('reports/ygrow-follow-up-5-hari.html','YGROW Follow Up 5 Hari — Poster + Template')">
+              Full Screen
+            </button>
+          </div>
+          <iframe
+            id="ygrow-flow-dashboard-frame"
+            class="ygrow-flow-dashboard-frame"
+            src="reports/ygrow-follow-up-5-hari.html"
+            loading="lazy"
+            title="YGROW Follow Up 5 Hari"
+            onload="resizeYgrowFlowFrame(this)">
+          </iframe>
         </div>
       </section>
 
@@ -2306,7 +2341,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v37-historical-package-analysis"></script>
+<script src="js/app.js?v=v39-ygrow-flow-dashboard"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
