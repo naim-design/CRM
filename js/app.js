@@ -771,6 +771,162 @@ document.getElementById('tt-leads-form')?.addEventListener('submit',async e=>{
   }catch(err){toast('Gagal simpan TikTok Leads: '+err.message,true);}finally{if(save)save.disabled=false;}
 });
 
+
+// ============================================================
+// V33 — UNIVERSAL TABLE SORTING (ASC / DESC)
+// Applies to every table.tbl across Dashboard, Laporan and CRM reports.
+// Click column header once = descending for numeric performance metrics,
+// click again = ascending. Arrow shows current direction.
+// ============================================================
+const TABLE_SORT_STATE = new WeakMap();
+
+function tableSortCleanText(v){
+  return String(v ?? '')
+    .replace(/[▲▼↕]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function tableSortValue(cell){
+  if(!cell) return {type:'text',value:''};
+  const raw=tableSortCleanText(cell.textContent);
+  if(!raw || raw==='–' || raw==='-') return {type:'empty',value:null};
+
+  // Common CRM numeric formats:
+  // RM 30,000.50 / €12.20 / 7.08x / 50.2% / 38,622
+  const numericCandidate=raw
+    .replace(/RM\s*/ig,'')
+    .replace(/€/g,'')
+    .replace(/,/g,'')
+    .replace(/%/g,'')
+    .replace(/x$/i,'')
+    .trim();
+
+  if(/^[-+]?\d*\.?\d+$/.test(numericCandidate)){
+    return {type:'number',value:Number(numericCandidate)};
+  }
+
+  // ISO / common date cells. Date ranges use first date only.
+  const iso=raw.match(/\b(\d{4}-\d{2}-\d{2})\b/);
+  if(iso){
+    const t=Date.parse(iso[1]+'T12:00:00');
+    if(!Number.isNaN(t)) return {type:'date',value:t};
+  }
+
+  // Malaysian presentation dates such as 1 Sep 2026.
+  const msMonths={jan:0,feb:1,mac:2,apr:3,mei:4,jun:5,jul:6,ogo:7,sep:8,okt:9,nov:10,dis:11};
+  const dm=raw.toLowerCase().match(/\b(\d{1,2})\s+(jan|feb|mac|apr|mei|jun|jul|ogo|sep|okt|nov|dis)\s+(\d{4})\b/);
+  if(dm){
+    return {type:'date',value:new Date(Number(dm[3]),msMonths[dm[2]],Number(dm[1]),12).getTime()};
+  }
+
+  return {type:'text',value:raw.toLowerCase()};
+}
+
+function tableSortDefaultDirection(headerText){
+  const h=tableSortCleanText(headerText).toLowerCase();
+  // Performance metrics normally make more sense highest-first.
+  if(/sales|buyer|sent|reply|read|delivered|result|leads|click|impression|roi|roas|ctr|conversion|frequency|contact|cost|kos|spend|cpl|cpc|rate|jumlah|kapasiti|had 2x|bil\. blast|sesi/.test(h)){
+    return 'desc';
+  }
+  // Dates / names default ascending.
+  return 'asc';
+}
+
+function sortTableByColumn(table,colIndex,forcedDirection){
+  const tbody=table?.tBodies?.[0];
+  if(!tbody) return;
+
+  const headers=[...(table.tHead?.rows?.[0]?.cells||[])];
+  const th=headers[colIndex];
+  if(!th) return;
+
+  const prev=TABLE_SORT_STATE.get(table)||{col:-1,dir:null};
+  const dir=forcedDirection || (prev.col===colIndex
+    ? (prev.dir==='asc'?'desc':'asc')
+    : tableSortDefaultDirection(th.textContent));
+
+  const rows=[...tbody.rows];
+  // Keep summary/total rows fixed at bottom.
+  const fixed=rows.filter(r=>r.classList.contains('total-row'));
+  const sortable=rows.filter(r=>!r.classList.contains('total-row') && !r.querySelector('.empty-state'));
+
+  sortable.sort((a,b)=>{
+    const av=tableSortValue(a.cells[colIndex]);
+    const bv=tableSortValue(b.cells[colIndex]);
+
+    if(av.type==='empty' && bv.type!=='empty') return 1;
+    if(bv.type==='empty' && av.type!=='empty') return -1;
+
+    let cmp=0;
+    if((av.type==='number'||av.type==='date') && (bv.type==='number'||bv.type==='date')){
+      cmp=(av.value??0)-(bv.value??0);
+    }else{
+      cmp=String(av.value??'').localeCompare(String(bv.value??''),'ms',{numeric:true,sensitivity:'base'});
+    }
+    return dir==='asc'?cmp:-cmp;
+  });
+
+  sortable.forEach(r=>tbody.appendChild(r));
+  fixed.forEach(r=>tbody.appendChild(r));
+
+  headers.forEach((h,i)=>{
+    h.classList.remove('sort-asc','sort-desc');
+    h.setAttribute('aria-sort','none');
+    const old=h.querySelector('.sort-arrow');
+    if(old) old.remove();
+    if(i===colIndex){
+      h.classList.add(dir==='asc'?'sort-asc':'sort-desc');
+      h.setAttribute('aria-sort',dir==='asc'?'ascending':'descending');
+      const arrow=document.createElement('span');
+      arrow.className='sort-arrow';
+      arrow.textContent=dir==='asc'?'▲':'▼';
+      h.appendChild(arrow);
+    }
+  });
+
+  TABLE_SORT_STATE.set(table,{col:colIndex,dir});
+}
+
+function initSortableTables(scope=document){
+  scope.querySelectorAll('table.tbl').forEach(table=>{
+    if(table.dataset.sortReady==='1') return;
+    const headRow=table.tHead?.rows?.[0];
+    if(!headRow) return;
+
+    [...headRow.cells].forEach((th,i)=>{
+      // Skip clearly non-data action columns.
+      const label=tableSortCleanText(th.textContent).toLowerCase();
+      if(/tindakan|action|aksi/.test(label)){
+        th.classList.add('sort-disabled');
+        return;
+      }
+      th.classList.add('sort-enabled');
+      th.tabIndex=0;
+      th.setAttribute('title','Klik untuk susun naik / turun');
+      th.addEventListener('click',()=>sortTableByColumn(table,i));
+      th.addEventListener('keydown',e=>{
+        if(e.key==='Enter'||e.key===' '){
+          e.preventDefault();
+          sortTableByColumn(table,i);
+        }
+      });
+    });
+    table.dataset.sortReady='1';
+  });
+}
+
+// Re-run after dynamic report renderers replace tbody contents.
+// Header listeners stay attached; this also catches tables created later.
+const sortableTableObserver=new MutationObserver(()=>{
+  window.clearTimeout(window.__crmSortInitTimer);
+  window.__crmSortInitTimer=window.setTimeout(()=>initSortableTables(document),60);
+});
+sortableTableObserver.observe(document.body,{childList:true,subtree:true});
+document.addEventListener('DOMContentLoaded',()=>initSortableTables(document));
+setTimeout(()=>initSortableTables(document),150);
+
+
 // ---- Realtime listeners ----
 function startListeners() {
   // Jangan orderBy(createdAt) di Firestore.
