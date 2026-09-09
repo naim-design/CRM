@@ -20,6 +20,10 @@ let allTikTokLeads = [];
 let unsubTikTokLeads = null;
 let editingTikTokLeadId = null;
 let tikTokLeadImageData = '';
+let allPackageAnalysis = [];
+let unsubPackageAnalysis = null;
+let editingPackageId = null;
+let packageImageData = '';
 
 function fmt(n) { return Number(n || 0).toLocaleString('en-US'); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
@@ -521,6 +525,7 @@ auth.onAuthStateChanged(async (user) => {
   startListeners();
   startTopupListener();
   startPlanningListener();
+  startPackageAnalysisListener();
   initWabotControlInputs();
   updateTopupVisibility();
 
@@ -543,7 +548,506 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     if (btn.dataset.view === 'contacts') { loadKnownSources(); loadContactStats(); loadContactsPage('first'); loadImportBatches(); }
     if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); populateBatchSelect(); }
     if (btn.dataset.view === 'tiktokleads') { startTikTokLeadsListener(); initTikTokLeadsView(); renderTikTokLeads(); }
+    if (btn.dataset.view === 'packageanalysis') { renderPackageAnalysis(); }
   });
+});
+
+
+
+// ============================================================
+// PAKEJ ANALISIS — PRICE & OFFER COMPARISON
+// ============================================================
+function pkgNum(v){ return Number(v||0)||0; }
+function pkgMoney(v){ return 'RM '+pkgNum(v).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pkgEsc(v){ return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+
+function pkgRenderImagePreview(){
+  const img=document.getElementById('pkg-image-preview');
+  const empty=document.getElementById('pkg-image-empty');
+  if(!img||!empty)return;
+  if(packageImageData){
+    img.src=packageImageData;
+    img.style.display='block';
+    empty.style.display='none';
+  }else{
+    img.removeAttribute('src');
+    img.style.display='none';
+    empty.style.display='block';
+  }
+}
+
+function pkgCompressImage(file,maxW=900,maxH=900,quality=.78){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('Gagal baca gambar.'));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('Format gambar tidak disokong.'));
+      img.onload=()=>{
+        let {width,height}=img;
+        const scale=Math.min(1,maxW/width,maxH/height);
+        width=Math.max(1,Math.round(width*scale));
+        height=Math.max(1,Math.round(height*scale));
+        const c=document.createElement('canvas');
+        c.width=width;c.height=height;
+        c.getContext('2d').drawImage(img,0,0,width,height);
+        resolve(c.toDataURL('image/jpeg',quality));
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function pkgChannelRows(r){
+  return [
+    {key:'WhatsApp',price:pkgNum(r.waPrice),qty:pkgNum(r.waQty),items:r.waItems||''},
+    {key:'CRM',price:pkgNum(r.crmPrice),qty:pkgNum(r.crmQty),items:r.crmItems||''},
+    {key:'TikTok',price:pkgNum(r.ttPrice),qty:pkgNum(r.ttQty),items:r.ttItems||''}
+  ].filter(x=>x.price>0);
+}
+
+function pkgCheapest(r){
+  const rows=pkgChannelRows(r);
+  if(!rows.length)return {key:'–',price:0};
+  return rows.sort((a,b)=>a.price-b.price)[0];
+}
+
+function pkgSaveVsWa(r){ return pkgNum(r.waPrice)-pkgNum(r.crmPrice); }
+function pkgSaveVsTt(r){ return pkgNum(r.ttPrice)-pkgNum(r.crmPrice); }
+
+function pkgValuePerMainItem(price,qty){
+  return qty>0 ? price/qty : 0;
+}
+
+
+function pkgEntryMonth(e){
+  const d=String(e.tarikh||'').slice(0,7);
+  if(/^\d{4}-\d{2}$/.test(d)) return d;
+  if(e.createdAt?.toDate){
+    const dt=e.createdAt.toDate();
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`;
+  }
+  return '';
+}
+
+function pkgContextText(e){
+  return [e.kategori,e.source,e.template,e.poster,e.project,e.note].filter(Boolean).join(' ').toLowerCase();
+}
+
+function pkgCatalogCandidatesForEntry(e){
+  const ctx=pkgContextText(e);
+  let codes=Object.keys(CRM_PROMO_CATALOG).filter(k=>CRM_PROMO_CATALOG[k].price>0);
+
+  // Use project/template words only to narrow equal-price family ambiguity.
+  const hasYg=/ygrow|ygf|tinggi anak|tinggi badan/.test(ctx);
+  const hasMilk=/mocha|hazelnut|susu/.test(ctx);
+  const hasJus=/jus|mamariam|promo tiktok|crm/.test(ctx);
+
+  if(hasYg && !hasMilk) codes=codes.filter(k=>/^YG/.test(k) || /^CRM/.test(k));
+  else if(hasMilk && !hasYg) codes=codes.filter(k=>/^MILK/.test(k) || /^YG/.test(k) || /^CRM/.test(k));
+  else if(hasJus && !hasMilk && !hasYg) codes=codes.filter(k=>/^CRM/.test(k));
+
+  return codes;
+}
+
+function pkgInferOldEntry(e){
+  const sales=pkgNum(e.sales), buyer=pkgNum(e.buyer);
+  if(!sales) return {status:'none',label:'–',price:0,packages:0,confidence:'–',reason:'Tiada sales'};
+
+  // Newer records already tagged: exact source of truth.
+  if(e.promoCode){
+    const info=crmPromoInfo(e.promoCode);
+    const packages=info.price>0?sales/info.price:0;
+    return {
+      status:'tagged', code:e.promoCode,label:info.label,price:info.price,
+      packages,confidence:'Tagged',reason:'Promo dipilih dalam Input Data'
+    };
+  }
+
+  const candidates=[];
+  pkgCatalogCandidatesForEntry(e).forEach(code=>{
+    const info=CRM_PROMO_CATALOG[code];
+    if(!info?.price)return;
+    const q=sales/info.price;
+    const rounded=Math.round(q);
+    const exact=Math.abs(q-rounded)<0.001 && rounded>0;
+    if(!exact)return;
+
+    let score=60;
+    let reasons=[`RM${sales} ÷ RM${info.price} = ${rounded}`];
+
+    if(buyer>0 && buyer===rounded){ score+=30; reasons.push(`Buyer ${buyer} = ${rounded} pakej`); }
+    else if(buyer>0 && buyer!==rounded){ score-=12; reasons.push(`Buyer ${buyer} tidak sama dengan ${rounded} pakej`); }
+
+    const ctx=pkgContextText(e);
+    if(/^YG/.test(code) && /ygrow|ygf/.test(ctx)){score+=15;reasons.push('Konteks YGROW');}
+    if(/^MILK/.test(code) && /mocha|hazelnut|susu/.test(ctx)){score+=15;reasons.push('Konteks susu');}
+    if(/^CRM/.test(code) && /jus|promo tiktok|crm|mamariam/.test(ctx)){score+=10;reasons.push('Konteks Jus/CRM');}
+
+    candidates.push({code,label:info.label,price:info.price,packages:rounded,score,reasons});
+  });
+
+  if(!candidates.length){
+    return {status:'review',label:'Tak dapat dikenal pasti',price:0,packages:0,confidence:'Perlu semak',reason:'Sales tidak padan tepat dengan harga promo yang diketahui'};
+  }
+
+  candidates.sort((a,b)=>b.score-a.score);
+  const best=candidates[0];
+  const sameTop=candidates.filter(x=>x.score===best.score);
+
+  // Same price but different product family = deliberately ambiguous.
+  const sameMath=candidates.filter(x=>x.price===best.price && x.packages===best.packages);
+  if(sameTop.length>1 || sameMath.length>1){
+    const labels=[...new Set((sameTop.length>1?sameTop:sameMath).map(x=>x.label))];
+    return {
+      status:'review',label:labels.join(' / '),price:best.price,packages:best.packages,
+      confidence:'Perlu semak',reason:`Nilai sesuai dengan lebih daripada satu promo RM${best.price}`
+    };
+  }
+
+  const confidence=best.score>=85?'Tinggi':'Sederhana';
+  return {
+    status:'inferred',code:best.code,label:best.label,price:best.price,packages:best.packages,
+    confidence,reason:best.reasons.join(' • ')
+  };
+}
+
+function pkgPopulateHistoryMonths(){
+  const sel=document.getElementById('pkg-history-month'); if(!sel)return;
+  const months=[...new Set((allEntries||[]).map(pkgEntryMonth).filter(Boolean))].sort().reverse();
+  const prev=sel.value;
+  sel.innerHTML=months.map(m=>{
+    const [y,mo]=m.split('-').map(Number);
+    const label=new Date(y,mo-1,1).toLocaleDateString('ms-MY',{month:'long',year:'numeric'});
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  if(prev && months.includes(prev)) sel.value=prev;
+  else if(months.includes('2026-08')) sel.value='2026-08';
+  else if(months.length) sel.value=months[0];
+}
+
+function renderHistoricalPackageAnalysis(){
+  const sel=document.getElementById('pkg-history-month'); if(!sel)return;
+  if(!sel.options.length) pkgPopulateHistoryMonths();
+  const month=sel.value;
+  const monthRows=(allEntries||[]).filter(e=>pkgEntryMonth(e)===month && pkgNum(e.sales)>0);
+  const analyses=monthRows.map(e=>({e,a:pkgInferOldEntry(e)}));
+
+  const totalSales=monthRows.reduce((s,e)=>s+pkgNum(e.sales),0);
+  const known=analyses.filter(x=>x.a.status==='tagged'||x.a.status==='inferred');
+  const knownSales=known.reduce((s,x)=>s+pkgNum(x.e.sales),0);
+  const packages=known.reduce((s,x)=>s+pkgNum(x.a.packages),0);
+  const review=analyses.filter(x=>x.a.status==='review').length;
+
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('pkg-hist-sales',pkgMoney(totalSales));
+  set('pkg-hist-known-sales',pkgMoney(knownSales));
+  set('pkg-hist-packages',Number.isInteger(packages)?fmt(packages):packages.toLocaleString('en-MY',{maximumFractionDigits:2}));
+  set('pkg-hist-review',fmt(review));
+
+  const grouped={};
+  known.forEach(({e,a})=>{
+    const key=a.code||a.label;
+    if(!grouped[key])grouped[key]={label:a.label,price:a.price,sales:0,packages:0,buyer:0,entries:0,tagged:0,inferred:0};
+    const g=grouped[key];
+    g.sales+=pkgNum(e.sales);g.packages+=pkgNum(a.packages);g.buyer+=pkgNum(e.buyer);g.entries++;
+    if(a.status==='tagged')g.tagged++; else g.inferred++;
+  });
+
+  const summary=document.getElementById('pkg-history-summary-body');
+  if(summary){
+    const groups=Object.values(grouped).sort((a,b)=>b.sales-a.sales);
+    summary.innerHTML=groups.length?groups.map(g=>`<tr>
+      <td class="tname"><b>${pkgEsc(g.label)}</b></td>
+      <td class="num">${g.price?pkgMoney(g.price):'–'}</td>
+      <td class="num"><b>${pkgMoney(g.sales)}</b></td>
+      <td class="num">${Number.isInteger(g.packages)?fmt(g.packages):g.packages.toFixed(2)}</td>
+      <td class="num">${fmt(g.buyer)}</td>
+      <td class="num">${fmt(g.entries)}</td>
+      <td><span class="pkg-confidence ${g.inferred?'medium':'tagged'}">${g.tagged&&g.inferred?'Tagged + Anggaran':g.inferred?'Anggaran':'Tagged'}</span></td>
+    </tr>`).join(''):'<tr><td colspan="7" class="empty-state">Tiada pakej yang boleh dikenal pasti dengan yakin untuk bulan ini.</td></tr>';
+  }
+
+  const detail=document.getElementById('pkg-history-detail-body');
+  if(detail){
+    detail.innerHTML=analyses.length?analyses.map(({e,a})=>`<tr>
+      <td>${pkgEsc(e.tarikh||'-')}</td>
+      <td class="num">${pkgMoney(e.sales)}</td>
+      <td class="num">${fmt(e.buyer||0)}</td>
+      <td>${pkgEsc(e.kategori||e.source||'-')}</td>
+      <td>${pkgEsc(a.label)}</td>
+      <td class="num">${a.packages?pkgNum(a.packages).toLocaleString('en-MY',{maximumFractionDigits:2}):'–'}</td>
+      <td><span class="pkg-confidence ${a.status==='review'?'review':a.status==='tagged'?'tagged':a.confidence==='Tinggi'?'high':'medium'}">${pkgEsc(a.confidence)}</span></td>
+      <td class="pkg-reason">${pkgEsc(a.reason)}</td>
+    </tr>`).join(''):'<tr><td colspan="8" class="empty-state">Tiada sales untuk bulan ini.</td></tr>';
+  }
+  if(typeof initSortableTables==='function')setTimeout(()=>initSortableTables(document),20);
+}
+
+function renderPackageAnalysis(){
+  pkgPopulateHistoryMonths();
+  renderHistoricalPackageAnalysis();
+  const search=(document.getElementById('pkg-search')?.value||'').trim().toLowerCase();
+  const rows=allPackageAnalysis.filter(r=>{
+    if(!search)return true;
+    return [r.name,r.waItems,r.crmItems,r.ttItems,r.note].some(v=>String(v||'').toLowerCase().includes(search));
+  });
+
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('pkg-total-count',fmt(rows.length));
+
+  const crmCheapest=rows.filter(r=>pkgCheapest(r).key==='CRM').length;
+  set('pkg-crm-cheapest-count',fmt(crmCheapest));
+
+  const waComparable=rows.filter(r=>pkgNum(r.waPrice)>0&&pkgNum(r.crmPrice)>0);
+  const ttComparable=rows.filter(r=>pkgNum(r.ttPrice)>0&&pkgNum(r.crmPrice)>0);
+  const avgWa=waComparable.length?waComparable.reduce((s,r)=>s+pkgSaveVsWa(r),0)/waComparable.length:0;
+  const avgTt=ttComparable.length?ttComparable.reduce((s,r)=>s+pkgSaveVsTt(r),0)/ttComparable.length:0;
+  set('pkg-avg-save-wa',pkgMoney(avgWa));
+  set('pkg-avg-save-tt',pkgMoney(avgTt));
+
+  const body=document.getElementById('pkg-table-body');
+  if(body){
+    if(!rows.length){
+      body.innerHTML='<tr><td colspan="12" class="empty-state">Belum ada pakej direkod.</td></tr>';
+    }else{
+      body.innerHTML=rows.map(r=>{
+        const cheapest=pkgCheapest(r);
+        const saveWa=pkgSaveVsWa(r);
+        const saveTt=pkgSaveVsTt(r);
+        const waUnit=pkgValuePerMainItem(pkgNum(r.waPrice),pkgNum(r.waQty));
+        const crmUnit=pkgValuePerMainItem(pkgNum(r.crmPrice),pkgNum(r.crmQty));
+        const ttUnit=pkgValuePerMainItem(pkgNum(r.ttPrice),pkgNum(r.ttQty));
+        return `<tr>
+          <td class="pkg-thumb-cell">${r.imageData?`<img class="pkg-thumb" src="${r.imageData}" alt="${pkgEsc(r.name||'Pakej')}">`:'<span class="pkg-no-image">–</span>'}</td>
+          <td class="tname"><b>${pkgEsc(r.name||'-')}</b>${r.note?`<small class="pkg-row-note">${pkgEsc(r.note)}</small>`:''}</td>
+          <td class="num">${pkgMoney(r.waPrice)}${waUnit?`<small class="pkg-unit">≈ ${pkgMoney(waUnit)}/item utama</small>`:''}</td>
+          <td class="pkg-items-cell">${pkgEsc(r.waItems||'-')}</td>
+          <td class="num ${cheapest.key==='CRM'?'pkg-cheapest-cell':''}">${pkgMoney(r.crmPrice)}${crmUnit?`<small class="pkg-unit">≈ ${pkgMoney(crmUnit)}/item utama</small>`:''}</td>
+          <td class="pkg-items-cell">${pkgEsc(r.crmItems||'-')}</td>
+          <td class="num ${cheapest.key==='TikTok'?'pkg-cheapest-cell':''}">${pkgMoney(r.ttPrice)}${ttUnit?`<small class="pkg-unit">≈ ${pkgMoney(ttUnit)}/item utama</small>`:''}</td>
+          <td class="pkg-items-cell">${pkgEsc(r.ttItems||'-')}</td>
+          <td><span class="pkg-channel-pill ${cheapest.key.toLowerCase()}">${cheapest.key}</span></td>
+          <td class="num ${saveWa>0?'pkg-positive':saveWa<0?'pkg-negative':''}">${saveWa===0?'RM 0.00':(saveWa>0?'+ ':'- ')+pkgMoney(Math.abs(saveWa))}</td>
+          <td class="num ${saveTt>0?'pkg-positive':saveTt<0?'pkg-negative':''}">${saveTt===0?'RM 0.00':(saveTt>0?'+ ':'- ')+pkgMoney(Math.abs(saveTt))}</td>
+          <td class="pkg-action-cell">
+            <button type="button" class="pkg-action-btn" onclick="editPackageAnalysis('${r.id}')">Edit</button>
+            <button type="button" class="pkg-action-btn danger" onclick="deletePackageAnalysis('${r.id}')">Padam</button>
+          </td>
+        </tr>`;
+      }).join('');
+      if(typeof initSortableTables==='function') setTimeout(()=>initSortableTables(document),20);
+    }
+  }
+
+
+  const salesBody=document.getElementById('pkg-sales-body');
+  if(salesBody){
+    const tagged=(allEntries||[]).filter(e=>e.promoCode && pkgNum(e.sales)>0);
+    const grouped={};
+    tagged.forEach(e=>{
+      const code=e.promoCode, info=crmPromoInfo(code);
+      if(!grouped[code]) grouped[code]={code,label:info.label,price:info.price,sales:0,buyer:0,entries:0};
+      grouped[code].sales+=pkgNum(e.sales);
+      grouped[code].buyer+=pkgNum(e.buyer);
+      grouped[code].entries+=1;
+    });
+    const groups=Object.values(grouped).sort((a,b)=>b.sales-a.sales);
+    const totalPromoSales=groups.reduce((s,g)=>s+g.sales,0);
+    if(!groups.length){
+      salesBody.innerHTML='<tr><td colspan="7" class="empty-state">Belum ada sales yang ditag dengan promo.</td></tr>';
+    }else{
+      salesBody.innerHTML=groups.map(g=>{
+        const exact=g.price>0?g.sales/g.price:0;
+        const rounded=Math.round(exact);
+        const exactEnough=g.price>0 && Math.abs(exact-rounded)<0.001;
+        const unitText=g.price?(exactEnough?fmt(rounded):'≈ '+exact.toLocaleString('en-MY',{maximumFractionDigits:2})):'–';
+        const share=totalPromoSales?g.sales/totalPromoSales*100:0;
+        return `<tr>
+          <td class="tname"><b>${pkgEsc(g.label)}</b></td>
+          <td class="num">${g.price?pkgMoney(g.price):'–'}</td>
+          <td class="num"><b>${pkgMoney(g.sales)}</b></td>
+          <td class="num">${unitText}</td>
+          <td class="num">${fmt(g.buyer)}</td>
+          <td class="num">${fmt(g.entries)}</td>
+          <td class="num">${share.toFixed(1)}%</td>
+        </tr>`;
+      }).join('');
+      if(typeof initSortableTables==='function') setTimeout(()=>initSortableTables(document),20);
+    }
+  }
+
+  const insight=document.getElementById('pkg-insight-grid');
+  if(insight){
+    if(!rows.length){
+      insight.innerHTML='<div class="empty-state">Tambah pakej untuk hasilkan analisis.</div>';
+    }else{
+      insight.innerHTML=rows.map(r=>{
+        const c=pkgCheapest(r), sw=pkgSaveVsWa(r), st=pkgSaveVsTt(r);
+        const crmUnit=pkgValuePerMainItem(pkgNum(r.crmPrice),pkgNum(r.crmQty));
+        const waUnit=pkgValuePerMainItem(pkgNum(r.waPrice),pkgNum(r.waQty));
+        const ttUnit=pkgValuePerMainItem(pkgNum(r.ttPrice),pkgNum(r.ttQty));
+        const unitPairs=[
+          {k:'WhatsApp',v:waUnit},{k:'CRM',v:crmUnit},{k:'TikTok',v:ttUnit}
+        ].filter(x=>x.v>0).sort((a,b)=>a.v-b.v);
+        const bestUnit=unitPairs[0];
+        return `<article class="pkg-insight-card">
+          ${r.imageData?`<img class="pkg-insight-image" src="${r.imageData}" alt="${pkgEsc(r.name||'Pakej')}">`:''}
+          <div class="pkg-insight-top"><span>${pkgEsc(r.name||'-')}</span><b class="pkg-channel-pill ${c.key.toLowerCase()}">${c.key} paling murah</b></div>
+          <div class="pkg-insight-main">
+            <strong>${pkgMoney(c.price)}</strong>
+            <small>Harga terendah antara channel</small>
+          </div>
+          <div class="pkg-insight-lines">
+            <div><span>CRM vs WhatsApp</span><b class="${sw>=0?'pkg-positive':'pkg-negative'}">${sw>=0?'Jimat ':'Lebih mahal '}${pkgMoney(Math.abs(sw))}</b></div>
+            <div><span>CRM vs TikTok</span><b class="${st>=0?'pkg-positive':'pkg-negative'}">${st>=0?'Jimat ':'Lebih mahal '}${pkgMoney(Math.abs(st))}</b></div>
+            <div><span>Value / item utama</span><b>${bestUnit?`${bestUnit.k} ${pkgMoney(bestUnit.v)}`:'Tiada qty'}</b></div>
+          </div>
+        </article>`;
+      }).join('');
+    }
+  }
+}
+
+function startPackageAnalysisListener(){
+  if(unsubPackageAnalysis)return;
+  unsubPackageAnalysis=db.collection('packageAnalysis').orderBy('createdAt','desc').onSnapshot(snap=>{
+    allPackageAnalysis=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderPackageAnalysis();
+  },err=>toast('Ralat baca Pakej Analisis: '+err.message,true));
+}
+
+function updatePackageLiveComparison(){
+  const wa=pkgNum(document.getElementById('pkg-wa-price')?.value);
+  const crm=pkgNum(document.getElementById('pkg-crm-price')?.value);
+  const tt=pkgNum(document.getElementById('pkg-tt-price')?.value);
+  const fake={waPrice:wa,crmPrice:crm,ttPrice:tt};
+  const sw=wa&&crm?wa-crm:0,st=tt&&crm?tt-crm:0,c=pkgCheapest(fake);
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('pkg-live-wa',(sw>=0?'+ ':'- ')+pkgMoney(Math.abs(sw)));
+  set('pkg-live-tt',(st>=0?'+ ':'- ')+pkgMoney(Math.abs(st)));
+  set('pkg-live-cheapest',c.key==='–'?'–':`${c.key} • ${pkgMoney(c.price)}`);
+}
+
+function resetPackageForm(){
+  editingPackageId=null;
+  packageImageData='';
+  document.getElementById('pkg-form')?.reset();
+  pkgRenderImagePreview();
+  ['pkg-wa-price','pkg-wa-qty','pkg-crm-price','pkg-crm-qty','pkg-tt-price','pkg-tt-qty'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+  const title=document.getElementById('pkg-form-title');if(title)title.textContent='Tambah Pakej';
+  const save=document.getElementById('pkg-save-btn');if(save)save.textContent='Simpan Pakej';
+  updatePackageLiveComparison();
+}
+
+function fillPackageExample(){
+  const vals={
+    'pkg-name':'Combo Koko',
+    'pkg-wa-price':'199',
+    'pkg-wa-qty':'4',
+    'pkg-wa-items':'4 botol Jus Mamariam + 1 kotak Koko Zuriat',
+    'pkg-crm-price':'179',
+    'pkg-crm-qty':'4',
+    'pkg-crm-items':'4 botol Jus Mamariam + FREE 1 shaker + 1 kotak Koko Zuriat',
+    'pkg-tt-price':'196',
+    'pkg-tt-qty':'3',
+    'pkg-tt-items':'3 botol Jus Mamariam + FREE 1 kotak Koko Zuriat',
+    'pkg-note':'Contoh comparison: CRM RM179, WhatsApp RM199, TikTok RM196.'
+  };
+  Object.entries(vals).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
+  packageImageData=''; pkgRenderImagePreview();
+  document.getElementById('pkg-modal-backdrop')?.classList.add('open');
+  updatePackageLiveComparison();
+  document.getElementById('pkg-entry-panel')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function editPackageAnalysis(id){
+  const r=allPackageAnalysis.find(x=>x.id===id);if(!r)return;
+  editingPackageId=id;
+  packageImageData=r.imageData||''; pkgRenderImagePreview();
+  const vals={
+    'pkg-name':r.name||'','pkg-wa-price':pkgNum(r.waPrice),'pkg-wa-qty':pkgNum(r.waQty),'pkg-wa-items':r.waItems||'',
+    'pkg-crm-price':pkgNum(r.crmPrice),'pkg-crm-qty':pkgNum(r.crmQty),'pkg-crm-items':r.crmItems||'',
+    'pkg-tt-price':pkgNum(r.ttPrice),'pkg-tt-qty':pkgNum(r.ttQty),'pkg-tt-items':r.ttItems||'','pkg-note':r.note||''
+  };
+  Object.entries(vals).forEach(([id,v])=>{const el=document.getElementById(id);if(el)el.value=v;});
+  document.getElementById('pkg-form-title').textContent='Edit Pakej';
+  document.getElementById('pkg-save-btn').textContent='Update Pakej';
+  document.getElementById('pkg-modal-backdrop')?.classList.add('open');
+  updatePackageLiveComparison();
+  document.getElementById('pkg-entry-panel')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function deletePackageAnalysis(id){
+  const r=allPackageAnalysis.find(x=>x.id===id);
+  if(!r||!confirm(`Padam pakej "${r.name||''}"?`))return;
+  try{await db.collection('packageAnalysis').doc(id).delete();toast('Pakej dipadam ✓');}
+  catch(err){toast('Gagal padam pakej: '+err.message,true);}
+}
+
+document.getElementById('pkg-open-form')?.addEventListener('click',()=>{
+  resetPackageForm();
+  document.getElementById('pkg-modal-backdrop')?.classList.add('open');
+});
+document.getElementById('pkg-close-form')?.addEventListener('click',()=>document.getElementById('pkg-modal-backdrop')?.classList.remove('open'));
+document.getElementById('pkg-modal-backdrop')?.addEventListener('click',e=>{
+  if(e.target===e.currentTarget)e.currentTarget.classList.remove('open');
+});
+document.getElementById('pkg-reset-btn')?.addEventListener('click',resetPackageForm);
+document.getElementById('pkg-fill-example')?.addEventListener('click',fillPackageExample);
+document.getElementById('pkg-search')?.addEventListener('input',renderPackageAnalysis);
+document.getElementById('pkg-history-month')?.addEventListener('change',renderHistoricalPackageAnalysis);
+
+document.getElementById('pkg-image-file')?.addEventListener('change',async e=>{
+  const file=e.target.files?.[0];
+  if(!file)return;
+  try{
+    packageImageData=await pkgCompressImage(file);
+    pkgRenderImagePreview();
+  }catch(err){toast(err.message||'Gagal proses gambar',true);}
+});
+document.getElementById('pkg-remove-image')?.addEventListener('click',()=>{
+  packageImageData='';
+  const f=document.getElementById('pkg-image-file'); if(f)f.value='';
+  pkgRenderImagePreview();
+});
+['pkg-wa-price','pkg-crm-price','pkg-tt-price'].forEach(id=>document.getElementById(id)?.addEventListener('input',updatePackageLiveComparison));
+
+document.getElementById('pkg-form')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('pkg-save-btn');if(btn)btn.disabled=true;
+  try{
+    const payload={
+      name:document.getElementById('pkg-name').value.trim(),
+      waPrice:pkgNum(document.getElementById('pkg-wa-price').value),
+      waQty:pkgNum(document.getElementById('pkg-wa-qty').value),
+      waItems:document.getElementById('pkg-wa-items').value.trim(),
+      crmPrice:pkgNum(document.getElementById('pkg-crm-price').value),
+      crmQty:pkgNum(document.getElementById('pkg-crm-qty').value),
+      crmItems:document.getElementById('pkg-crm-items').value.trim(),
+      ttPrice:pkgNum(document.getElementById('pkg-tt-price').value),
+      ttQty:pkgNum(document.getElementById('pkg-tt-qty').value),
+      ttItems:document.getElementById('pkg-tt-items').value.trim(),
+      note:document.getElementById('pkg-note').value.trim(),
+      imageData:packageImageData||'',
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      updatedBy:currentUser?.email||''
+    };
+    if(!payload.name)throw new Error('Nama pakej diperlukan.');
+    if(editingPackageId){
+      await db.collection('packageAnalysis').doc(editingPackageId).update(payload);
+      toast('Pakej dikemaskini ✓');
+    }else{
+      payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+      payload.createdBy=currentUser?.email||'';
+      await db.collection('packageAnalysis').add(payload);
+      toast('Pakej disimpan ✓');
+    }
+    resetPackageForm();
+    document.getElementById('pkg-modal-backdrop')?.classList.remove('open');
+  }catch(err){toast('Gagal simpan pakej: '+err.message,true);}
+  finally{if(btn)btn.disabled=false;}
 });
 
 
@@ -962,6 +1466,7 @@ function startListeners() {
     // Render Senarai Entri FIRST so old data stays editable even if
     // another report/view has a UI error.
     renderEntriesList();
+      if(document.getElementById('view-packageanalysis')?.classList.contains('active')) renderPackageAnalysis();
     try{ renderReferenceDashboardWidgets(); }catch(e){ console.warn(e); }
 
     // Each secondary renderer is isolated. One broken/moved section
@@ -1062,6 +1567,20 @@ function updateEntryLivePreview() {
   document.getElementById(id).addEventListener('input', updateEntryLivePreview);
 });
 
+
+const CRM_PROMO_CATALOG = {
+  CRM169:{label:'Promo CRM RM169',price:169},
+  CRM179:{label:'Promo CRM RM179',price:179},
+  CRM185:{label:'Promo CRM RM185',price:185},
+  YG59:{label:'YGROW / Hazelnut — 1 kotak RM59',price:59},
+  YG99:{label:'YGROW / Hazelnut — 2 kotak RM99',price:99},
+  YG199:{label:'YGROW / Hazelnut — 4 kotak + shaker RM199',price:199},
+  MILK49:{label:'Susu Mocha / Hazelnut — 1 kotak RM49',price:49},
+  MILK99:{label:'Susu Mocha / Hazelnut — 2 kotak RM99',price:99},
+  OTHER:{label:'Lain-lain',price:0}
+};
+function crmPromoInfo(code){ return CRM_PROMO_CATALOG[code]||{label:code||'Tidak ditag',price:0}; }
+
 // ============================================================
 // INPUT DATA — Entry blast harian
 // ============================================================
@@ -1087,6 +1606,7 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     buyer: Number(document.getElementById('entry-buyer').value || 0),
     sales: Number(document.getElementById('entry-sales').value || 0),
     totalContact: Number(document.getElementById('entry-total-contact')?.value || 0),
+    promoCode: document.getElementById('entry-promo')?.value || '',
   };
   try {
     if (editingEntryId) {
@@ -1129,6 +1649,7 @@ function startEditEntry(id) {
   document.getElementById('entry-buyer').value = entry.buyer || 0;
   document.getElementById('entry-sales').value = entry.sales || 0;
   const tc=document.getElementById('entry-total-contact'); if(tc) tc.value = entry.totalContact || 0;
+  const promo=document.getElementById('entry-promo'); if(promo) promo.value = entry.promoCode || '';
   updateEntryLivePreview();
   document.getElementById('entry-form-title').textContent = 'Edit Entri Blast';
   document.getElementById('entry-submit-btn').textContent = 'Kemaskini Entri';
