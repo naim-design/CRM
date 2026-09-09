@@ -12648,3 +12648,41 @@ html[data-theme="light"] .tt-summary-callout{background:#effaf6;border-color:#d9
 .weekly-report-table{min-width:1080px}
 @media(max-width:900px){.ygrow-target-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.ygrow-target-strip{grid-template-columns:1fr}}
+
+
+/* =========================================================
+   V28 — FIXED MONTH WEEKS + DATABASE FREQUENCY
+   ========================================================= */
+.monthly-contact-section{
+  margin-top:14px;padding:16px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.06);background:#0f2025;
+}
+.monthly-contact-sub{margin:4px 0 0;color:#7f9499;font-size:9px}
+.monthly-contact-kpis{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px
+}
+.monthly-contact-kpi{
+  min-height:100px;padding:13px;border-radius:11px;background:#0b191d;
+  border:1px solid rgba(255,255,255,.055)
+}
+.monthly-contact-kpi span{display:block;color:#738b91;font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:.07em}
+.monthly-contact-kpi strong{display:block;margin-top:9px;color:#eef6f4;font-size:23px}
+.monthly-contact-kpi small{display:block;margin-top:7px;color:#768d92;font-size:8px}
+.monthly-contact-kpi.frequency{border-top:2px solid #20d8ad}
+.monthly-frequency-alert{margin-top:10px;padding:9px 11px;border-radius:8px;font-size:9px;line-height:1.45}
+.monthly-frequency-alert.good{color:#55d9b5;background:rgba(32,216,173,.07);border:1px solid rgba(32,216,173,.13)}
+.monthly-frequency-alert.warn{color:#efb65f;background:rgba(239,182,95,.07);border:1px solid rgba(239,182,95,.13)}
+.monthly-frequency-alert.danger{color:#e98686;background:rgba(233,134,134,.07);border:1px solid rgba(233,134,134,.13)}
+.monthly-frequency-alert.neutral{color:#8da0a4;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.055)}
+.monthly-status-pill{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:8px;font-weight:700}
+.monthly-status-pill.good{color:#27d7af;background:rgba(39,215,175,.08)}
+.monthly-status-pill.warn{color:#eab15c;background:rgba(234,177,92,.08)}
+.monthly-status-pill.danger{color:#e27f7f;background:rgba(226,127,127,.08)}
+.monthly-status-pill.neutral{color:#7d9297;background:rgba(125,146,151,.08)}
+
+html[data-theme="light"] .monthly-contact-section{background:#fff;border-color:#dfe8e5}
+html[data-theme="light"] .monthly-contact-kpi{background:#f7faf9;border-color:#e3eae8}
+html[data-theme="light"] .monthly-contact-kpi strong{color:#17313d}
+
+@media(max-width:1000px){.monthly-contact-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.monthly-contact-kpis{grid-template-columns:1fr}}
