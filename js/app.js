@@ -825,6 +825,7 @@ function startListeners() {
     // Do not call renderTemplateReport() here because its old DOM may no longer exist.
     safeRender('Daily Report', renderDailyReport);
     safeRender('Weekly Report', renderWeeklyReport);
+    safeRender('Monthly Database Report', renderMonthlyDatabaseReport);
     safeRender('Poster Performance', renderPosterPerformance);
     safeRender('Template Library Report', renderTemplateLibraryReport);
     safeRender('Template Library', renderTemplateLibrary);
@@ -901,7 +902,7 @@ function updateEntryLivePreview() {
   setText('live-reply-rate', replyRate.toFixed(1) + '%');
   setText('live-conv-rate', convRate.toFixed(2) + '%');
 }
-['entry-sent', 'entry-read', 'entry-reply', 'entry-buyer', 'entry-sales'].forEach(id => {
+['entry-sent', 'entry-read', 'entry-reply', 'entry-buyer', 'entry-sales', 'entry-total-contact'].forEach(id => {
   document.getElementById(id).addEventListener('input', updateEntryLivePreview);
 });
 
@@ -929,6 +930,7 @@ document.getElementById('entry-form').addEventListener('submit', async (e) => {
     failed: Number(document.getElementById('entry-failed').value || 0),
     buyer: Number(document.getElementById('entry-buyer').value || 0),
     sales: Number(document.getElementById('entry-sales').value || 0),
+    totalContact: Number(document.getElementById('entry-total-contact')?.value || 0),
   };
   try {
     if (editingEntryId) {
@@ -970,6 +972,7 @@ function startEditEntry(id) {
   document.getElementById('entry-failed').value = entry.failed || 0;
   document.getElementById('entry-buyer').value = entry.buyer || 0;
   document.getElementById('entry-sales').value = entry.sales || 0;
+  const tc=document.getElementById('entry-total-contact'); if(tc) tc.value = entry.totalContact || 0;
   updateEntryLivePreview();
   document.getElementById('entry-form-title').textContent = 'Edit Entri Blast';
   document.getElementById('entry-submit-btn').textContent = 'Kemaskini Entri';
@@ -1285,30 +1288,130 @@ function weekStartMonday(dateStr) {
 function weekEndSunday(startStr) {
   return dashDateShift(startStr, 6);
 }
+function monthBucketInfo(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  if(Number.isNaN(d.getTime())) return null;
+  const y=d.getFullYear(), m=d.getMonth(), day=d.getDate();
+  const weekNo = day<=7 ? 1 : day<=14 ? 2 : day<=21 ? 3 : day<=28 ? 4 : 5;
+  const startDay = [1,1,8,15,22,29][weekNo];
+  const lastDay = new Date(y,m+1,0).getDate();
+  const endDay = weekNo<5 ? [0,7,14,21,28][weekNo] : lastDay;
+  const start=`${y}-${String(m+1).padStart(2,'0')}-${String(startDay).padStart(2,'0')}`;
+  const end=`${y}-${String(m+1).padStart(2,'0')}-${String(endDay).padStart(2,'0')}`;
+  return {key:`${y}-${String(m+1).padStart(2,'0')}-W${weekNo}`,weekNo,start,end};
+}
 function weeklyGroups(rows) {
   const map = new Map();
   rows.forEach(r => {
     if (!r.tarikh) return;
-    const start = weekStartMonday(r.tarikh);
-    if (!map.has(start)) map.set(start, []);
-    map.get(start).push(r);
+    const info=monthBucketInfo(r.tarikh);
+    if(!info) return;
+    if (!map.has(info.key)) map.set(info.key, {info,items:[]});
+    map.get(info.key).items.push(r);
   });
-  return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+  return [...map.values()]
+    .sort((a,b)=>b.info.start.localeCompare(a.info.start))
+    .map(x=>[x.info.start,x.items,x.info]);
 }
 function weekLabelMs(startStr) {
-  const d = new Date(startStr + 'T12:00:00');
-  const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
-  const firstMonday = new Date(monthStart);
-  const day = firstMonday.getDay();
-  firstMonday.setDate(firstMonday.getDate() + (day===0?1:day===1?0:8-day));
-  let n = 1;
-  if (d >= firstMonday) n = Math.floor((d - firstMonday) / 604800000) + 1;
-  return `Week ${n}`;
+  const info=monthBucketInfo(startStr);
+  return info ? `Week ${info.weekNo}` : 'Week';
 }
 function prettyDateMs(dateStr){
   const d=new Date(dateStr+'T12:00:00');
   return d.toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'});
 }
+
+function entryMonthKey(r){
+  const d=String(r?.tarikh||'');
+  return /^\d{4}-\d{2}/.test(d) ? d.slice(0,7) : '';
+}
+function monthLabelMs(key){
+  if(!key) return '-';
+  const d=new Date(key+'-01T12:00:00');
+  return d.toLocaleDateString('ms-MY',{month:'long',year:'numeric'});
+}
+function latestMonthlyContact(rows){
+  const candidates=rows
+    .filter(r=>Number(r.totalContact||0)>0)
+    .sort((a,b)=>{
+      const ad=String(a.tarikh||''),bd=String(b.tarikh||'');
+      if(ad!==bd) return bd.localeCompare(ad);
+      const at=a.createdAt?.toMillis?a.createdAt.toMillis():Number(a.createdAtMs||0);
+      const bt=b.createdAt?.toMillis?b.createdAt.toMillis():Number(b.createdAtMs||0);
+      return bt-at;
+    });
+  return Number(candidates[0]?.totalContact||0);
+}
+function monthlyDatabaseGroups(rows){
+  const map=new Map();
+  (rows||[]).forEach(r=>{
+    const key=entryMonthKey(r); if(!key)return;
+    if(!map.has(key))map.set(key,[]);
+    map.get(key).push(r);
+  });
+  return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([key,items])=>{
+    const totalContact=latestMonthlyContact(items);
+    const totalSent=items.reduce((s,r)=>s+Number(r.sent||0),0);
+    const frequency=totalContact?totalSent/totalContact:0;
+    const maxSent=totalContact*2;
+    const remaining=Math.max(0,maxSent-totalSent);
+    return {key,items,totalContact,totalSent,frequency,maxSent,remaining,status:!totalContact?'Tiada Contact':frequency>2?'Lebih 2x':frequency>=1.7?'Hampir 2x':'Okey'};
+  });
+}
+function renderMonthlyContactDashboard(){
+  const totalEl=document.getElementById('monthly-total-contact');
+  if(!totalEl)return;
+  const rows=filteredEntries();
+  const groups=monthlyDatabaseGroups(rows);
+  // Dashboard follows selected end date month; fallback latest group.
+  const to=document.getElementById('filter-to')?.value||'';
+  const wanted=to?to.slice(0,7):'';
+  const g=groups.find(x=>x.key===wanted)||groups[0];
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  if(!g){
+    set('monthly-total-contact','0');set('monthly-total-sent','0');set('monthly-frequency','0.00x');set('monthly-send-capacity','0');
+    set('monthly-capacity-note','Belum ada total contact');
+    set('monthly-contact-period','Bulan semasa');
+    const alert=document.getElementById('monthly-frequency-alert');
+    if(alert){alert.className='monthly-frequency-alert neutral';alert.textContent='Masukkan Total Contact di Input Data untuk aktifkan kiraan frequency bulanan.';}
+    return;
+  }
+  set('monthly-total-contact',fmt(g.totalContact));
+  set('monthly-total-sent',fmt(g.totalSent));
+  set('monthly-frequency',g.frequency.toFixed(2)+'x');
+  set('monthly-send-capacity',fmt(g.remaining));
+  set('monthly-capacity-note',g.totalContact?`Had 2x = ${fmt(g.maxSent)} mesej`:'Belum ada total contact');
+  set('monthly-contact-period',monthLabelMs(g.key));
+  const alert=document.getElementById('monthly-frequency-alert');
+  if(alert){
+    if(!g.totalContact){alert.className='monthly-frequency-alert neutral';alert.textContent='Total Contact bulan ini belum dimasukkan.';}
+    else if(g.frequency>2){alert.className='monthly-frequency-alert danger';alert.textContent=`Frequency ${g.frequency.toFixed(2)}x — sudah melebihi sasaran 2x untuk 1 nombor bulan ini.`;}
+    else if(g.frequency>=1.7){alert.className='monthly-frequency-alert warn';alert.textContent=`Frequency ${g.frequency.toFixed(2)}x — hampir capai had 2x. Baki kapasiti kira-kira ${fmt(g.remaining)} mesej.`;}
+    else{alert.className='monthly-frequency-alert good';alert.textContent=`Frequency ${g.frequency.toFixed(2)}x masih dalam sasaran. Baki kapasiti sehingga 2x: ${fmt(g.remaining)} mesej.`;}
+  }
+}
+function renderMonthlyDatabaseReport(){
+  const body=document.getElementById('monthly-db-report-body');
+  if(!body)return;
+  const groups=monthlyDatabaseGroups(lapFilteredEntries());
+  const count=document.getElementById('monthly-report-count');
+  if(count)count.textContent=`${groups.length} bulan`;
+  if(!groups.length){body.innerHTML='<tr><td colspan="7" class="empty-state">Tiada data bulanan lagi.</td></tr>';return;}
+  body.innerHTML=groups.map(g=>{
+    const cls=g.status==='Lebih 2x'?'danger':g.status==='Hampir 2x'?'warn':g.status==='Okey'?'good':'neutral';
+    return `<tr>
+      <td class="tname">${monthLabelMs(g.key)}</td>
+      <td class="num">${fmt(g.totalContact)}</td>
+      <td class="num">${fmt(g.totalSent)}</td>
+      <td class="num"><b>${g.frequency.toFixed(2)}x</b></td>
+      <td class="num">${fmt(g.maxSent)}</td>
+      <td class="num">${fmt(g.remaining)}</td>
+      <td><span class="monthly-status-pill ${cls}">${g.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
 function renderDashboardWeekly() {
   const body=document.getElementById('dash-weekly-body');
   if(!body) return;
@@ -1321,7 +1424,7 @@ function renderDashboardWeekly() {
   if(count) count.textContent=`${groups.length} minggu`;
   if(!groups.length){body.innerHTML='<tr><td colspan="11" class="empty-state">Tiada data mingguan lagi.</td></tr>';return;}
   body.innerHTML=groups.map(([start,items])=>{
-    const m=dashMetrics(items), end=weekEndSunday(start);
+    const m=dashMetrics(items), info=monthBucketInfo(start), end=info?.end||start;
     return `<tr>
       <td class="tname">${weekLabelMs(start)}</td>
       <td>${prettyDateMs(start)} – ${prettyDateMs(end)}</td>
@@ -1339,6 +1442,7 @@ function renderDashboardWeekly() {
 }
 
 function renderDashboard() {
+  renderMonthlyContactDashboard();
   const rows = filteredEntries();
   const m = dashMetrics(rows);
 
@@ -2539,7 +2643,7 @@ function renderWeeklyReport() {
   if(count) count.textContent=`${groups.length} minggu`;
   if(!groups.length){body.innerHTML='<tr><td colspan="12" class="empty-state">Tiada data mingguan lagi</td></tr>';return;}
   body.innerHTML=groups.map(([start,items])=>{
-    const m=dashMetrics(items), end=weekEndSunday(start);
+    const m=dashMetrics(items), info=monthBucketInfo(start), end=info?.end||start;
     return `<tr>
       <td class="tname">${weekLabelMs(start)}</td>
       <td>${prettyDateMs(start)} – ${prettyDateMs(end)}</td>
