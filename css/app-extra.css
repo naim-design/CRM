@@ -12704,3 +12704,73 @@ html[data-theme="light"] .monthly-contact-kpi strong{color:#17313d}
 @media(max-width:620px){
   .monthly-contact-kpis{grid-template-columns:1fr!important}
 }
+
+
+/* V31 — Monthly Sales & ROI target cards */
+.monthly-contact-kpis{
+  grid-template-columns:repeat(7,minmax(0,1fr))!important;
+}
+.monthly-contact-kpi.target-sales{
+  border-top:2px solid #20d8ad!important;
+}
+.monthly-contact-kpi.target-roi{
+  border-top:2px solid #f0ac52!important;
+}
+@media(max-width:1450px){
+  .monthly-contact-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(max-width:1100px){
+  .monthly-contact-kpis{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:800px){
+  .monthly-contact-kpis{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+  .monthly-contact-kpis{grid-template-columns:1fr!important}
+}
+
+
+/* V32 — Monthly Database cards: clean 2-row desktop layout */
+.monthly-contact-kpis{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  align-items:stretch!important;
+}
+
+.monthly-contact-kpi{
+  min-height:118px!important;
+}
+
+/* Second row: keep the 3 cards balanced and visually centered */
+.monthly-contact-kpi.cost2x,
+.monthly-contact-kpi.target-sales,
+.monthly-contact-kpi.target-roi{
+  min-height:118px!important;
+}
+
+/* Let the second row span neatly instead of leaving an awkward empty slot */
+.monthly-contact-kpi.cost2x{
+  grid-column:1 / span 2!important;
+}
+.monthly-contact-kpi.target-sales{
+  grid-column:3!important;
+}
+.monthly-contact-kpi.target-roi{
+  grid-column:4!important;
+}
+
+@media(max-width:1100px){
+  .monthly-contact-kpis{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .monthly-contact-kpi.cost2x,
+  .monthly-contact-kpi.target-sales,
+  .monthly-contact-kpi.target-roi{
+    grid-column:auto!important;
+  }
+}
+
+@media(max-width:620px){
+  .monthly-contact-kpis{
+    grid-template-columns:1fr!important;
+  }
+}
