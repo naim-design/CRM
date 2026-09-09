@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v33-sortable-all-tables">
+<link rel="stylesheet" href="css/app-extra.css?v=v35-package-sales-link">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -32,6 +32,7 @@
         <button data-view="dashboard">Dashboard</button>
         <button data-view="pageanalytics">Page Analytics</button>
         <button data-view="tiktokleads">TikTok Leads</button>
+        <button data-view="packageanalysis">Pakej Analisis</button>
         <button data-view="poster">Poster</button>
         <button data-view="template">Template</button>
         <button data-view="feedback">Feedback</button>
@@ -133,6 +134,28 @@
           </div>
           <div class="form-grid two" style="margin-top:16px;">
             <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
+            <div class="field">
+              <label>Promo / Pakej Digunakan</label>
+              <select id="entry-promo">
+                <option value="">- Pilih Promo -</option>
+                <optgroup label="Jus Mamariam / CRM">
+                  <option value="CRM169">Promo CRM RM169</option>
+                  <option value="CRM179">Promo CRM RM179</option>
+                  <option value="CRM185">Promo CRM RM185</option>
+                </optgroup>
+                <optgroup label="YGROW / Hazelnut">
+                  <option value="YG59">YGROW / Hazelnut — 1 kotak RM59</option>
+                  <option value="YG99">YGROW / Hazelnut — 2 kotak RM99</option>
+                  <option value="YG199">YGROW / Hazelnut — 4 kotak + shaker RM199</option>
+                </optgroup>
+                <optgroup label="Susu Mocha / Hazelnut">
+                  <option value="MILK49">Susu Mocha / Hazelnut — 1 kotak RM49</option>
+                  <option value="MILK99">Susu Mocha / Hazelnut — 2 kotak RM99</option>
+                </optgroup>
+                <option value="OTHER">Lain-lain</option>
+              </select>
+              <small style="display:block;margin-top:5px;color:var(--muted-2);font-size:10px;">Digunakan untuk pecahkan sales ikut promo dalam Pakej Analisis.</small>
+            </div>
             <div class="field">
               <label>Total Contact Database Bulan Ini</label>
               <input type="number" id="entry-total-contact" min="0" step="1" value="0">
@@ -820,6 +843,170 @@
       </section>
     </div>
 
+
+
+    <!-- ================= PAKEJ ANALISIS ================= -->
+    <div id="view-packageanalysis" class="view">
+      <div class="pkg-page">
+        <div class="pkg-hero">
+          <div>
+            <div class="pkg-eyebrow">PRICE & OFFER INTELLIGENCE</div>
+            <h1>Pakej Analisis</h1>
+            <p>Bandingkan harga WhatsApp biasa, Promo CRM dan TikTok sekali dengan kuantiti/item yang customer dapat. Sesuai untuk semak offer mana paling kuat dan mudah present kepada coach.</p>
+          </div>
+          <div class="pkg-hero-actions">
+            <button type="button" class="btn btn-primary" id="pkg-open-form">+ Tambah Pakej</button>
+            <button type="button" class="btn btn-ghost" id="pkg-fill-example">Isi Contoh Combo Koko</button>
+          </div>
+        </div>
+
+        <section class="pkg-kpi-grid">
+          <article class="pkg-kpi">
+            <span>JUMLAH PAKEJ</span>
+            <strong id="pkg-total-count">0</strong>
+            <small>Pakej direkod untuk comparison</small>
+          </article>
+          <article class="pkg-kpi crm">
+            <span>CRM PALING MURAH</span>
+            <strong id="pkg-crm-cheapest-count">0</strong>
+            <small>Bilangan pakej CRM paling rendah harga</small>
+          </article>
+          <article class="pkg-kpi">
+            <span>PURATA JIMAT CRM vs WA</span>
+            <strong id="pkg-avg-save-wa">RM 0.00</strong>
+            <small>Perbezaan harga CRM berbanding WhatsApp</small>
+          </article>
+          <article class="pkg-kpi">
+            <span>PURATA JIMAT CRM vs TIKTOK</span>
+            <strong id="pkg-avg-save-tt">RM 0.00</strong>
+            <small>Perbezaan harga CRM berbanding TikTok</small>
+          </article>
+        </section>
+
+        <section class="pkg-panel">
+          <div class="pkg-panel-head">
+            <div>
+              <span class="pkg-mini-label">COMPARISON TABLE</span>
+              <h3>Perbandingan Harga & Isi Pakej</h3>
+              <p>Klik tajuk kolum untuk sort. Harga terendah akan ditanda automatik.</p>
+            </div>
+            <div class="pkg-search-wrap">
+              <input type="search" id="pkg-search" placeholder="Cari pakej...">
+            </div>
+          </div>
+
+          <div class="pkg-table-wrap">
+            <table class="tbl pkg-table">
+              <thead>
+                <tr>
+                  <th>Pakej</th>
+                  <th>WhatsApp Harga</th>
+                  <th>WhatsApp Dapat</th>
+                  <th>CRM Harga</th>
+                  <th>CRM Dapat</th>
+                  <th>TikTok Harga</th>
+                  <th>TikTok Dapat</th>
+                  <th>Paling Murah</th>
+                  <th>Jimat CRM vs WA</th>
+                  <th>Jimat CRM vs TikTok</th>
+                  <th>Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="pkg-table-body">
+                <tr><td colspan="11" class="empty-state">Belum ada pakej direkod.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="pkg-panel">
+          <div class="pkg-panel-head">
+            <div>
+              <span class="pkg-mini-label">ACTUAL CRM SALES</span>
+              <h3>Prestasi Sales Ikut Promo</h3>
+              <p>Data ini ditarik terus daripada Input Data. Sales dikumpulkan berdasarkan promo yang dipilih masa blasting.</p>
+            </div>
+          </div>
+          <div class="pkg-table-wrap">
+            <table class="tbl pkg-sales-table">
+              <thead><tr><th>Promo</th><th>Harga Pakej</th><th>Total Sales</th><th>Anggaran Unit/Pakej</th><th>Buyer Direkod</th><th>Bil. Blast/Entri</th><th>% Sumbangan Sales</th></tr></thead>
+              <tbody id="pkg-sales-body"><tr><td colspan="7" class="empty-state">Belum ada sales yang ditag dengan promo.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="pkg-sales-note">Contoh: Total Sales RM338 + Promo CRM RM169 = anggaran 2 pakej terjual. Anggaran unit hanya dibuat bila sales boleh dibahagi dengan harga pakej.</div>
+        </section>
+
+        <section class="pkg-panel">
+          <div class="pkg-panel-head">
+            <div>
+              <span class="pkg-mini-label">OFFER ANALYSIS</span>
+              <h3>Analisis Offer</h3>
+              <p>Ringkasan automatik untuk nampak channel mana lebih agresif dari segi harga dan value.</p>
+            </div>
+          </div>
+          <div id="pkg-insight-grid" class="pkg-insight-grid">
+            <div class="empty-state">Tambah pakej untuk hasilkan analisis.</div>
+          </div>
+        </section>
+
+        <section class="pkg-entry-panel" id="pkg-entry-panel">
+          <div class="pkg-panel-head">
+            <div>
+              <span class="pkg-mini-label">INPUT / UPDATE</span>
+              <h3 id="pkg-form-title">Tambah Pakej</h3>
+              <p>Masukkan harga dan item yang customer dapat untuk ketiga-tiga channel.</p>
+            </div>
+            <button type="button" class="btn btn-ghost" id="pkg-close-form">Tutup</button>
+          </div>
+
+          <form id="pkg-form">
+            <div class="pkg-form-grid">
+              <div class="field pkg-span-3">
+                <label>Nama Pakej *</label>
+                <input type="text" id="pkg-name" placeholder="Contoh: Combo Koko" required>
+              </div>
+
+              <div class="pkg-channel-card whatsapp">
+                <div class="pkg-channel-title">WhatsApp Biasa</div>
+                <div class="field"><label>Harga (RM)</label><input type="number" id="pkg-wa-price" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Jumlah Item Utama</label><input type="number" id="pkg-wa-qty" min="0" step="1" value="0"></div>
+                <div class="field"><label>Apa Customer Dapat</label><textarea id="pkg-wa-items" rows="4" placeholder="Contoh: 4 botol Jus Mamariam + 1 kotak Koko Zuriat"></textarea></div>
+              </div>
+
+              <div class="pkg-channel-card crm">
+                <div class="pkg-channel-title">Promo CRM</div>
+                <div class="field"><label>Harga (RM)</label><input type="number" id="pkg-crm-price" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Jumlah Item Utama</label><input type="number" id="pkg-crm-qty" min="0" step="1" value="0"></div>
+                <div class="field"><label>Apa Customer Dapat</label><textarea id="pkg-crm-items" rows="4" placeholder="Contoh: 4 botol Jus + FREE shaker + 1 Koko Zuriat"></textarea></div>
+              </div>
+
+              <div class="pkg-channel-card tiktok">
+                <div class="pkg-channel-title">TikTok</div>
+                <div class="field"><label>Harga (RM)</label><input type="number" id="pkg-tt-price" min="0" step="0.01" value="0"></div>
+                <div class="field"><label>Jumlah Item Utama</label><input type="number" id="pkg-tt-qty" min="0" step="1" value="0"></div>
+                <div class="field"><label>Apa Customer Dapat</label><textarea id="pkg-tt-items" rows="4" placeholder="Contoh: 3 botol Jus Mamariam + FREE Koko Zuriat"></textarea></div>
+              </div>
+
+              <div class="field pkg-span-3">
+                <label>Nota / Pemerhatian</label>
+                <textarea id="pkg-note" rows="3" placeholder="Contoh: CRM paling agresif dari segi harga dan item percuma."></textarea>
+              </div>
+            </div>
+
+            <div class="pkg-live-comparison">
+              <div><span>CRM vs WA</span><strong id="pkg-live-wa">RM 0.00</strong><small>Jimat jika positif</small></div>
+              <div><span>CRM vs TikTok</span><strong id="pkg-live-tt">RM 0.00</strong><small>Jimat jika positif</small></div>
+              <div><span>Harga Terendah</span><strong id="pkg-live-cheapest">–</strong><small>Channel paling murah</small></div>
+            </div>
+
+            <div class="pkg-form-actions">
+              <button type="submit" class="btn btn-primary" id="pkg-save-btn">Simpan Pakej</button>
+              <button type="button" class="btn btn-ghost" id="pkg-reset-btn">Reset</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
 
     <!-- ================= TIKTOK LEADS ================= -->
     <div id="view-tiktokleads" class="view">
@@ -2061,7 +2248,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v33-sortable-all-tables"></script>
+<script src="js/app.js?v=v35-package-sales-link"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
