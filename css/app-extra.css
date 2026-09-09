@@ -12774,3 +12774,56 @@ html[data-theme="light"] .monthly-contact-kpi strong{color:#17313d}
     grid-template-columns:1fr!important;
   }
 }
+
+
+/* =========================================================
+   V33 — Universal sortable report/table headers
+   ========================================================= */
+.sort-global-hint{
+  display:flex;
+  justify-content:flex-end;
+  margin:0 0 8px;
+  color:var(--muted-2);
+  font-size:9px;
+  font-family:'IBM Plex Mono',monospace;
+}
+table.tbl thead th.sort-enabled{
+  cursor:pointer!important;
+  user-select:none!important;
+  white-space:nowrap!important;
+  transition:background .14s ease,color .14s ease!important;
+}
+table.tbl thead th.sort-enabled:hover{
+  color:var(--mint)!important;
+  background:rgba(32,216,173,.055)!important;
+}
+table.tbl thead th.sort-enabled:focus-visible{
+  outline:2px solid rgba(32,216,173,.35)!important;
+  outline-offset:-2px!important;
+}
+table.tbl thead th.sort-enabled::after{
+  content:"↕";
+  display:inline-block;
+  margin-left:5px;
+  color:rgba(128,150,155,.55);
+  font-size:8px;
+  vertical-align:middle;
+}
+table.tbl thead th.sort-enabled.sort-asc::after,
+table.tbl thead th.sort-enabled.sort-desc::after{
+  content:"";
+  display:none;
+}
+table.tbl thead th .sort-arrow{
+  display:inline-block;
+  margin-left:5px;
+  color:var(--mint);
+  font-size:8px;
+  vertical-align:middle;
+}
+table.tbl thead th.sort-disabled{
+  cursor:default!important;
+}
+html[data-theme="light"] table.tbl thead th.sort-enabled:hover{
+  background:#eef8f4!important;
+}
