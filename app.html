@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v27-weekly-ygrow">
+<link rel="stylesheet" href="css/app-extra.css?v=v28-fixed-weeks-db-frequency">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -133,6 +133,11 @@
           </div>
           <div class="form-grid two" style="margin-top:16px;">
             <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
+            <div class="field">
+              <label>Total Contact Database Bulan Ini</label>
+              <input type="number" id="entry-total-contact" min="0" step="1" value="0">
+              <small style="display:block;margin-top:5px;color:var(--muted-2);font-size:10px;">Masukkan sekali bila total database bulan berubah. Laporan bulanan akan guna nilai terkini, bukan jumlahkan semua entri.</small>
+            </div>
           </div>
           <p style="font-size:11.5px; color:var(--muted-2); margin-top:6px;">💡 Kos blasting dikira automatik dari jumlah Sent (€0.0116/mesej) — tak perlu masukkan manual. Laporan Keseluruhan & Laporan Harian automatik terima semua entri, tak kira kategori.</p>
 
@@ -311,7 +316,44 @@
           </div>
         </div>
 
-        <section class="dash-weekly-section">
+  
+      <section class="monthly-contact-section">
+        <div class="section-head">
+          <div>
+            <h2><span class="idx">DB</span>Database & Frequency Bulanan</h2>
+            <p class="monthly-contact-sub">Pantau saiz database, jumlah mesej dihantar dan berapa kali purata 1 nombor menerima blast dalam bulan tersebut.</p>
+          </div>
+          <span class="hint-chip" id="monthly-contact-period">Bulan semasa</span>
+        </div>
+
+        <div class="monthly-contact-kpis">
+          <article class="monthly-contact-kpi">
+            <span>TOTAL CONTACT</span>
+            <strong id="monthly-total-contact">0</strong>
+            <small>Nilai database terkini bulan ini</small>
+          </article>
+          <article class="monthly-contact-kpi">
+            <span>TOTAL SENT</span>
+            <strong id="monthly-total-sent">0</strong>
+            <small>Jumlah mesej dihantar bulan ini</small>
+          </article>
+          <article class="monthly-contact-kpi frequency">
+            <span>FREQUENCY / NOMBOR</span>
+            <strong id="monthly-frequency">0.00x</strong>
+            <small>Target maksimum sekarang: 2.00x</small>
+          </article>
+          <article class="monthly-contact-kpi">
+            <span>BAKI KAPASITI 2X</span>
+            <strong id="monthly-send-capacity">0</strong>
+            <small id="monthly-capacity-note">Belum ada total contact</small>
+          </article>
+        </div>
+        <div id="monthly-frequency-alert" class="monthly-frequency-alert neutral">
+          Masukkan Total Contact di Input Data untuk aktifkan kiraan frequency bulanan.
+        </div>
+      </section>
+
+      <section class="dash-weekly-section">
           <div class="dash-weekly-head">
             <div>
               <div class="eyebrow">Weekly View</div>
@@ -1008,9 +1050,31 @@
         </table>
       </section>
 
+
       <section>
         <div class="section-head">
-          <h2><span class="idx">02</span>Laporan Mingguan</h2>
+          <h2><span class="idx">02</span>Database & Frequency Bulanan</h2>
+          <span class="hint-chip" id="monthly-report-count">0 bulan</span>
+        </div>
+        <table class="tbl monthly-db-report-table">
+          <thead>
+            <tr>
+              <th>Bulan</th>
+              <th>Total Contact</th>
+              <th>Total Sent</th>
+              <th>Frequency / Nombor</th>
+              <th>Had 2x</th>
+              <th>Baki Kapasiti</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="monthly-db-report-body"></tbody>
+        </table>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2><span class="idx">03</span>Laporan Mingguan</h2>
           <span class="hint-chip" id="weekly-report-count">0 minggu</span>
         </div>
         <table class="tbl weekly-report-table">
@@ -1021,7 +1085,7 @@
 
       <section>
         <div class="section-head">
-          <h2><span class="idx">03</span>Prestasi Poster</h2>
+          <h2><span class="idx">04</span>Prestasi Poster</h2>
           <span class="hint-chip" id="poster-perf-count">0 poster</span>
         </div>
         <table class="tbl">
@@ -1032,7 +1096,7 @@
 
       <section>
         <div class="section-head">
-          <h2><span class="idx">04</span>Prestasi Akaun WABOT</h2>
+          <h2><span class="idx">05</span>Prestasi Akaun WABOT</h2>
           <span class="hint-chip" id="wabot-perf-count">0 akaun</span>
         </div>
         <table class="tbl">
@@ -1979,7 +2043,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v27-weekly-ygrow"></script>
+<script src="js/app.js?v=v28-fixed-weeks-db-frequency"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
