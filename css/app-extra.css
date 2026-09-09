@@ -12827,3 +12827,44 @@ table.tbl thead th.sort-disabled{
 html[data-theme="light"] table.tbl thead th.sort-enabled:hover{
   background:#eef8f4!important;
 }
+
+
+/* =========================================================
+   V34 — PAKEJ ANALISIS
+   ========================================================= */
+.pkg-page{display:flex;flex-direction:column;gap:15px;padding-top:22px}
+.pkg-hero{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;padding:22px 24px;border-radius:16px;background:linear-gradient(135deg,#102428,#0e1e22);border:1px solid rgba(255,255,255,.07)}
+.pkg-eyebrow,.pkg-mini-label{color:#22d9af;font-family:'IBM Plex Mono',monospace;font-size:7.5px;font-weight:700;letter-spacing:.11em}
+.pkg-hero h1{margin:6px 0 5px;color:#f0f7f5;font-size:26px}.pkg-hero p{margin:0;max-width:780px;color:#81969b;font-size:10px;line-height:1.55}
+.pkg-hero-actions{display:flex;gap:8px;flex-wrap:wrap}.pkg-hero-actions .btn{width:auto!important;font-size:9px;padding:9px 12px}
+.pkg-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.pkg-kpi{min-height:108px;padding:14px;border-radius:12px;background:#0f2025;border:1px solid rgba(255,255,255,.06)}
+.pkg-kpi span{display:block;color:#778f94;font-family:'IBM Plex Mono',monospace;font-size:7px;font-weight:700;letter-spacing:.07em}
+.pkg-kpi strong{display:block;margin-top:9px;color:#eff6f4;font-size:23px}.pkg-kpi small{display:block;margin-top:7px;color:#7b9196;font-size:8px}
+.pkg-kpi.crm{border-top:2px solid #21d7ad}
+.pkg-panel,.pkg-entry-panel{padding:16px;border-radius:14px;background:#0f2025;border:1px solid rgba(255,255,255,.06)}
+.pkg-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}.pkg-panel-head h3{margin:3px 0 0;color:#eaf3f1;font-size:16px}.pkg-panel-head p{margin:5px 0 0;color:#7f9398;font-size:9px}
+.pkg-search-wrap input{min-width:230px;min-height:34px;font-size:9px}
+.pkg-table-wrap{overflow:auto}.pkg-table{min-width:1500px}.pkg-table th,.pkg-table td{font-size:9px!important;vertical-align:top}.pkg-items-cell{min-width:180px;white-space:normal!important;line-height:1.45}.pkg-row-note,.pkg-unit{display:block;margin-top:4px;color:#71878c;font-size:7.5px}
+.pkg-cheapest-cell{background:rgba(32,216,173,.055)!important}.pkg-positive{color:#2bd7ae!important}.pkg-negative{color:#e47f7f!important}
+.pkg-channel-pill{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:7.5px;font-weight:700;white-space:nowrap}
+.pkg-channel-pill.crm{color:#25dcb0;background:rgba(37,220,176,.08)}.pkg-channel-pill.whatsapp{color:#67b1ff;background:rgba(103,177,255,.08)}.pkg-channel-pill.tiktok{color:#efb45f;background:rgba(239,180,95,.08)}
+.pkg-action-cell{white-space:nowrap}.pkg-action-btn{border:0;background:transparent;color:#5aa8ea;font-size:8px;cursor:pointer;padding:4px}.pkg-action-btn.danger{color:#db7b7b}
+.pkg-insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pkg-insight-card{padding:13px;border-radius:11px;background:#0b191d;border:1px solid rgba(255,255,255,.055)}
+.pkg-insight-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.pkg-insight-top>span{color:#dde9e6;font-size:11px;font-weight:700}.pkg-insight-main{margin-top:12px}.pkg-insight-main strong{display:block;color:#25dbb0;font-size:20px}.pkg-insight-main small{display:block;margin-top:4px;color:#71878c;font-size:8px}
+.pkg-insight-lines{display:flex;flex-direction:column;gap:6px;margin-top:10px}.pkg-insight-lines div{display:flex;justify-content:space-between;gap:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.045);font-size:8px}.pkg-insight-lines span{color:#748a8f}.pkg-insight-lines b{color:#dce8e5}
+.pkg-entry-panel{display:none}.pkg-entry-panel.open{display:block}.pkg-form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.pkg-span-3{grid-column:span 3}
+.pkg-channel-card{padding:13px;border-radius:11px;background:#0b191d;border:1px solid rgba(255,255,255,.055)}.pkg-channel-card.crm{border-top:2px solid #21d7ad}.pkg-channel-card.whatsapp{border-top:2px solid #5aa8ea}.pkg-channel-card.tiktok{border-top:2px solid #efb45f}.pkg-channel-title{margin-bottom:10px;color:#e5efed;font-size:12px;font-weight:700}
+.pkg-channel-card .field{margin-bottom:9px}.pkg-channel-card label,.pkg-form-grid> .field label{display:block;margin-bottom:5px;color:#7f9499;font-size:8px}.pkg-channel-card input,.pkg-channel-card textarea,.pkg-form-grid input,.pkg-form-grid textarea{font-size:9px}
+.pkg-live-comparison{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}.pkg-live-comparison>div{padding:10px;border-radius:9px;background:#0a181c;border:1px solid rgba(255,255,255,.05)}.pkg-live-comparison span{display:block;color:#71878d;font-size:7.5px}.pkg-live-comparison strong{display:block;margin-top:4px;color:#eaf3f0;font-size:13px}.pkg-live-comparison small{display:block;margin-top:3px;color:#6f858a;font-size:7px}
+.pkg-form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.pkg-form-actions .btn{width:auto!important;font-size:9px;padding:9px 13px}
+html[data-theme="light"] .pkg-hero{background:linear-gradient(135deg,#fff,#f5faf8);border-color:#dde8e4}html[data-theme="light"] .pkg-hero h1,html[data-theme="light"] .pkg-panel-head h3,html[data-theme="light"] .pkg-kpi strong,html[data-theme="light"] .pkg-insight-top>span,html[data-theme="light"] .pkg-channel-title{color:#17313d}
+html[data-theme="light"] .pkg-panel,html[data-theme="light"] .pkg-entry-panel,html[data-theme="light"] .pkg-kpi{background:#fff;border-color:#dfe8e5}html[data-theme="light"] .pkg-insight-card,html[data-theme="light"] .pkg-channel-card,html[data-theme="light"] .pkg-live-comparison>div{background:#f7faf9;border-color:#e4ebe8}
+@media(max-width:1100px){.pkg-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pkg-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pkg-form-grid{grid-template-columns:1fr}.pkg-span-3{grid-column:span 1}.pkg-live-comparison{grid-template-columns:1fr}}
+@media(max-width:700px){.pkg-hero{flex-direction:column;align-items:flex-start}.pkg-kpi-grid,.pkg-insight-grid{grid-template-columns:1fr}.pkg-search-wrap input{min-width:0;width:100%}}
+
+/* V35 — Promo tag + actual sales package analysis */
+#entry-promo{font-weight:600}
+.pkg-sales-table{min-width:850px}
+.pkg-sales-table td b{color:var(--mint)}
+.pkg-sales-note{margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(32,216,173,.05);color:var(--muted-2);font-size:8px;line-height:1.5;border:1px solid rgba(32,216,173,.09)}
