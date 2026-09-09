@@ -12629,3 +12629,22 @@ html[data-theme="light"] .tt-summary-callout{background:#effaf6;border-color:#d9
 .spa-pill.desktop{background:var(--blue-dim);color:var(--blue);}
 .spa-pill.done{background:var(--mint-dim);color:var(--mint);}
 .spa-pill.pending{background:var(--amber-dim);color:var(--amber);}
+
+
+/* =========================================================
+   V27 — WEEKLY DASHBOARD + YGROW PROJECT
+   ========================================================= */
+.dash-weekly-section{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface-raised)}
+.dash-weekly-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
+.dash-weekly-head h3{margin:4px 0 2px;font-size:16px;color:var(--text)}
+.dash-weekly-head p{margin:0;color:var(--muted);font-size:9px}
+.dash-weekly-table-wrap{overflow-x:auto}
+.dash-weekly-table{min-width:980px}
+.dash-weekly-table th,.dash-weekly-table td,.weekly-report-table th,.weekly-report-table td{font-size:9px!important}
+.ygrow-target-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
+.ygrow-target-strip>div{padding:11px 12px;border-radius:10px;background:rgba(35,216,173,.06);border:1px solid rgba(35,216,173,.14)}
+.ygrow-target-strip span{display:block;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:.07em}
+.ygrow-target-strip strong{display:block;margin-top:5px;color:var(--text);font-size:13px}
+.weekly-report-table{min-width:1080px}
+@media(max-width:900px){.ygrow-target-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.ygrow-target-strip{grid-template-columns:1fr}}
