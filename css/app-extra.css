@@ -12924,3 +12924,6 @@ html[data-theme="light"] .pkg-modal-backdrop .pkg-entry-panel{background:#fff}
 html[data-theme="light"] .pkg-history-kpis article{background:#f7faf9}
 @media(max-width:900px){.pkg-history-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pkg-history-head{align-items:flex-start;flex-direction:column}.pkg-history-filter{width:100%}}
 @media(max-width:520px){.pkg-history-kpis{grid-template-columns:1fr}}
+
+/* V38 — Top KPI cards in Pakej Analisis removed */
+#view-packageanalysis .pkg-kpi-grid{display:none!important;}
