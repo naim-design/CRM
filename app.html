@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v35-package-sales-link">
+<link rel="stylesheet" href="css/app-extra.css?v=v37-historical-package-analysis">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -913,9 +913,74 @@
                 </tr>
               </thead>
               <tbody id="pkg-table-body">
-                <tr><td colspan="11" class="empty-state">Belum ada pakej direkod.</td></tr>
+                <tr><td colspan="12" class="empty-state">Belum ada pakej direkod.</td></tr>
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <section class="pkg-panel">
+          <div class="pkg-panel-head pkg-history-head">
+            <div>
+              <span class="pkg-mini-label">HISTORICAL SALES ESTIMATE</span>
+              <h3>Analisis Pakej Data Lama</h3>
+              <p>Untuk rekod lama yang belum ada tag promo. Sistem cuba kenal pasti pakej berdasarkan nilai Sales, Buyer dan konteks projek/template — tanpa mengubah data lama.</p>
+            </div>
+            <div class="pkg-history-filter">
+              <label>Bulan</label>
+              <select id="pkg-history-month"></select>
+            </div>
+          </div>
+
+          <div class="pkg-history-kpis">
+            <article><span>TOTAL SALES BULAN</span><strong id="pkg-hist-sales">RM 0.00</strong><small>Semua entry bulan dipilih</small></article>
+            <article><span>SALES BOLEH DIKENAL PASTI</span><strong id="pkg-hist-known-sales">RM 0.00</strong><small>Tagged + inference keyakinan tinggi/sederhana</small></article>
+            <article><span>ANGGARAN PAKEJ</span><strong id="pkg-hist-packages">0</strong><small>Jumlah unit/pakej yang boleh dianggarkan</small></article>
+            <article><span>PERLU SEMAK</span><strong id="pkg-hist-review">0</strong><small>Entry ambiguous / tak padan harga</small></article>
+          </div>
+
+          <div class="pkg-table-wrap">
+            <table class="tbl pkg-history-summary-table">
+              <thead>
+                <tr>
+                  <th>Pakej / Promo</th>
+                  <th>Harga</th>
+                  <th>Total Sales</th>
+                  <th>Anggaran Pakej</th>
+                  <th>Buyer</th>
+                  <th>Bil. Entry</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="pkg-history-summary-body">
+                <tr><td colspan="7" class="empty-state">Belum ada data untuk dianalisis.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <details class="pkg-history-details">
+            <summary>Lihat entry data lama satu per satu</summary>
+            <div class="pkg-table-wrap">
+              <table class="tbl pkg-history-detail-table">
+                <thead>
+                  <tr>
+                    <th>Tarikh</th>
+                    <th>Sales</th>
+                    <th>Buyer</th>
+                    <th>Projek / Kategori</th>
+                    <th>Promo Dikesan</th>
+                    <th>Anggaran Pakej</th>
+                    <th>Keyakinan</th>
+                    <th>Sebab</th>
+                  </tr>
+                </thead>
+                <tbody id="pkg-history-detail-body"></tbody>
+              </table>
+            </div>
+          </details>
+
+          <div class="pkg-history-warning">
+            Anggaran data lama tidak ditulis semula ke Firestore. Kalau satu nilai Sales boleh datang daripada beberapa pakej berharga sama/bercampur, sistem akan tandakan <b>PERLU SEMAK</b> dan tidak paksa pilih pakej.
           </div>
         </section>
 
@@ -949,7 +1014,8 @@
           </div>
         </section>
 
-        <section class="pkg-entry-panel" id="pkg-entry-panel">
+        <div class="pkg-modal-backdrop" id="pkg-modal-backdrop">
+        <section class="pkg-entry-panel open" id="pkg-entry-panel">
           <div class="pkg-panel-head">
             <div>
               <span class="pkg-mini-label">INPUT / UPDATE</span>
@@ -964,6 +1030,19 @@
               <div class="field pkg-span-3">
                 <label>Nama Pakej *</label>
                 <input type="text" id="pkg-name" placeholder="Contoh: Combo Koko" required>
+              </div>
+
+              <div class="field pkg-span-3">
+                <label>Gambar Pakej / Poster Promo</label>
+                <div class="pkg-image-upload">
+                  <input type="file" id="pkg-image-file" accept="image/*">
+                  <div class="pkg-image-preview-wrap" id="pkg-image-preview-wrap">
+                    <img id="pkg-image-preview" alt="Preview gambar pakej">
+                    <span id="pkg-image-empty">Belum ada gambar</span>
+                  </div>
+                  <button type="button" class="btn btn-ghost" id="pkg-remove-image">Buang Gambar</button>
+                </div>
+                <small class="pkg-field-help">Gambar akan dikecilkan automatik sebelum disimpan supaya Firestore tidak terlalu berat.</small>
               </div>
 
               <div class="pkg-channel-card whatsapp">
@@ -1005,6 +1084,7 @@
             </div>
           </form>
         </section>
+        </div>
       </div>
     </div>
 
@@ -2248,7 +2328,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v35-package-sales-link"></script>
+<script src="js/app.js?v=v37-historical-package-analysis"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
