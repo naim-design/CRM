@@ -824,6 +824,7 @@ function startListeners() {
     // Old Dashboard Template Report was moved into the Template tab.
     // Do not call renderTemplateReport() here because its old DOM may no longer exist.
     safeRender('Daily Report', renderDailyReport);
+    safeRender('Weekly Report', renderWeeklyReport);
     safeRender('Poster Performance', renderPosterPerformance);
     safeRender('Template Library Report', renderTemplateLibraryReport);
     safeRender('Template Library', renderTemplateLibrary);
@@ -1087,6 +1088,11 @@ const DASH_TARGETS_BY_KATEGORI = {
     roas: 19,
     cost: 140,
     sent: 2500
+  },
+  'Projek Susu YGROW': {
+    sales: 1000,
+    roi: 8,
+    buyer: 17
   }
 };
 
@@ -1212,6 +1218,7 @@ function renderProjectTrends() {
 
   const projectLabelMap = {
     'Projek Susu':'Projek Susu',
+    'Projek Susu YGROW':'Projek Susu YGROW',
     'Projek Leads Ikhtiar (NaimFani)':'Projek Leads Ikhtiar',
     'Promo TikTok':'Promo TikTok',
     'Database WS/Lead':'Database WS/Lead'
@@ -1265,6 +1272,70 @@ function renderProjectTrends() {
     if(!window.__dashTrendActive[p].length) window.__dashTrendActive[p]=['sales'];
     renderProjectTrends();
   });
+}
+
+
+function weekStartMonday(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().slice(0,10);
+}
+function weekEndSunday(startStr) {
+  return dashDateShift(startStr, 6);
+}
+function weeklyGroups(rows) {
+  const map = new Map();
+  rows.forEach(r => {
+    if (!r.tarikh) return;
+    const start = weekStartMonday(r.tarikh);
+    if (!map.has(start)) map.set(start, []);
+    map.get(start).push(r);
+  });
+  return [...map.entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+}
+function weekLabelMs(startStr) {
+  const d = new Date(startStr + 'T12:00:00');
+  const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+  const firstMonday = new Date(monthStart);
+  const day = firstMonday.getDay();
+  firstMonday.setDate(firstMonday.getDate() + (day===0?1:day===1?0:8-day));
+  let n = 1;
+  if (d >= firstMonday) n = Math.floor((d - firstMonday) / 604800000) + 1;
+  return `Week ${n}`;
+}
+function prettyDateMs(dateStr){
+  const d=new Date(dateStr+'T12:00:00');
+  return d.toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric'});
+}
+function renderDashboardWeekly() {
+  const body=document.getElementById('dash-weekly-body');
+  if(!body) return;
+  const rows=filteredEntries();
+  const groups=weeklyGroups(rows);
+  const kategori=document.getElementById('filter-kategori')?.value||'';
+  const strip=document.getElementById('ygrow-target-strip');
+  if(strip) strip.style.display=kategori==='Projek Susu YGROW'?'grid':'none';
+  const count=document.getElementById('dash-weekly-count');
+  if(count) count.textContent=`${groups.length} minggu`;
+  if(!groups.length){body.innerHTML='<tr><td colspan="11" class="empty-state">Tiada data mingguan lagi.</td></tr>';return;}
+  body.innerHTML=groups.map(([start,items])=>{
+    const m=dashMetrics(items), end=weekEndSunday(start);
+    return `<tr>
+      <td class="tname">${weekLabelMs(start)}</td>
+      <td>${prettyDateMs(start)} – ${prettyDateMs(end)}</td>
+      <td class="num">${items.length}</td>
+      <td class="num">${fmt(m.sent)}</td>
+      <td class="num">${fmt(m.reply)}</td>
+      <td class="num">${m.replyRate.toFixed(1)}%</td>
+      <td class="num">${fmt(m.buyer)}</td>
+      <td class="num">RM ${fmt(m.sales)}</td>
+      <td class="num">RM ${fmt(m.cost.toFixed(2))}</td>
+      <td class="num">${m.roi.toFixed(2)}x</td>
+      <td class="num">${m.roas.toFixed(2)}x</td>
+    </tr>`;
+  }).join('');
 }
 
 function renderDashboard() {
@@ -1348,6 +1419,7 @@ function renderDashboard() {
   if (!Object.keys(bySrc).length) srcGrid.innerHTML = '<div class="empty-state">Tiada data lagi — isi entri di tab Input Data.</div>';
 
   renderProjectTrends();
+  renderDashboardWeekly();
 }
 
 function renderTemplateReport() {
@@ -1444,7 +1516,7 @@ function updateTopupVisibility() {
   if (roiTopup) roiTopup.style.display = kategori ? 'none' : 'block';
 
   const susuExtra = document.getElementById('kategori-susu-extra');
-  if (susuExtra) susuExtra.style.display = kategori === 'Projek Susu' ? 'block' : 'none';
+  if (susuExtra) susuExtra.style.display = (kategori === 'Projek Susu' || kategori === 'Projek Susu YGROW') ? 'block' : 'none';
 
   const leadsExtra = document.getElementById('kategori-naimfani-extra');
   if (leadsExtra) leadsExtra.style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
@@ -2457,6 +2529,34 @@ function renderDailyReport() {
   body.appendChild(totalTr);
 }
 
+
+function renderWeeklyReport() {
+  const body=document.getElementById('weekly-report-body');
+  if(!body) return;
+  const rows=lapFilteredEntries();
+  const groups=weeklyGroups(rows);
+  const count=document.getElementById('weekly-report-count');
+  if(count) count.textContent=`${groups.length} minggu`;
+  if(!groups.length){body.innerHTML='<tr><td colspan="12" class="empty-state">Tiada data mingguan lagi</td></tr>';return;}
+  body.innerHTML=groups.map(([start,items])=>{
+    const m=dashMetrics(items), end=weekEndSunday(start);
+    return `<tr>
+      <td class="tname">${weekLabelMs(start)}</td>
+      <td>${prettyDateMs(start)} – ${prettyDateMs(end)}</td>
+      <td class="num">${items.length}</td>
+      <td class="num">${fmt(m.sent)}</td>
+      <td class="num">${m.readRate.toFixed(1)}%</td>
+      <td class="num">${m.replyRate.toFixed(1)}%</td>
+      <td class="num">${fmt(m.buyer)}</td>
+      <td class="num">${m.conversion.toFixed(2)}%</td>
+      <td class="num">${m.sales?'RM '+fmt(m.sales):'–'}</td>
+      <td class="num">RM ${fmt(m.cost.toFixed(2))}</td>
+      <td class="num">${m.roi.toFixed(2)}x</td>
+      <td class="num">${m.roas.toFixed(2)}x</td>
+    </tr>`;
+  }).join('');
+}
+
 function renderPosterPerformance() {
   if (!document.getElementById('poster-perf-body') || !document.getElementById('poster-perf-count')) return;
 
@@ -2645,7 +2745,7 @@ function renderHourOfDay() {
 
 ['lap-filter-from', 'lap-filter-to', 'lap-filter-kategori'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
-    renderDailyReport(); renderPosterPerformance(); renderWabotPerformance();
+    renderDailyReport(); renderWeeklyReport(); renderPosterPerformance(); renderWabotPerformance();
     renderDayOfWeek(); renderHourOfDay();
   });
 });
