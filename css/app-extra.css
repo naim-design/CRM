@@ -13033,3 +13033,16 @@ html[data-theme="light"] .ygrow-flow-dashboard-head p{
 .dash-range-presets button{
   white-space:nowrap;
 }
+
+
+/* V45 — Projek Susu Cross Sell Flow */
+#kategori-susu-cross-sell-flow .ygrow-flow-dashboard-head{
+  background:
+    radial-gradient(circle at 92% 10%,rgba(215,162,81,.12),transparent 18rem),
+    linear-gradient(135deg,#2e241f,#5c3926 58%,#154f70);
+}
+html[data-theme="light"] #kategori-susu-cross-sell-flow .ygrow-flow-dashboard-head{
+  background:
+    radial-gradient(circle at 92% 10%,rgba(215,162,81,.11),transparent 18rem),
+    linear-gradient(135deg,#fffaf4,#f7fbfc);
+}
