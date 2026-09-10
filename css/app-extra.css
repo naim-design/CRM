@@ -13022,3 +13022,14 @@ html[data-theme="light"] .ygrow-flow-dashboard-head p{
     flex-direction:column;
   }
 }
+
+
+/* V40 — Dashboard quick date presets */
+.dash-range-presets{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.dash-range-presets button{
+  white-space:nowrap;
+}
