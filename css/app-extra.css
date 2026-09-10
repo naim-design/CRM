@@ -13046,3 +13046,72 @@ html[data-theme="light"] #kategori-susu-cross-sell-flow .ygrow-flow-dashboard-he
     radial-gradient(circle at 92% 10%,rgba(215,162,81,.11),transparent 18rem),
     linear-gradient(135deg,#fffaf4,#f7fbfc);
 }
+
+
+/* =========================================================
+   V46 — Dedicated Stop Iklan table
+   ========================================================= */
+.seg-stop-section{
+  margin-top:18px;
+  padding:16px;
+  border-radius:14px;
+  background:var(--surface);
+  border:1px solid var(--line);
+}
+.seg-stop-section .section-head{
+  margin:0 0 12px;
+}
+.seg-stop-actions{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.seg-stop-actions .btn{
+  width:auto!important;
+}
+.seg-stop-count-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:7px 9px;
+  border-radius:999px;
+  background:rgba(255,122,104,.08);
+  border:1px solid rgba(255,122,104,.16);
+  color:var(--coral);
+  font-size:8.5px;
+  font-weight:700;
+}
+.seg-stop-count-badge b{
+  font-size:11px;
+}
+.seg-stop-table-wrap{
+  overflow:auto;
+}
+.seg-stop-table{
+  min-width:720px;
+}
+.seg-stop-table tbody tr{
+  background:rgba(255,122,104,.018);
+}
+.seg-stop-table tbody tr:hover{
+  background:rgba(255,122,104,.045);
+}
+.seg-saved-card.stop-save{
+  border-left:3px solid var(--coral)!important;
+}
+html[data-theme="light"] .seg-stop-section{
+  background:#fff;
+}
+@media(max-width:700px){
+  .seg-stop-section .section-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .seg-stop-actions{
+    width:100%;
+  }
+  .seg-stop-actions .btn{
+    width:100%!important;
+  }
+}
