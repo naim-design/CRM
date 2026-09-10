@@ -2597,7 +2597,8 @@ const CONTACT_TAGS = [
   { key: 'hamil', label: 'Hamil' },
   { key: 'ikhtiar', label: 'Ikhtiar' },
   { key: 'reply', label: 'Dah Reply' },
-];
+  {value:'bersalin',label:'Dah Bersalin'},
+  {value:'ada_anak',label:'Dah Ada Anak'}];
 function renderTagBadges(tags) {
   if (!tags || !tags.length) return '<span style="color:var(--muted-2); font-size:11px;">–</span>';
   return tags.map(t => {
