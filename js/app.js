@@ -4163,6 +4163,118 @@ async function segCopyNumbers(kind){
 
 let segSavedUnsub=null;
 
+
+function segStopRowsFromCurrent(){
+  const map=new Map();
+
+  // Hasil carian semasa — preserve nama sebenar daripada contacts.
+  segUniqueContacts(segLastResults||[]).forEach(c=>{
+    const phone=segNormalizePhone(c.phone);
+    if(!phone)return;
+    map.set(phone,{name:String(c.name||'').trim()||'–',phone});
+  });
+
+  // Nombor direct filter.
+  const direct=(document.getElementById('seg-filter-phone')?.value||'').trim();
+  if(direct){
+    const phone=segNormalizePhone(direct);
+    if(phone && !map.has(phone)) map.set(phone,{name:'–',phone});
+  }
+
+  // Sokong flow yang user sekarang guna: paste "nama + nombor" di kotak bulk.
+  // Bila tag Stop dipilih, data ini dianggap sebagai sumber Stop Iklan,
+  // BUKAN ditag Buyer selagi button "Tag sebagai Buyer" tidak ditekan.
+  const raw=(document.getElementById('seg-buyer-paste')?.value||'').trim();
+  if(raw){
+    try{
+      parseBulkRows(raw).forEach(r=>{
+        const phone=segNormalizePhone(r.phone);
+        if(!phone)return;
+        const name=String(r.name||'').trim()||'–';
+        const prev=map.get(phone);
+        map.set(phone,{name:(prev?.name&&prev.name!=='–')?prev.name:name,phone});
+      });
+    }catch(_){}
+  }
+
+  return [...map.values()];
+}
+
+async function segApplyStopTagToExistingContacts(stopRows){
+  const phones=segUniquePhones((stopRows||[]).map(r=>r.phone));
+  if(!phones.length)return {matched:0};
+
+  let matched=0;
+  const CHUNK=9;
+  for(let i=0;i<phones.length;i+=CHUNK){
+    const chunk=phones.slice(i,i+CHUNK);
+    const allVariants=[...new Set(chunk.flatMap(phoneVariants))];
+    if(!allVariants.length)continue;
+    const snap=await db.collection('contacts').where('phone','in',allVariants.slice(0,30)).get();
+    if(snap.empty)continue;
+    const batch=db.batch();
+    snap.forEach(d=>{
+      batch.update(d.ref,{tags:firebase.firestore.FieldValue.arrayUnion('stop')});
+      matched++;
+    });
+    await batch.commit();
+  }
+  return {matched};
+}
+
+function segAggregateStopRows(savedRows){
+  const map=new Map();
+  (savedRows||[]).forEach(save=>{
+    const isStop=Array.isArray(save.filters?.tags)&&save.filters.tags.includes('stop');
+    if(!isStop && !(save.stopRows||[]).length)return;
+
+    const d=save.createdAt&&save.createdAt.toDate?save.createdAt.toDate():null;
+    const date=d?d.toLocaleString('ms-MY'):(save.createdAtText||'-');
+    const source=save.filters?.source || save.filters?.batchLabel || save.name || 'Filter';
+
+    (save.stopRows||[]).forEach(r=>{
+      const phone=segNormalizePhone(r.phone);
+      if(!phone || map.has(phone))return; // newest first from Firestore listener
+      map.set(phone,{
+        name:String(r.name||'').trim()||'–',
+        phone,
+        date,
+        source
+      });
+    });
+
+    // Backward compatibility for V44 saves: manual phone may exist in filters.phone.
+    if(isStop && save.filters?.phone){
+      const phone=segNormalizePhone(save.filters.phone);
+      if(phone && !map.has(phone)){
+        map.set(phone,{name:'–',phone,date,source});
+      }
+    }
+  });
+  return [...map.values()];
+}
+
+function renderSegStopTable(savedRows){
+  const rows=segAggregateStopRows(savedRows);
+  const body=document.getElementById('seg-stop-body');
+  const total=document.getElementById('seg-stop-total');
+  if(total) total.textContent=fmt(rows.length);
+  window.__segStopRows=rows;
+  if(!body)return;
+
+  if(!rows.length){
+    body.innerHTML='<tr><td colspan="4" class="empty-state">Belum ada nombor Stop Iklan.</td></tr>';
+    return;
+  }
+  body.innerHTML=rows.map(r=>`<tr>
+    <td class="tname"><b>${pkgEsc?pkgEsc(r.name):r.name}</b></td>
+    <td style="font-family:'IBM Plex Mono';">${r.phone}</td>
+    <td>${r.date}</td>
+    <td>${pkgEsc?pkgEsc(r.source):r.source}</td>
+  </tr>`).join('');
+  if(typeof initSortableTables==='function') setTimeout(()=>initSortableTables(document),20);
+}
+
 function renderSegSavedCards(rows){
   const wrap=document.getElementById('seg-saved-list');
   if(!wrap) return;
@@ -4180,7 +4292,8 @@ function renderSegSavedCards(rows){
       Array.isArray(r.filters?.tags)&&r.filters.tags.length ? 'Tag: '+r.filters.tags.join(', ') : '',
       r.filters?.phone ? 'Nombor: '+r.filters.phone : ''
     ].filter(Boolean).join(' • ') || 'Filter umum / belum ada hasil';
-    return `<article class="seg-saved-card">
+    const isStopSave=Array.isArray(r.filters?.tags)&&r.filters.tags.includes('stop');
+    return `<article class="seg-saved-card ${isStopSave?'stop-save':''}">
       <div class="seg-saved-top">
         <div>
           <strong>${refEsc ? refEsc(r.name||'Hasil Filter') : (r.name||'Hasil Filter')}</strong>
@@ -4232,6 +4345,7 @@ function startSegSavedListener(){
     window.__segSavedRows=rows;
     renderSegSavedCards(rows);
     renderSegCumulativeSummary(rows);
+    renderSegStopTable(rows);
   },err=>toast('Ralat baca hasil filter disimpan: '+err.message,true));
 }
 
@@ -4263,6 +4377,22 @@ document.getElementById('seg-save-result-btn')?.addEventListener('click',async()
   const replyPhones=segNumbersBy('reply');
   const allPhones=segNumbersBy('all');
 
+  const isStopFilter=tags.includes('stop');
+  const stopRows=isStopFilter ? segStopRowsFromCurrent() : [];
+  const stopPhones=segUniquePhones(stopRows.map(r=>r.phone));
+
+  // Bila user pilih Stop / Tak Nak Iklan, tag contact sedia ada terus sebagai stop.
+  // Nombor yang belum ada dalam contacts tetap disimpan dalam table Stop Iklan.
+  let stopMatched=0;
+  if(isStopFilter && stopRows.length){
+    try{
+      const stopTagResult=await segApplyStopTagToExistingContacts(stopRows);
+      stopMatched=stopTagResult.matched||0;
+    }catch(err){
+      console.warn('Gagal apply tag stop pada sebahagian contacts',err);
+    }
+  }
+
   // Simpan nombor manual walaupun tak jumpa dalam database.
   let unmatchedPhones=segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]);
   if(phone && !allPhones.some(p=>segNormalizePhone(p)===segNormalizePhone(phone))){
@@ -4283,13 +4413,34 @@ document.getElementById('seg-save-result-btn')?.addEventListener('click',async()
       unmatchedPhones,
       unmatched:unmatchedPhones.length,
       filters:{status,source,batchId,batchLabel,tags,phone},
+      stopRows,
+      stopPhones,
       savedAsFilter:true,
       createdBy:currentProfile?.name||currentUser?.email||'Staff',
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-    toast('Filter disimpan ✓');
+    if(isStopFilter){
+      toast(`Stop Iklan disimpan ✓ ${stopRows.length} nombor${stopMatched?` • ${stopMatched} contact ditag Stop`:''}`);
+    }else{
+      toast('Filter disimpan ✓');
+    }
   }catch(err){
     toast('Gagal simpan filter: '+err.message,true);
+  }
+});
+
+
+document.getElementById('seg-copy-stop-all')?.addEventListener('click',async()=>{
+  const nums=segUniquePhones((window.__segStopRows||[]).map(r=>r.phone));
+  if(!nums.length){
+    toast('Belum ada nombor Stop Iklan',true);
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(nums.join('\n'));
+    toast(fmt(nums.length)+' nombor Stop Iklan disalin ✓');
+  }catch(err){
+    toast('Gagal copy nombor Stop Iklan',true);
   }
 });
 
