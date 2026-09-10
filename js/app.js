@@ -2338,6 +2338,15 @@ function updateTopupVisibility() {
   const susuExtra = document.getElementById('kategori-susu-extra');
   if (susuExtra) susuExtra.style.display = (kategori === 'Projek Susu' || kategori === 'Projek Susu YGROW') ? 'block' : 'none';
 
+  const susuCrossSell = document.getElementById('kategori-susu-cross-sell-flow');
+  if (susuCrossSell) {
+    const showSusuCrossSell = kategori === 'Projek Susu';
+    susuCrossSell.style.display = showSusuCrossSell ? 'block' : 'none';
+    if (showSusuCrossSell) {
+      setTimeout(() => resizeSusuCrossSellFrame(document.getElementById('projek-susu-cross-sell-frame')), 120);
+    }
+  }
+
   const ygrowFlow = document.getElementById('kategori-ygrow-flow');
   if (ygrowFlow) {
     const showYgrowFlow = kategori === 'Projek Susu YGROW';
@@ -2349,6 +2358,24 @@ function updateTopupVisibility() {
   if (leadsExtra) leadsExtra.style.display = kategori === 'Projek Leads Ikhtiar (NaimFani)' ? 'block' : 'none';
 }
 
+
+
+// ---- Projek Susu cross-sell presentation embedded inside Dashboard ----
+function resizeSusuCrossSellFrame(frame) {
+  if (!frame) return;
+  try {
+    const doc = frame.contentDocument || frame.contentWindow?.document;
+    if (!doc) return;
+    const h = Math.max(
+      doc.body?.scrollHeight || 0,
+      doc.documentElement?.scrollHeight || 0,
+      900
+    );
+    frame.style.height = Math.min(Math.max(h + 8, 900), 6200) + 'px';
+  } catch (err) {
+    frame.style.height = '1800px';
+  }
+}
 
 // ---- YGROW presentation flow embedded inside Dashboard ----
 function resizeYgrowFlowFrame(frame) {
@@ -4150,8 +4177,9 @@ function renderSegSavedCards(rows){
       r.filters?.status ? 'Status: '+r.filters.status : '',
       r.filters?.source ? 'Sumber: '+r.filters.source : '',
       r.filters?.batchLabel ? 'Batch: '+r.filters.batchLabel : '',
-      Array.isArray(r.filters?.tags)&&r.filters.tags.length ? 'Tag: '+r.filters.tags.join(', ') : ''
-    ].filter(Boolean).join(' • ') || 'Semua hasil';
+      Array.isArray(r.filters?.tags)&&r.filters.tags.length ? 'Tag: '+r.filters.tags.join(', ') : '',
+      r.filters?.phone ? 'Nombor: '+r.filters.phone : ''
+    ].filter(Boolean).join(' • ') || 'Filter umum / belum ada hasil';
     return `<article class="seg-saved-card">
       <div class="seg-saved-top">
         <div>
@@ -4167,6 +4195,7 @@ function renderSegSavedCards(rows){
         <div class="unmatched"><span>Tiada DB</span><b>${fmt(r.unmatched||0)}</b></div>
       </div>
       <div class="seg-saved-actions">
+        <button class="btn btn-primary seg-use-saved-filter" data-id="${r.id}">↻ Guna Filter</button>
         <button class="btn btn-ghost seg-copy-saved" data-id="${r.id}" data-kind="buyer">📋 Copy Buyer</button>
         <button class="btn btn-ghost seg-copy-saved" data-id="${r.id}" data-kind="reply">📋 Copy Reply</button>
         <button class="btn btn-ghost seg-copy-saved" data-id="${r.id}" data-kind="unmatched">⚠️ Copy Tiada DB</button>
@@ -4206,35 +4235,11 @@ function startSegSavedListener(){
   },err=>toast('Ralat baca hasil filter disimpan: '+err.message,true));
 }
 
-async function segWaitForSearchComplete(timeoutMs=8000){
-  const started=Date.now();
-  while(Date.now()-started < timeoutMs){
-    const bodyText=(document.getElementById('seg-result-body')?.textContent||'').trim();
-    const countText=(document.getElementById('seg-result-count')?.textContent||'').trim();
-    const loading=bodyText.includes('Mencari...') || countText==='–';
-    if(!loading) return true;
-    await new Promise(r=>setTimeout(r,120));
-  }
-  return false;
-}
 
 document.getElementById('seg-save-result-btn')?.addEventListener('click',async()=>{
-  // V43: kalau user terus tekan Simpan tanpa tekan Cari dahulu,
-  // jalankan carian semasa secara automatik supaya flow lebih natural.
-  if(!segLastResults.length && !(segLastUnmatched||[]).length){
-    const searchBtn=document.getElementById('seg-search-btn');
-    if(searchBtn){
-      toast('Sedang cari nombor ikut filter semasa...');
-      searchBtn.click();
-      await segWaitForSearchComplete();
-    }
-  }
-
-  if(!segLastResults.length && !(segLastUnmatched||[]).length && !(segPersistentUnmatched||[]).length){
-    toast('Tiada nombor ditemui untuk filter ini. Semak filter dan cuba lagi.',true);
-    return;
-  }
-
+  // V44: Simpan filter walaupun belum ada result.
+  // Kalau ada result semasa, nombor itu disimpan sekali.
+  // Kalau user taip nombor tetapi nombor tiada DB, nombor itu tetap disimpan sebagai unmatched.
   const summary=segResultSummary();
   const status=document.getElementById('seg-filter-status')?.value||'';
   const source=document.getElementById('seg-filter-source')?.value.trim()||'';
@@ -4242,29 +4247,50 @@ document.getElementById('seg-save-result-btn')?.addEventListener('click',async()
   const batchId=batch?.value||'';
   const batchLabel=batchId ? (batch?.selectedOptions?.[0]?.textContent||'') : '';
   const tags=getCheckedTags('seg-filter-tags');
-  const name=prompt('Nama simpanan filter ini:', status==='buyer'?'Buyer Retarget':status==='replied'?'Reply Retarget':'Filter Retarget');
+  const phone=(document.getElementById('seg-filter-phone')?.value||'').trim();
+
+  const defaultName =
+    phone ? `Nombor ${phone}` :
+    status==='buyer' ? 'Buyer Retarget' :
+    status==='replied' ? 'Reply Retarget' :
+    source ? `Filter ${source}` :
+    'Filter Retarget';
+
+  const name=prompt('Nama simpanan filter ini:', defaultName);
   if(name===null) return;
+
   const buyerPhones=segNumbersBy('buyer');
   const replyPhones=segNumbersBy('reply');
   const allPhones=segNumbersBy('all');
+
+  // Simpan nombor manual walaupun tak jumpa dalam database.
+  let unmatchedPhones=segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]);
+  if(phone && !allPhones.some(p=>segNormalizePhone(p)===segNormalizePhone(phone))){
+    unmatchedPhones=segUniquePhones([...unmatchedPhones,phone]);
+    addPersistentUnmatched([phone]);
+  }
+
   try{
     await db.collection('filterSaves').add({
       name:(name||'Filter Retarget').trim(),
-      total:summary.total,
-      buyer:summary.buyer,
-      replied:summary.replied,
-      other:summary.other,
+      total:summary.total||allPhones.length||0,
+      buyer:summary.buyer||buyerPhones.length||0,
+      replied:summary.replied||replyPhones.length||0,
+      other:summary.other||0,
       buyerPhones,
       replyPhones,
       allPhones,
-      unmatchedPhones:segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]),
-      unmatched:segUniquePhones([...(segLastUnmatched||[]), ...(segPersistentUnmatched||[])]).length,
-      filters:{status,source,batchId,batchLabel,tags},
+      unmatchedPhones,
+      unmatched:unmatchedPhones.length,
+      filters:{status,source,batchId,batchLabel,tags,phone},
+      savedAsFilter:true,
       createdBy:currentProfile?.name||currentUser?.email||'Staff',
       createdAt:firebase.firestore.FieldValue.serverTimestamp()
     });
-    toast('Hasil filter disimpan ✓');
-  }catch(err){toast('Gagal simpan hasil filter: '+err.message,true);}
+    toast('Filter disimpan ✓');
+  }catch(err){
+    toast('Gagal simpan filter: '+err.message,true);
+  }
 });
 
 document.getElementById('seg-copy-buyer-btn')?.addEventListener('click',()=>segCopyNumbers('buyer'));
