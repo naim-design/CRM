@@ -1782,6 +1782,26 @@ function getDashTargets() {
   return Object.assign({}, DASH_TARGETS_DEFAULT, overrides);
 }
 
+// V41 — target KHAS untuk kad KPI utama Dashboard sahaja.
+// Sengaja diasingkan supaya section lain (contoh Database & Frequency Bulanan)
+// tidak berubah.
+const DASH_KPI_TARGETS_DEFAULT = {
+  sales: 30000,
+  conversion: 1,
+  reply: 50,
+  roas: 10,
+  roi: 7,
+  cost: 4380.16,
+  buyer: 178,
+  sent: 80000
+};
+
+function getDashKpiTargets() {
+  const kategori = document.getElementById('filter-kategori') ? document.getElementById('filter-kategori').value : '';
+  const overrides = DASH_TARGETS_BY_KATEGORI[kategori] || {};
+  return Object.assign({}, DASH_KPI_TARGETS_DEFAULT, overrides);
+}
+
 function dashTotals(rows) {
   return rows.reduce((a, r) => {
     a.sent += Number(r.sent)||0; a.delivered += Number(r.delivered)||0; a.read += Number(r.read)||0;
@@ -2147,7 +2167,7 @@ function renderDashboard() {
   document.getElementById('stat-reply-rate').textContent = m.replyRate.toFixed(1) + '%';
   document.getElementById('stat-conv-rate').textContent = m.conversion.toFixed(2) + '%';
 
-  const DASH_TARGETS = getDashTargets();
+  const DASH_TARGETS = getDashKpiTargets();
   dashSetTarget('sales',m.sales,DASH_TARGETS.sales);
   dashSetTarget('roi',m.roi,DASH_TARGETS.roi);
   dashSetTarget('roas',m.roas,DASH_TARGETS.roas);
