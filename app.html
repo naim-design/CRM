@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v45-projek-susu-cross-sell">
+<link rel="stylesheet" href="css/app-extra.css?v=v46-stop-ads-table">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -1778,6 +1778,36 @@ Ahmad	60112223344"></textarea>
         <button class="btn btn-ghost" id="seg-copy-btn">📋 Salin Semua Nombor</button>
       </div>
 
+
+      <section class="seg-stop-section">
+        <div class="section-head">
+          <div>
+            <h2><span class="idx">STOP</span> Stop Iklan</h2>
+            <p>Bila tag <b>Stop / Tak Nak Iklan</b> dipilih dan tekan <b>Simpan Filter</b>, nama + nombor akan masuk terus ke senarai ini.</p>
+          </div>
+          <div class="seg-stop-actions">
+            <span class="seg-stop-count-badge"><b id="seg-stop-total">0</b> nombor unik</span>
+            <button type="button" class="btn btn-primary" id="seg-copy-stop-all">📋 Copy Semua Stop Iklan</button>
+          </div>
+        </div>
+
+        <div class="seg-stop-table-wrap">
+          <table class="tbl sortable-table seg-stop-table">
+            <thead>
+              <tr>
+                <th>Nama</th>
+                <th>Nombor</th>
+                <th>Tarikh Simpan</th>
+                <th>Sumber</th>
+              </tr>
+            </thead>
+            <tbody id="seg-stop-body">
+              <tr><td colspan="4" class="empty-state">Belum ada nombor Stop Iklan.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="seg-saved-section">
         <div class="section-head">
           <div>
@@ -2378,7 +2408,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v45-projek-susu-cross-sell"></script>
+<script src="js/app.js?v=v46-stop-ads-table"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
