@@ -4206,8 +4206,35 @@ function startSegSavedListener(){
   },err=>toast('Ralat baca hasil filter disimpan: '+err.message,true));
 }
 
+async function segWaitForSearchComplete(timeoutMs=8000){
+  const started=Date.now();
+  while(Date.now()-started < timeoutMs){
+    const bodyText=(document.getElementById('seg-result-body')?.textContent||'').trim();
+    const countText=(document.getElementById('seg-result-count')?.textContent||'').trim();
+    const loading=bodyText.includes('Mencari...') || countText==='–';
+    if(!loading) return true;
+    await new Promise(r=>setTimeout(r,120));
+  }
+  return false;
+}
+
 document.getElementById('seg-save-result-btn')?.addEventListener('click',async()=>{
-  if(!segLastResults.length && !(segLastUnmatched||[]).length && !(segPersistentUnmatched||[]).length){toast('Cari/filter data dulu sebelum simpan',true);return;}
+  // V43: kalau user terus tekan Simpan tanpa tekan Cari dahulu,
+  // jalankan carian semasa secara automatik supaya flow lebih natural.
+  if(!segLastResults.length && !(segLastUnmatched||[]).length){
+    const searchBtn=document.getElementById('seg-search-btn');
+    if(searchBtn){
+      toast('Sedang cari nombor ikut filter semasa...');
+      searchBtn.click();
+      await segWaitForSearchComplete();
+    }
+  }
+
+  if(!segLastResults.length && !(segLastUnmatched||[]).length && !(segPersistentUnmatched||[]).length){
+    toast('Tiada nombor ditemui untuk filter ini. Semak filter dan cuba lagi.',true);
+    return;
+  }
+
   const summary=segResultSummary();
   const status=document.getElementById('seg-filter-status')?.value||'';
   const source=document.getElementById('seg-filter-source')?.value.trim()||'';
