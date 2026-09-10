@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v40-date-presets">
+<link rel="stylesheet" href="css/app-extra.css?v=v45-projek-susu-cross-sell">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -578,6 +578,41 @@
         </div>
       </section>
 
+
+
+      <section id="kategori-susu-cross-sell-flow" class="ygrow-flow-dashboard" style="display:none;">
+        <div class="ygrow-flow-dashboard-head">
+          <div>
+            <div class="eyebrow">PROJEK SUSU • CROSS SELL PRESENTATION</div>
+            <h2>Flow Cross Sell Hazelnut → YGROW</h2>
+            <p>Flow 3 hari untuk database WhatsApp: tarik minat Susu Chocolate Hazelnut, warm up rutin mommy, kemudian cross sell kepada YGROW untuk anak 2+.</p>
+          </div>
+          <button type="button"
+                  class="btn btn-primary ygrow-flow-full-btn"
+                  onclick="openReportModal('reports/projek-susu-cross-sell-hazelnut-ygrow.html','Flow Cross Sell Hazelnut → YGROW')">
+            Buka Presentation Penuh ↗
+          </button>
+        </div>
+
+        <div class="ygrow-flow-embed-card">
+          <div class="ygrow-flow-embed-toolbar">
+            <span>Database WhatsApp → Day 1 Hazelnut → Day 2 Warm Up → Day 3 Cross Sell YGROW</span>
+            <button type="button"
+                    class="ref-outline-btn"
+                    onclick="openReportModal('reports/projek-susu-cross-sell-hazelnut-ygrow.html','Flow Cross Sell Hazelnut → YGROW')">
+              Full Screen
+            </button>
+          </div>
+          <iframe
+            id="projek-susu-cross-sell-frame"
+            class="ygrow-flow-dashboard-frame"
+            src="reports/projek-susu-cross-sell-hazelnut-ygrow.html"
+            loading="lazy"
+            title="Flow Cross Sell Hazelnut ke YGROW"
+            onload="resizeSusuCrossSellFrame(this)">
+          </iframe>
+        </div>
+      </section>
 
       <section id="kategori-ygrow-flow" class="ygrow-flow-dashboard" style="display:none;">
         <div class="ygrow-flow-dashboard-head">
@@ -1736,7 +1771,7 @@ Ahmad	60112223344"></textarea>
       </div>
 
       <div class="seg-result-actions">
-        <button class="btn btn-primary" id="seg-save-result-btn" title="Simpan hasil filter. Jika belum tekan Cari, sistem akan cari automatik dahulu.">💾 Simpan Hasil Filter</button>
+        <button class="btn btn-primary" id="seg-save-result-btn" title="Simpan filter semasa walaupun belum ada hasil.">💾 Simpan Filter</button>
         <button class="btn btn-ghost" id="seg-copy-buyer-btn">📋 Salin Nombor Buyer</button>
         <button class="btn btn-ghost" id="seg-copy-reply-btn">📋 Salin Nombor Reply</button>
         <button class="btn btn-ghost" id="seg-copy-unmatched-btn">⚠️ Salin Nombor Tiada DB</button>
@@ -1747,7 +1782,7 @@ Ahmad	60112223344"></textarea>
         <div class="section-head">
           <div>
             <h2><span class="idx">01</span> Hasil Filter Disimpan</h2>
-            <p>Rekodkan hasil retarget supaya senang semak semula berapa Buyer dan Dah Reply.</p>
+            <p>Simpan filter atau nombor untuk digunakan semula kemudian, walaupun hasil semasa masih kosong.</p>
           </div>
         </div>
 
@@ -2343,7 +2378,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v43-filter-save-autosearch"></script>
+<script src="js/app.js?v=v45-projek-susu-cross-sell"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
