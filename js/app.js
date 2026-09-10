@@ -2281,8 +2281,12 @@ document.querySelectorAll('[data-range]').forEach(btn => {
     const now = new Date();
     const to = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     let from = new Date(to);
-    if (type === '7') from.setDate(to.getDate() - 6);
-    else if (type === '30') from.setDate(to.getDate() - 29);
+    if (type === 'yesterday') {
+      from.setDate(to.getDate() - 1);
+      to.setDate(to.getDate() - 1);
+    }
+    else if (type === 'last7') from.setDate(to.getDate() - 6);
+    else if (type === 'last30') from.setDate(to.getDate() - 29);
     else if (type === 'month') from = new Date(to.getFullYear(), to.getMonth(), 1);
     const iso = d => {
       const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
