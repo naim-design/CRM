@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v48-creative">
+<link rel="stylesheet" href="css/app-extra.css?v=v49-creative-advanced">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -2238,118 +2238,117 @@ Ahmad	60112223344"></textarea>
     <!-- ==================== CREATIVE ==================== -->
     <div id="view-creative" class="view">
       <div class="creative-head">
-        <div>
-          <div class="eyebrow">CREATIVE CONTROL CENTER</div>
-          <h2>Creative — Video & Poster</h2>
-          <p>Track target creative, berapa dah siap/dipost dan berapa lagi perlu dicapai. Data Video dan Poster diasingkan supaya senang review dengan team.</p>
+        <div><div class="eyebrow">CREATIVE CONTROL CENTER</div><h2>Creative</h2><p>Track content TikTok dan kerja designer/poster dalam satu tempat.</p></div>
+        <button class="btn btn-primary" id="creative-add-btn">+ Tambah</button>
+      </div>
+
+      <div class="creative-subtabs">
+        <button class="active" data-creative-tab="video">Video</button>
+        <button data-creative-tab="poster">Poster / Designer</button>
+      </div>
+
+      <div class="creative-rangebar">
+        <div class="creative-range-inputs">
+          <label>Dari<input type="date" id="creative-from"></label><span>—</span>
+          <label>Hingga<input type="date" id="creative-to"></label>
         </div>
-        <button type="button" class="btn btn-primary" id="creative-add-btn">+ Tambah Creative</button>
+        <div class="creative-range-presets">
+          <button data-crange="last3">Last 3 Days</button>
+          <button data-crange="last7">Last 7 Days</button>
+          <button data-crange="last14">Last 2 Weeks</button>
+          <button data-crange="lastmonth">Last Month</button>
+          <button data-crange="month" class="active">This Month</button>
+        </div>
       </div>
 
-      <div class="creative-datebar">
-        <label>Tarikh
-          <input type="date" id="creative-date">
-        </label>
-        <label>Akaun / Projek
-          <select id="creative-account">
-            <option value="">Semua Akaun</option>
-            <option>HQ</option>
-            <option>Solusi</option>
-            <option>Mamayyuu</option>
-            <option>Manjaratu V+</option>
-          </select>
-        </label>
-        <button type="button" class="btn btn-ghost" id="creative-today-btn">Hari Ini</button>
-      </div>
+      <section id="creative-tab-video" class="creative-tab-pane active">
+        <div class="creative-overview-grid">
+          <article class="creative-overview-card"><span>TARGET CONTENT</span><strong id="creative-target-all">0</strong><small id="creative-target-period">Target ikut julat tarikh</small></article>
+          <article class="creative-overview-card"><span>DAH DIPOST</span><strong id="creative-posted-all">0</strong><small>Video + photoslide</small></article>
+          <article class="creative-overview-card"><span>BAKI PERLU CAPAI</span><strong id="creative-remaining-all">0</strong><small>Target − dah dipost</small></article>
+          <article class="creative-overview-card"><span>PROGRESS</span><strong id="creative-progress-all">0%</strong><div class="creative-progress"><i id="creative-progress-bar"></i></div></article>
+        </div>
 
-      <div class="creative-overview-grid">
-        <article class="creative-overview-card">
-          <span>TARGET CREATIVE</span><strong id="creative-target-all">32</strong>
-          <small>Target harian semua akaun</small>
-        </article>
-        <article class="creative-overview-card">
-          <span>DAH DIPOST</span><strong id="creative-posted-all">0</strong>
-          <small>Video + poster/photoslide</small>
-        </article>
-        <article class="creative-overview-card">
-          <span>BAKI PERLU CAPAI</span><strong id="creative-remaining-all">32</strong>
-          <small>Target − dah dipost</small>
-        </article>
-        <article class="creative-overview-card">
-          <span>PROGRESS</span><strong id="creative-progress-all">0%</strong>
-          <div class="creative-progress"><i id="creative-progress-bar"></i></div>
-        </article>
-      </div>
-
-      <div class="creative-type-grid">
-        <section class="creative-type-card video">
-          <div class="creative-type-head">
-            <div><span>VIDEO</span><h3>Analisis Video</h3></div>
-            <strong id="creative-video-progress">0%</strong>
-          </div>
-          <div class="creative-type-kpis">
-            <div><small>Target</small><b id="creative-video-target">0</b></div>
-            <div><small>Dah Post</small><b id="creative-video-posted">0</b></div>
-            <div><small>Baki</small><b id="creative-video-remaining">0</b></div>
-          </div>
-          <div class="creative-progress"><i id="creative-video-bar"></i></div>
+        <section class="creative-panel">
+          <div class="creative-panel-head"><div><span class="eyebrow">DAILY CONTENT STRUCTURE</span><h3>Target Harian 32 Content / 4 Akaun TikTok</h3></div></div>
+          <div class="creative-account-grid" id="creative-account-grid"></div>
         </section>
 
-        <section class="creative-type-card poster">
-          <div class="creative-type-head">
-            <div><span>POSTER / PHOTOSLIDE</span><h3>Analisis Poster</h3></div>
-            <strong id="creative-poster-progress">0%</strong>
+        <section class="creative-panel">
+          <div class="creative-panel-head"><div><span class="eyebrow">CONTENT LIST</span><h3>Video / Photo Slide Yang Dipost</h3><p>Klik link TikTok untuk buka video terus.</p></div><button class="btn btn-primary" id="creative-add-video">+ Tambah Content</button></div>
+          <div class="creative-table-wrap">
+            <table class="tbl sortable-table creative-table"><thead><tr><th>Tarikh</th><th>Akaun</th><th>Format</th><th>Funnel</th><th>Tajuk</th><th>Status</th><th>Link TikTok</th><th>24 Jam</th><th>3 Hari</th><th>7 Hari</th><th>1 Bulan</th><th>Aksi</th></tr></thead>
+            <tbody id="creative-video-body"><tr><td colspan="12" class="empty-state">Belum ada content.</td></tr></tbody></table>
           </div>
-          <div class="creative-type-kpis">
-            <div><small>Target</small><b id="creative-poster-target">0</b></div>
-            <div><small>Dah Post</small><b id="creative-poster-posted">0</b></div>
-            <div><small>Baki</small><b id="creative-poster-remaining">0</b></div>
-          </div>
-          <div class="creative-progress"><i id="creative-poster-bar"></i></div>
         </section>
-      </div>
 
-      <section class="creative-panel">
-        <div class="creative-panel-head">
-          <div><span class="eyebrow">DAILY TARGET</span><h3>Target Mengikut Akaun</h3></div>
-          <small>Rujukan daripada flow yang diberi: HQ 11 · Solusi 11 · Mamayyuu 9 · Manjaratu V+ 1</small>
-        </div>
-        <div class="creative-account-grid" id="creative-account-grid"></div>
+        <section class="creative-panel">
+          <div class="creative-panel-head"><div><span class="eyebrow">VIDEO INSIGHT ANALYSIS</span><h3>Analisis View, Like & Komen</h3><p>Insight 24 jam, 3 hari, 7 hari dan 1 bulan.</p></div></div>
+          <div class="creative-insight-grid" id="creative-insight-summary"></div>
+        </section>
       </section>
 
-      <section class="creative-panel">
-        <div class="creative-panel-head">
-          <div><span class="eyebrow">CREATIVE LIST</span><h3>Video & Poster Yang Direkod</h3></div>
-          <div class="creative-segment">
-            <button class="active" data-creative-filter="all">Semua</button>
-            <button data-creative-filter="video">Video</button>
-            <button data-creative-filter="poster">Poster</button>
-          </div>
+      <section id="creative-tab-poster" class="creative-tab-pane">
+        <div class="creative-poster-kpis">
+          <article><span>TOTAL TASK</span><strong id="poster-total-task">0</strong><small>Dalam julat tarikh</small></article>
+          <article><span>DONE</span><strong id="poster-done">0</strong><small>Poster siap / approved</small></article>
+          <article><span>IN PROGRESS</span><strong id="poster-progress">0</strong><small>Sedang dibuat</small></article>
+          <article><span>BELUM START</span><strong id="poster-belum">0</strong><small>Belum mula</small></article>
         </div>
-        <div class="creative-table-wrap">
-          <table class="tbl sortable-table creative-table">
-            <thead><tr>
-              <th>Tarikh</th><th>Akaun</th><th>Jenis</th><th>Funnel</th><th>Platform</th><th>Tajuk Creative</th><th>Status</th><th>Aksi</th>
-            </tr></thead>
-            <tbody id="creative-table-body"><tr><td colspan="8" class="empty-state">Belum ada creative direkod.</td></tr></tbody>
-          </table>
-        </div>
+
+        <section class="creative-panel">
+          <div class="creative-panel-head"><div><span class="eyebrow">DESIGNER / POSTER TASK</span><h3>Poster Approved & Progress Kerja</h3><p>Website merah · TikTok hitam · WhatsApp hijau · Shopee oren · Ecommerce biru.</p></div><button class="btn btn-primary" id="creative-add-poster">+ Tambah Poster</button></div>
+          <div class="creative-table-wrap"><table class="tbl sortable-table creative-table"><thead><tr><th>Tarikh</th><th>Preview</th><th>Tajuk</th><th>Platform</th><th>Status</th><th>Nota</th><th>Aksi</th></tr></thead>
+          <tbody id="creative-poster-body"><tr><td colspan="7" class="empty-state">Belum ada poster.</td></tr></tbody></table></div>
+        </section>
+
+        <section class="creative-panel">
+          <div class="creative-panel-head"><div><span class="eyebrow">PLATFORM ANALYSIS</span><h3>Analisis Poster Mengikut Platform</h3></div></div>
+          <div class="creative-platform-grid" id="creative-platform-analysis"></div>
+        </section>
       </section>
 
-      <div class="creative-modal" id="creative-modal" aria-hidden="true">
-        <div class="creative-modal-card">
-          <div class="creative-modal-head"><div><span class="eyebrow">ADD CREATIVE</span><h3>Rekod Video / Poster</h3></div><button type="button" id="creative-modal-close">×</button></div>
-          <form id="creative-form">
+      <div class="creative-modal" id="creative-video-modal" aria-hidden="true">
+        <div class="creative-modal-card creative-modal-wide">
+          <div class="creative-modal-head"><div><span class="eyebrow">VIDEO / CONTENT</span><h3 id="creative-video-form-title">Tambah Content</h3></div><button type="button" data-close-modal="creative-video-modal">×</button></div>
+          <form id="creative-video-form">
             <div class="creative-form-grid">
-              <label>Tarikh<input type="date" id="creative-form-date" required></label>
-              <label>Akaun<select id="creative-form-account" required><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option></select></label>
-              <label>Jenis<select id="creative-form-type" required><option value="video">Video</option><option value="poster">Poster / Photoslide</option></select></label>
-              <label>Funnel<select id="creative-form-funnel"><option>Engagement</option><option>Awareness</option><option>Conversion</option><option>Highlight Live</option><option>CTL</option><option>Other</option></select></label>
-              <label>Platform<select id="creative-form-platform"><option>TikTok</option><option>WhatsApp</option><option>Website</option><option>Shopee</option><option>E-commerce</option></select></label>
-              <label>Status<select id="creative-form-status"><option value="belum">Belum Start</option><option value="progress">In Progress</option><option value="posted">Dah Post</option></select></label>
-              <label class="creative-form-wide">Tajuk / Nama Creative<input type="text" id="creative-form-title" placeholder="Contoh: Hook anak pendek sekolah"></label>
+              <label>Tarikh<input type="date" id="cv-date" required></label>
+              <label>Akaun<select id="cv-account"><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option></select></label>
+              <label>Format<select id="cv-format"><option value="video">Video</option><option value="photoslide">Photo Slide</option></select></label>
+              <label>Funnel<select id="cv-funnel"><option>Engagement</option><option>Awareness</option><option>Conversion</option><option>Highlight Live</option><option>Call To Live</option><option>Other</option></select></label>
+              <label>Status<select id="cv-status"><option value="belum">Belum Start</option><option value="progress">In Progress</option><option value="posted">Dah Post</option></select></label>
+              <label>Link TikTok<input type="url" id="cv-link" placeholder="https://www.tiktok.com/..."></label>
+              <label class="creative-form-wide">Tajuk Content<input type="text" id="cv-title"></label>
             </div>
-            <div class="creative-form-actions"><button type="button" class="btn btn-ghost" id="creative-form-cancel">Batal</button><button class="btn btn-primary" type="submit">Simpan Creative</button></div>
+            <div class="creative-insight-input-wrap">
+              <div class="creative-insight-input-title">Insight Selepas Posting</div>
+              <div class="creative-insight-input-grid">
+                <div><b>24 Jam</b><input type="number" id="cv-24-view" placeholder="View"><input type="number" id="cv-24-like" placeholder="Like"><input type="number" id="cv-24-comment" placeholder="Komen"></div>
+                <div><b>3 Hari</b><input type="number" id="cv-3-view" placeholder="View"><input type="number" id="cv-3-like" placeholder="Like"><input type="number" id="cv-3-comment" placeholder="Komen"></div>
+                <div><b>7 Hari</b><input type="number" id="cv-7-view" placeholder="View"><input type="number" id="cv-7-like" placeholder="Like"><input type="number" id="cv-7-comment" placeholder="Komen"></div>
+                <div><b>1 Bulan</b><input type="number" id="cv-30-view" placeholder="View"><input type="number" id="cv-30-like" placeholder="Like"><input type="number" id="cv-30-comment" placeholder="Komen"></div>
+              </div>
+            </div>
+            <div class="creative-form-actions"><button type="button" class="btn btn-ghost" data-close-modal="creative-video-modal">Batal</button><button class="btn btn-primary" type="submit">Simpan Content</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="creative-modal" id="creative-poster-modal" aria-hidden="true">
+        <div class="creative-modal-card">
+          <div class="creative-modal-head"><div><span class="eyebrow">DESIGNER / POSTER</span><h3 id="creative-poster-form-title">Tambah Poster</h3></div><button type="button" data-close-modal="creative-poster-modal">×</button></div>
+          <form id="creative-poster-form">
+            <div class="creative-form-grid">
+              <label>Tarikh<input type="date" id="cp-date" required></label>
+              <label>Platform<select id="cp-platform"><option>Website</option><option>TikTok</option><option>WhatsApp</option><option>Shopee</option><option>Ecommerce</option></select></label>
+              <label>Status<select id="cp-status"><option value="belum">Belum Start</option><option value="progress">In Progress</option><option value="done">Done</option></select></label>
+              <label class="creative-form-wide">Tajuk / Request<input type="text" id="cp-title" required></label>
+              <label class="creative-form-wide">Upload Media / Poster Approved<input type="file" id="cp-media" accept="image/*"></label>
+              <div class="creative-poster-preview" id="cp-preview-wrap"><img id="cp-preview"><span>Belum ada media</span></div>
+              <label class="creative-form-wide">Nota<textarea id="cp-note" rows="3" placeholder="Contoh: dah sent group WhatsApp"></textarea></label>
+            </div>
+            <div class="creative-form-actions"><button type="button" class="btn btn-ghost" data-close-modal="creative-poster-modal">Batal</button><button class="btn btn-primary" type="submit">Simpan Poster</button></div>
           </form>
         </div>
       </div>
@@ -2530,7 +2529,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v48-creative"></script>
+<script src="js/app.js?v=v49-creative-advanced"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
