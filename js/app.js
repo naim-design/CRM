@@ -550,8 +550,9 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     if (btn.dataset.view === 'tiktokleads') { startTikTokLeadsListener(); initTikTokLeadsView(); renderTikTokLeads(); }
     if (btn.dataset.view === 'packageanalysis') { renderPackageAnalysis(); }
     if (btn.dataset.view === 'creative') {
-      const cd=document.getElementById('creative-date'); if(cd && !cd.value) cd.value=todayStr();
-      startCreativeListener(); renderCreative();
+      const cf=document.getElementById('creative-from');
+      if(cf && !cf.value) setCreativeRange('month'); else renderCreativeControl();
+      startCreativeListener();
     }
   });
 });
@@ -7754,116 +7755,39 @@ document.querySelectorAll('.salespage-copy-url-btn').forEach(btn=>{
   });
 });
 
+// V49 CREATIVE ADVANCED
 
-// ============================================================
-// V48 CREATIVE CONTROL CENTER
-// ============================================================
-const CREATIVE_DAILY_TARGETS={
-  'HQ':{total:11,video:9,poster:2},
-  'Solusi':{total:11,video:9,poster:2},
-  'Mamayyuu':{total:9,video:7,poster:2},
-  'Manjaratu V+':{total:1,video:1,poster:0}
-};
-let creativeRows=[], creativeFilter='all', creativeListenerStarted=false;
-
-function creativeDateValue(){ return document.getElementById('creative-date')?.value||todayStr(); }
-function creativeSelectedAccount(){ return document.getElementById('creative-account')?.value||''; }
-function creativeTarget(account=''){
-  if(account && CREATIVE_DAILY_TARGETS[account]) return CREATIVE_DAILY_TARGETS[account];
-  return Object.values(CREATIVE_DAILY_TARGETS).reduce((a,x)=>({total:a.total+x.total,video:a.video+x.video,poster:a.poster+x.poster}),{total:0,video:0,poster:0});
-}
-function creativeScopedRows(account=''){
-  const date=creativeDateValue();
-  return creativeRows.filter(r=>(r.date||'')===date && (!account || r.account===account));
-}
-function creativePct(n,d){ return d>0?Math.min(100,Math.round(n/d*100)):0; }
-function creativeSet(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
-function creativeSetBar(id,p){const e=document.getElementById(id);if(e)e.style.width=Math.min(100,p)+'%';}
-
-function renderCreative(){
-  const account=creativeSelectedAccount();
-  const target=creativeTarget(account);
-  const rows=creativeScopedRows(account);
-  const posted=rows.filter(r=>r.status==='posted');
-  const videoPosted=posted.filter(r=>r.type==='video').length;
-  const posterPosted=posted.filter(r=>r.type==='poster').length;
-  const totalPosted=posted.length;
-  const pct=creativePct(totalPosted,target.total);
-
-  creativeSet('creative-target-all',target.total);
-  creativeSet('creative-posted-all',totalPosted);
-  creativeSet('creative-remaining-all',Math.max(0,target.total-totalPosted));
-  creativeSet('creative-progress-all',pct+'%'); creativeSetBar('creative-progress-bar',pct);
-
-  creativeSet('creative-video-target',target.video); creativeSet('creative-video-posted',videoPosted);
-  creativeSet('creative-video-remaining',Math.max(0,target.video-videoPosted));
-  const vp=creativePct(videoPosted,target.video); creativeSet('creative-video-progress',vp+'%');creativeSetBar('creative-video-bar',vp);
-
-  creativeSet('creative-poster-target',target.poster); creativeSet('creative-poster-posted',posterPosted);
-  creativeSet('creative-poster-remaining',Math.max(0,target.poster-posterPosted));
-  const pp=creativePct(posterPosted,target.poster); creativeSet('creative-poster-progress',pp+'%');creativeSetBar('creative-poster-bar',pp);
-
-  const grid=document.getElementById('creative-account-grid');
-  if(grid){
-    grid.innerHTML=Object.entries(CREATIVE_DAILY_TARGETS).map(([name,t])=>{
-      const rr=creativeScopedRows(name).filter(r=>r.status==='posted');
-      const n=rr.length,p=creativePct(n,t.total);
-      return `<article><div><b>${name}</b><span>${n}/${t.total} posted</span></div><strong>${p}%</strong><div class="creative-progress"><i style="width:${p}%"></i></div><small>Video ${rr.filter(x=>x.type==='video').length}/${t.video} · Poster ${rr.filter(x=>x.type==='poster').length}/${t.poster}</small></article>`;
-    }).join('');
-  }
-
-  const body=document.getElementById('creative-table-body');
-  if(body){
-    let list=[...rows].filter(r=>creativeFilter==='all'||r.type===creativeFilter).sort((a,b)=>(b.createdAtMs||0)-(a.createdAtMs||0));
-    body.innerHTML=list.length?list.map(r=>`<tr>
-      <td>${r.date||'-'}</td><td><b>${r.account||'-'}</b></td>
-      <td><span class="creative-type-pill ${r.type}">${r.type==='video'?'Video':'Poster'}</span></td>
-      <td>${r.funnel||'-'}</td><td>${r.platform||'-'}</td><td>${pkgEsc(r.title||'-')}</td>
-      <td><span class="creative-status ${r.status}">${r.status==='posted'?'Dah Post':r.status==='progress'?'In Progress':'Belum Start'}</span></td>
-      <td><button class="creative-delete" data-id="${r.id}">Padam</button></td>
-    </tr>`).join(''):'<tr><td colspan="8" class="empty-state">Belum ada creative untuk tarikh/filter ini.</td></tr>';
-  }
-}
-function startCreativeListener(){
-  if(creativeListenerStarted)return; creativeListenerStarted=true;
-  db.collection('creativeTracker').onSnapshot(s=>{
-    creativeRows=s.docs.map(d=>{const x=d.data();return{id:d.id,...x,createdAtMs:x.createdAt?.toMillis?.()||0};});
-    renderCreative();
-  },err=>{console.warn('Creative listener',err);toast('Ralat baca Creative: '+err.message,true);});
-}
-function openCreativeModal(){
-  const m=document.getElementById('creative-modal');if(!m)return;
-  document.getElementById('creative-form-date').value=creativeDateValue();
-  m.classList.add('open');m.setAttribute('aria-hidden','false');
-}
-function closeCreativeModal(){const m=document.getElementById('creative-modal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');}}
-document.getElementById('creative-add-btn')?.addEventListener('click',openCreativeModal);
-document.getElementById('creative-modal-close')?.addEventListener('click',closeCreativeModal);
-document.getElementById('creative-form-cancel')?.addEventListener('click',closeCreativeModal);
-document.getElementById('creative-today-btn')?.addEventListener('click',()=>{document.getElementById('creative-date').value=todayStr();renderCreative();});
-document.getElementById('creative-date')?.addEventListener('change',renderCreative);
-document.getElementById('creative-account')?.addEventListener('change',renderCreative);
-document.querySelectorAll('[data-creative-filter]').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-creative-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');creativeFilter=b.dataset.creativeFilter;renderCreative();
-}));
-document.getElementById('creative-form')?.addEventListener('submit',async e=>{
-  e.preventDefault();
-  const data={
-    date:document.getElementById('creative-form-date').value,
-    account:document.getElementById('creative-form-account').value,
-    type:document.getElementById('creative-form-type').value,
-    funnel:document.getElementById('creative-form-funnel').value,
-    platform:document.getElementById('creative-form-platform').value,
-    status:document.getElementById('creative-form-status').value,
-    title:document.getElementById('creative-form-title').value.trim(),
-    createdBy:currentProfile?.name||currentUser?.email||'Staff',
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  };
-  try{await db.collection('creativeTracker').add(data);closeCreativeModal();e.target.reset();toast('Creative disimpan ✓');}
-  catch(err){toast('Gagal simpan Creative: '+err.message,true);}
-});
-document.getElementById('creative-table-body')?.addEventListener('click',async e=>{
-  const b=e.target.closest('.creative-delete');if(!b)return;
-  if(!confirm('Padam rekod creative ini?'))return;
-  try{await db.collection('creativeTracker').doc(b.dataset.id).delete();toast('Creative dipadam ✓');}catch(err){toast(err.message,true);}
-});
+const CREATIVE_ACCOUNT_TARGETS={
+'HQ':{total:11,video:9,photoslide:2,breakdown:{Engagement:{video:2,photoslide:1},Awareness:{video:2,photoslide:1},Conversion:{video:3,photoslide:0},'Highlight Live':{video:1,photoslide:0},'Call To Live':{video:1,photoslide:0}}},
+'Solusi':{total:11,video:9,photoslide:2,breakdown:{Engagement:{video:2,photoslide:1},Awareness:{video:2,photoslide:1},Conversion:{video:3,photoslide:0},'Highlight Live':{video:1,photoslide:0},'Call To Live':{video:1,photoslide:0}}},
+'Mamayyuu':{total:9,video:7,photoslide:2,breakdown:{Engagement:{video:2,photoslide:1},Awareness:{video:2,photoslide:1},Conversion:{video:3,photoslide:0}}},
+'Manjaratu V+':{total:1,video:1,photoslide:0,breakdown:{Other:{video:1,photoslide:0}}}};
+const CREATIVE_PLATFORM_META={Website:'website',TikTok:'tiktok',WhatsApp:'whatsapp',Shopee:'shopee',Ecommerce:'ecommerce'};
+let creativeRows=[],creativeListenerStarted=false,creativeActiveTab='video',creativeEditingId=null,creativePosterImageData='';
+function cIso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function cToday(){return cIso(new Date());}
+function cParse(s){return new Date(s+'T12:00:00');}
+function cDays(){let f=document.getElementById('creative-from')?.value,t=document.getElementById('creative-to')?.value;if(!f||!t)return 0;return Math.max(0,Math.floor((cParse(t)-cParse(f))/86400000)+1);}
+function cEsc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function cFmt(v){return Number(v||0).toLocaleString('en-MY');}
+function setCreativeRange(type='month'){const n=new Date();let f=new Date(n),t=new Date(n);if(type==='last3')f.setDate(t.getDate()-2);else if(type==='last7')f.setDate(t.getDate()-6);else if(type==='last14')f.setDate(t.getDate()-13);else if(type==='lastmonth'){f=new Date(n.getFullYear(),n.getMonth()-1,1);t=new Date(n.getFullYear(),n.getMonth(),0);}else f=new Date(n.getFullYear(),n.getMonth(),1);document.getElementById('creative-from').value=cIso(f);document.getElementById('creative-to').value=cIso(t);document.querySelectorAll('[data-crange]').forEach(b=>b.classList.toggle('active',b.dataset.crange===type));renderCreativeControl();}
+function cRows(kind){const f=document.getElementById('creative-from')?.value||'',t=document.getElementById('creative-to')?.value||'';return creativeRows.filter(r=>(!kind||r.kind===kind)&&(!f||r.date>=f)&&(!t||r.date<=t));}
+function cSet(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}function cBar(id,p){const e=document.getElementById(id);if(e)e.style.width=Math.min(100,Math.max(0,p))+'%';}
+function renderCreativeVideo(){const rows=cRows('video'),days=cDays(),target=32*days,posted=rows.filter(r=>r.status==='posted').length,pct=target?Math.min(100,Math.round(posted/target*100)):0;cSet('creative-target-all',target);cSet('creative-posted-all',posted);cSet('creative-remaining-all',Math.max(0,target-posted));cSet('creative-progress-all',pct+'%');cSet('creative-target-period',`${days} hari × 32 content`);cBar('creative-progress-bar',pct);
+const g=document.getElementById('creative-account-grid');if(g)g.innerHTML=Object.entries(CREATIVE_ACCOUNT_TARGETS).map(([n,t])=>{const ar=rows.filter(r=>r.account===n),ap=ar.filter(r=>r.status==='posted'),at=t.total*days,p=at?Math.min(100,Math.round(ap.length/at*100)):0,vd=ap.filter(r=>r.format==='video').length,ph=ap.filter(r=>r.format==='photoslide').length,bd=Object.entries(t.breakdown).map(([f,b])=>{const v=ap.filter(r=>r.funnel===f&&r.format==='video').length,q=ap.filter(r=>r.funnel===f&&r.format==='photoslide').length;return `<li><span>${f}</span><b>${v}V${b.photoslide?` + ${q}P`:''} / ${b.video*days}V${b.photoslide?` + ${b.photoslide*days}P`:''}</b></li>`;}).join('');return `<article class="creative-account-card"><div class="creative-account-card-top"><div><b>${n}</b><span>${ap.length}/${at} posted</span></div><strong>${p}%</strong></div><div class="creative-progress"><i style="width:${p}%"></i></div><small>Video ${vd}/${t.video*days} · Photo Slide ${ph}/${t.photoslide*days}</small><ul>${bd}</ul></article>`;}).join('');
+const body=document.getElementById('creative-video-body');if(body)body.innerHTML=rows.length?[...rows].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r=>{const ins=k=>{const x=r.insights?.[k]||{};return `<span class="creative-insight-mini">V ${cFmt(x.view)} · L ${cFmt(x.like)} · C ${cFmt(x.comment)}</span>`;};return `<tr><td>${r.date||'-'}</td><td><b>${cEsc(r.account||'-')}</b></td><td><span class="creative-type-pill ${r.format==='photoslide'?'poster':'video'}">${r.format==='photoslide'?'Photo Slide':'Video'}</span></td><td>${cEsc(r.funnel||'-')}</td><td>${cEsc(r.title||'-')}</td><td><span class="creative-status ${r.status||'belum'}">${r.status==='posted'?'Dah Post':r.status==='progress'?'In Progress':'Belum Start'}</span></td><td>${r.tiktokLink?`<a class="creative-link-btn" href="${cEsc(r.tiktokLink)}" target="_blank" rel="noopener">Buka TikTok ↗</a>`:'–'}</td><td>${ins('h24')}</td><td>${ins('d3')}</td><td>${ins('d7')}</td><td>${ins('d30')}</td><td><button class="creative-action edit" data-cedit="${r.id}">Edit</button><button class="creative-action delete" data-cdelete="${r.id}">Padam</button></td></tr>`;}).join(''):'<tr><td colspan="12" class="empty-state">Belum ada content dalam julat tarikh ini.</td></tr>';
+const s=document.getElementById('creative-insight-summary');if(s)s.innerHTML=[['h24','24 Jam'],['d3','3 Hari'],['d7','7 Hari'],['d30','1 Bulan']].map(([k,l])=>{const d=rows.reduce((a,r)=>{const x=r.insights?.[k]||{};a.v+=+x.view||0;a.l+=+x.like||0;a.c+=+x.comment||0;return a;},{v:0,l:0,c:0});return `<article><span>${l}</span><strong>${cFmt(d.v)} views</strong><small>${cFmt(d.l)} likes · ${cFmt(d.c)} komen</small></article>`;}).join('');}
+function renderCreativePoster(){const rows=cRows('poster');cSet('poster-total-task',rows.length);cSet('poster-done',rows.filter(r=>r.status==='done').length);cSet('poster-progress',rows.filter(r=>r.status==='progress').length);cSet('poster-belum',rows.filter(r=>r.status==='belum').length);const b=document.getElementById('creative-poster-body');if(b)b.innerHTML=rows.length?[...rows].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r=>{const cls=CREATIVE_PLATFORM_META[r.platform]||'ecommerce';return `<tr><td>${r.date||'-'}</td><td>${r.mediaData?`<img class="creative-poster-thumb" src="${r.mediaData}">`:'–'}</td><td><b>${cEsc(r.title||'-')}</b></td><td><span class="creative-platform-pill ${cls}">${cEsc(r.platform||'-')}</span></td><td><span class="creative-status ${r.status||'belum'}">${r.status==='done'?'Done':r.status==='progress'?'In Progress':'Belum Start'}</span></td><td class="creative-note-cell">${cEsc(r.note||'-')}</td><td><button class="creative-action edit" data-pedit="${r.id}">Edit</button><button class="creative-action delete" data-cdelete="${r.id}">Padam</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty-state">Belum ada poster dalam julat tarikh ini.</td></tr>';const g=document.getElementById('creative-platform-analysis');if(g)g.innerHTML=Object.entries(CREATIVE_PLATFORM_META).map(([p,c])=>{const x=rows.filter(r=>r.platform===p),d=x.filter(r=>r.status==='done').length,ip=x.filter(r=>r.status==='progress').length,bs=x.filter(r=>r.status==='belum').length;return `<article class="creative-platform-card ${c}"><span>${p}</span><strong>${x.length}</strong><small>Done ${d} · In Progress ${ip} · Belum ${bs}</small></article>`;}).join('');}
+function renderCreativeControl(){renderCreativeVideo();renderCreativePoster();if(typeof initSortableTables==='function')setTimeout(()=>initSortableTables(document),20);}
+function startCreativeListener(){if(creativeListenerStarted)return;creativeListenerStarted=true;db.collection('creativeTracker').onSnapshot(s=>{creativeRows=s.docs.map(d=>({id:d.id,...d.data()}));renderCreativeControl();},e=>toast('Ralat baca Creative: '+e.message,true));}
+function cOpen(type,id=null){creativeEditingId=id;const r=id?creativeRows.find(x=>x.id===id):null;if(type==='video'){document.getElementById('creative-video-form-title').textContent=r?'Edit Content':'Tambah Content';document.getElementById('cv-date').value=r?.date||cToday();document.getElementById('cv-account').value=r?.account||'HQ';document.getElementById('cv-format').value=r?.format||'video';document.getElementById('cv-funnel').value=r?.funnel||'Engagement';document.getElementById('cv-status').value=r?.status||'belum';document.getElementById('cv-link').value=r?.tiktokLink||'';document.getElementById('cv-title').value=r?.title||'';[['24','h24'],['3','d3'],['7','d7'],['30','d30']].forEach(([p,k])=>['view','like','comment'].forEach(m=>document.getElementById(`cv-${p}-${m}`).value=r?.insights?.[k]?.[m]||0));document.getElementById('creative-video-modal').classList.add('open');}else{creativePosterImageData=r?.mediaData||'';document.getElementById('creative-poster-form-title').textContent=r?'Edit Poster':'Tambah Poster';document.getElementById('cp-date').value=r?.date||cToday();document.getElementById('cp-platform').value=r?.platform||'Website';document.getElementById('cp-status').value=r?.status||'belum';document.getElementById('cp-title').value=r?.title||'';document.getElementById('cp-note').value=r?.note||'';cPreview();document.getElementById('creative-poster-modal').classList.add('open');}}
+function cClose(id){document.getElementById(id)?.classList.remove('open');creativeEditingId=null;}
+function cPreview(){const i=document.getElementById('cp-preview'),w=document.getElementById('cp-preview-wrap'),s=w?.querySelector('span');if(!i||!w)return;if(creativePosterImageData){i.src=creativePosterImageData;i.style.display='block';if(s)s.style.display='none';}else{i.style.display='none';if(s)s.style.display='block';}}
+function cCompress(f){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=()=>rej(new Error('Gagal baca gambar'));fr.onload=()=>{const im=new Image();im.onload=()=>{let w=im.width,h=im.height,sc=Math.min(1,1100/w,1100/h);w=Math.round(w*sc);h=Math.round(h*sc);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);res(c.toDataURL('image/jpeg',.78));};im.onerror=()=>rej(new Error('Format gambar tak disokong'));im.src=fr.result;};fr.readAsDataURL(f);});}
+document.querySelectorAll('[data-creative-tab]').forEach(b=>b.addEventListener('click',()=>{creativeActiveTab=b.dataset.creativeTab;document.querySelectorAll('[data-creative-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('.creative-tab-pane').forEach(p=>p.classList.toggle('active',p.id===`creative-tab-${creativeActiveTab}`));}));
+document.querySelectorAll('[data-crange]').forEach(b=>b.addEventListener('click',()=>setCreativeRange(b.dataset.crange)));document.getElementById('creative-from')?.addEventListener('change',renderCreativeControl);document.getElementById('creative-to')?.addEventListener('change',renderCreativeControl);document.getElementById('creative-add-btn')?.addEventListener('click',()=>cOpen(creativeActiveTab==='poster'?'poster':'video'));document.getElementById('creative-add-video')?.addEventListener('click',()=>cOpen('video'));document.getElementById('creative-add-poster')?.addEventListener('click',()=>cOpen('poster'));document.querySelectorAll('[data-close-modal]').forEach(b=>b.addEventListener('click',()=>cClose(b.dataset.closeModal)));
+document.getElementById('cp-media')?.addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{creativePosterImageData=await cCompress(f);cPreview();}catch(err){toast(err.message,true);}});
+document.getElementById('creative-video-form')?.addEventListener('submit',async e=>{e.preventDefault();const ins={};[['24','h24'],['3','d3'],['7','d7'],['30','d30']].forEach(([p,k])=>ins[k]={view:+document.getElementById(`cv-${p}-view`).value||0,like:+document.getElementById(`cv-${p}-like`).value||0,comment:+document.getElementById(`cv-${p}-comment`).value||0});const d={kind:'video',date:document.getElementById('cv-date').value,account:document.getElementById('cv-account').value,format:document.getElementById('cv-format').value,funnel:document.getElementById('cv-funnel').value,status:document.getElementById('cv-status').value,tiktokLink:document.getElementById('cv-link').value.trim(),title:document.getElementById('cv-title').value.trim(),insights:ins,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{creativeEditingId?await db.collection('creativeTracker').doc(creativeEditingId).update(d):(d.createdAt=firebase.firestore.FieldValue.serverTimestamp(),await db.collection('creativeTracker').add(d));toast('Content disimpan ✓');cClose('creative-video-modal');}catch(err){toast('Gagal simpan: '+err.message,true);}});
+document.getElementById('creative-poster-form')?.addEventListener('submit',async e=>{e.preventDefault();const d={kind:'poster',date:document.getElementById('cp-date').value,platform:document.getElementById('cp-platform').value,status:document.getElementById('cp-status').value,title:document.getElementById('cp-title').value.trim(),note:document.getElementById('cp-note').value.trim(),mediaData:creativePosterImageData||'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{creativeEditingId?await db.collection('creativeTracker').doc(creativeEditingId).update(d):(d.createdAt=firebase.firestore.FieldValue.serverTimestamp(),await db.collection('creativeTracker').add(d));toast('Poster disimpan ✓');cClose('creative-poster-modal');creativePosterImageData='';}catch(err){toast('Gagal simpan: '+err.message,true);}});
+document.getElementById('creative-video-body')?.addEventListener('click',async e=>{const ed=e.target.closest('[data-cedit]'),del=e.target.closest('[data-cdelete]');if(ed)cOpen('video',ed.dataset.cedit);if(del&&confirm('Padam rekod ini?'))await db.collection('creativeTracker').doc(del.dataset.cdelete).delete();});
+document.getElementById('creative-poster-body')?.addEventListener('click',async e=>{const ed=e.target.closest('[data-pedit]'),del=e.target.closest('[data-cdelete]');if(ed)cOpen('poster',ed.dataset.pedit);if(del&&confirm('Padam rekod ini?'))await db.collection('creativeTracker').doc(del.dataset.cdelete).delete();});
