@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v46-stop-ads-table">
+<link rel="stylesheet" href="css/app-extra.css?v=v48-creative">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -41,6 +41,7 @@
         <button data-view="wabotcontrol">Wabot Control</button>
         <button data-view="projection">Projection</button>
         <button data-view="planning">Planning</button>
+        <button data-view="creative">Creative</button>
         <button data-view="analyticspro">Analytics Pro</button>
         <div class="nav-group-label">UTILITI</div>
         <button data-view="campaignmanager">Campaign Manager</button>
@@ -2233,6 +2234,127 @@ Ahmad	60112223344"></textarea>
 
 
     <!-- ================= ANALYTICS PRO ================= -->
+
+    <!-- ==================== CREATIVE ==================== -->
+    <div id="view-creative" class="view">
+      <div class="creative-head">
+        <div>
+          <div class="eyebrow">CREATIVE CONTROL CENTER</div>
+          <h2>Creative — Video & Poster</h2>
+          <p>Track target creative, berapa dah siap/dipost dan berapa lagi perlu dicapai. Data Video dan Poster diasingkan supaya senang review dengan team.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="creative-add-btn">+ Tambah Creative</button>
+      </div>
+
+      <div class="creative-datebar">
+        <label>Tarikh
+          <input type="date" id="creative-date">
+        </label>
+        <label>Akaun / Projek
+          <select id="creative-account">
+            <option value="">Semua Akaun</option>
+            <option>HQ</option>
+            <option>Solusi</option>
+            <option>Mamayyuu</option>
+            <option>Manjaratu V+</option>
+          </select>
+        </label>
+        <button type="button" class="btn btn-ghost" id="creative-today-btn">Hari Ini</button>
+      </div>
+
+      <div class="creative-overview-grid">
+        <article class="creative-overview-card">
+          <span>TARGET CREATIVE</span><strong id="creative-target-all">32</strong>
+          <small>Target harian semua akaun</small>
+        </article>
+        <article class="creative-overview-card">
+          <span>DAH DIPOST</span><strong id="creative-posted-all">0</strong>
+          <small>Video + poster/photoslide</small>
+        </article>
+        <article class="creative-overview-card">
+          <span>BAKI PERLU CAPAI</span><strong id="creative-remaining-all">32</strong>
+          <small>Target − dah dipost</small>
+        </article>
+        <article class="creative-overview-card">
+          <span>PROGRESS</span><strong id="creative-progress-all">0%</strong>
+          <div class="creative-progress"><i id="creative-progress-bar"></i></div>
+        </article>
+      </div>
+
+      <div class="creative-type-grid">
+        <section class="creative-type-card video">
+          <div class="creative-type-head">
+            <div><span>VIDEO</span><h3>Analisis Video</h3></div>
+            <strong id="creative-video-progress">0%</strong>
+          </div>
+          <div class="creative-type-kpis">
+            <div><small>Target</small><b id="creative-video-target">0</b></div>
+            <div><small>Dah Post</small><b id="creative-video-posted">0</b></div>
+            <div><small>Baki</small><b id="creative-video-remaining">0</b></div>
+          </div>
+          <div class="creative-progress"><i id="creative-video-bar"></i></div>
+        </section>
+
+        <section class="creative-type-card poster">
+          <div class="creative-type-head">
+            <div><span>POSTER / PHOTOSLIDE</span><h3>Analisis Poster</h3></div>
+            <strong id="creative-poster-progress">0%</strong>
+          </div>
+          <div class="creative-type-kpis">
+            <div><small>Target</small><b id="creative-poster-target">0</b></div>
+            <div><small>Dah Post</small><b id="creative-poster-posted">0</b></div>
+            <div><small>Baki</small><b id="creative-poster-remaining">0</b></div>
+          </div>
+          <div class="creative-progress"><i id="creative-poster-bar"></i></div>
+        </section>
+      </div>
+
+      <section class="creative-panel">
+        <div class="creative-panel-head">
+          <div><span class="eyebrow">DAILY TARGET</span><h3>Target Mengikut Akaun</h3></div>
+          <small>Rujukan daripada flow yang diberi: HQ 11 · Solusi 11 · Mamayyuu 9 · Manjaratu V+ 1</small>
+        </div>
+        <div class="creative-account-grid" id="creative-account-grid"></div>
+      </section>
+
+      <section class="creative-panel">
+        <div class="creative-panel-head">
+          <div><span class="eyebrow">CREATIVE LIST</span><h3>Video & Poster Yang Direkod</h3></div>
+          <div class="creative-segment">
+            <button class="active" data-creative-filter="all">Semua</button>
+            <button data-creative-filter="video">Video</button>
+            <button data-creative-filter="poster">Poster</button>
+          </div>
+        </div>
+        <div class="creative-table-wrap">
+          <table class="tbl sortable-table creative-table">
+            <thead><tr>
+              <th>Tarikh</th><th>Akaun</th><th>Jenis</th><th>Funnel</th><th>Platform</th><th>Tajuk Creative</th><th>Status</th><th>Aksi</th>
+            </tr></thead>
+            <tbody id="creative-table-body"><tr><td colspan="8" class="empty-state">Belum ada creative direkod.</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="creative-modal" id="creative-modal" aria-hidden="true">
+        <div class="creative-modal-card">
+          <div class="creative-modal-head"><div><span class="eyebrow">ADD CREATIVE</span><h3>Rekod Video / Poster</h3></div><button type="button" id="creative-modal-close">×</button></div>
+          <form id="creative-form">
+            <div class="creative-form-grid">
+              <label>Tarikh<input type="date" id="creative-form-date" required></label>
+              <label>Akaun<select id="creative-form-account" required><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option></select></label>
+              <label>Jenis<select id="creative-form-type" required><option value="video">Video</option><option value="poster">Poster / Photoslide</option></select></label>
+              <label>Funnel<select id="creative-form-funnel"><option>Engagement</option><option>Awareness</option><option>Conversion</option><option>Highlight Live</option><option>CTL</option><option>Other</option></select></label>
+              <label>Platform<select id="creative-form-platform"><option>TikTok</option><option>WhatsApp</option><option>Website</option><option>Shopee</option><option>E-commerce</option></select></label>
+              <label>Status<select id="creative-form-status"><option value="belum">Belum Start</option><option value="progress">In Progress</option><option value="posted">Dah Post</option></select></label>
+              <label class="creative-form-wide">Tajuk / Nama Creative<input type="text" id="creative-form-title" placeholder="Contoh: Hook anak pendek sekolah"></label>
+            </div>
+            <div class="creative-form-actions"><button type="button" class="btn btn-ghost" id="creative-form-cancel">Batal</button><button class="btn btn-primary" type="submit">Simpan Creative</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <div id="view-analyticspro" class="view">
       <div class="section-head" style="padding-top:36px; align-items:flex-end; gap:12px; flex-wrap:wrap;">
         <div>
@@ -2408,7 +2530,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v47-more-filter-tags"></script>
+<script src="js/app.js?v=v48-creative"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
