@@ -549,6 +549,10 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
     if (btn.dataset.view === 'filter') { buildTagCheckRow('seg-filter-tags', [], null); populateBatchSelect(); }
     if (btn.dataset.view === 'tiktokleads') { startTikTokLeadsListener(); initTikTokLeadsView(); renderTikTokLeads(); }
     if (btn.dataset.view === 'packageanalysis') { renderPackageAnalysis(); }
+    if (btn.dataset.view === 'creative') {
+      const cd=document.getElementById('creative-date'); if(cd && !cd.value) cd.value=todayStr();
+      startCreativeListener(); renderCreative();
+    }
   });
 });
 
@@ -7748,4 +7752,118 @@ document.querySelectorAll('.salespage-copy-url-btn').forEach(btn=>{
       toast('Gagal salin link', true);
     }
   });
+});
+
+
+// ============================================================
+// V48 CREATIVE CONTROL CENTER
+// ============================================================
+const CREATIVE_DAILY_TARGETS={
+  'HQ':{total:11,video:9,poster:2},
+  'Solusi':{total:11,video:9,poster:2},
+  'Mamayyuu':{total:9,video:7,poster:2},
+  'Manjaratu V+':{total:1,video:1,poster:0}
+};
+let creativeRows=[], creativeFilter='all', creativeListenerStarted=false;
+
+function creativeDateValue(){ return document.getElementById('creative-date')?.value||todayStr(); }
+function creativeSelectedAccount(){ return document.getElementById('creative-account')?.value||''; }
+function creativeTarget(account=''){
+  if(account && CREATIVE_DAILY_TARGETS[account]) return CREATIVE_DAILY_TARGETS[account];
+  return Object.values(CREATIVE_DAILY_TARGETS).reduce((a,x)=>({total:a.total+x.total,video:a.video+x.video,poster:a.poster+x.poster}),{total:0,video:0,poster:0});
+}
+function creativeScopedRows(account=''){
+  const date=creativeDateValue();
+  return creativeRows.filter(r=>(r.date||'')===date && (!account || r.account===account));
+}
+function creativePct(n,d){ return d>0?Math.min(100,Math.round(n/d*100)):0; }
+function creativeSet(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function creativeSetBar(id,p){const e=document.getElementById(id);if(e)e.style.width=Math.min(100,p)+'%';}
+
+function renderCreative(){
+  const account=creativeSelectedAccount();
+  const target=creativeTarget(account);
+  const rows=creativeScopedRows(account);
+  const posted=rows.filter(r=>r.status==='posted');
+  const videoPosted=posted.filter(r=>r.type==='video').length;
+  const posterPosted=posted.filter(r=>r.type==='poster').length;
+  const totalPosted=posted.length;
+  const pct=creativePct(totalPosted,target.total);
+
+  creativeSet('creative-target-all',target.total);
+  creativeSet('creative-posted-all',totalPosted);
+  creativeSet('creative-remaining-all',Math.max(0,target.total-totalPosted));
+  creativeSet('creative-progress-all',pct+'%'); creativeSetBar('creative-progress-bar',pct);
+
+  creativeSet('creative-video-target',target.video); creativeSet('creative-video-posted',videoPosted);
+  creativeSet('creative-video-remaining',Math.max(0,target.video-videoPosted));
+  const vp=creativePct(videoPosted,target.video); creativeSet('creative-video-progress',vp+'%');creativeSetBar('creative-video-bar',vp);
+
+  creativeSet('creative-poster-target',target.poster); creativeSet('creative-poster-posted',posterPosted);
+  creativeSet('creative-poster-remaining',Math.max(0,target.poster-posterPosted));
+  const pp=creativePct(posterPosted,target.poster); creativeSet('creative-poster-progress',pp+'%');creativeSetBar('creative-poster-bar',pp);
+
+  const grid=document.getElementById('creative-account-grid');
+  if(grid){
+    grid.innerHTML=Object.entries(CREATIVE_DAILY_TARGETS).map(([name,t])=>{
+      const rr=creativeScopedRows(name).filter(r=>r.status==='posted');
+      const n=rr.length,p=creativePct(n,t.total);
+      return `<article><div><b>${name}</b><span>${n}/${t.total} posted</span></div><strong>${p}%</strong><div class="creative-progress"><i style="width:${p}%"></i></div><small>Video ${rr.filter(x=>x.type==='video').length}/${t.video} · Poster ${rr.filter(x=>x.type==='poster').length}/${t.poster}</small></article>`;
+    }).join('');
+  }
+
+  const body=document.getElementById('creative-table-body');
+  if(body){
+    let list=[...rows].filter(r=>creativeFilter==='all'||r.type===creativeFilter).sort((a,b)=>(b.createdAtMs||0)-(a.createdAtMs||0));
+    body.innerHTML=list.length?list.map(r=>`<tr>
+      <td>${r.date||'-'}</td><td><b>${r.account||'-'}</b></td>
+      <td><span class="creative-type-pill ${r.type}">${r.type==='video'?'Video':'Poster'}</span></td>
+      <td>${r.funnel||'-'}</td><td>${r.platform||'-'}</td><td>${pkgEsc(r.title||'-')}</td>
+      <td><span class="creative-status ${r.status}">${r.status==='posted'?'Dah Post':r.status==='progress'?'In Progress':'Belum Start'}</span></td>
+      <td><button class="creative-delete" data-id="${r.id}">Padam</button></td>
+    </tr>`).join(''):'<tr><td colspan="8" class="empty-state">Belum ada creative untuk tarikh/filter ini.</td></tr>';
+  }
+}
+function startCreativeListener(){
+  if(creativeListenerStarted)return; creativeListenerStarted=true;
+  db.collection('creativeTracker').onSnapshot(s=>{
+    creativeRows=s.docs.map(d=>{const x=d.data();return{id:d.id,...x,createdAtMs:x.createdAt?.toMillis?.()||0};});
+    renderCreative();
+  },err=>{console.warn('Creative listener',err);toast('Ralat baca Creative: '+err.message,true);});
+}
+function openCreativeModal(){
+  const m=document.getElementById('creative-modal');if(!m)return;
+  document.getElementById('creative-form-date').value=creativeDateValue();
+  m.classList.add('open');m.setAttribute('aria-hidden','false');
+}
+function closeCreativeModal(){const m=document.getElementById('creative-modal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');}}
+document.getElementById('creative-add-btn')?.addEventListener('click',openCreativeModal);
+document.getElementById('creative-modal-close')?.addEventListener('click',closeCreativeModal);
+document.getElementById('creative-form-cancel')?.addEventListener('click',closeCreativeModal);
+document.getElementById('creative-today-btn')?.addEventListener('click',()=>{document.getElementById('creative-date').value=todayStr();renderCreative();});
+document.getElementById('creative-date')?.addEventListener('change',renderCreative);
+document.getElementById('creative-account')?.addEventListener('change',renderCreative);
+document.querySelectorAll('[data-creative-filter]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-creative-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');creativeFilter=b.dataset.creativeFilter;renderCreative();
+}));
+document.getElementById('creative-form')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const data={
+    date:document.getElementById('creative-form-date').value,
+    account:document.getElementById('creative-form-account').value,
+    type:document.getElementById('creative-form-type').value,
+    funnel:document.getElementById('creative-form-funnel').value,
+    platform:document.getElementById('creative-form-platform').value,
+    status:document.getElementById('creative-form-status').value,
+    title:document.getElementById('creative-form-title').value.trim(),
+    createdBy:currentProfile?.name||currentUser?.email||'Staff',
+    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+  try{await db.collection('creativeTracker').add(data);closeCreativeModal();e.target.reset();toast('Creative disimpan ✓');}
+  catch(err){toast('Gagal simpan Creative: '+err.message,true);}
+});
+document.getElementById('creative-table-body')?.addEventListener('click',async e=>{
+  const b=e.target.closest('.creative-delete');if(!b)return;
+  if(!confirm('Padam rekod creative ini?'))return;
+  try{await db.collection('creativeTracker').doc(b.dataset.id).delete();toast('Creative dipadam ✓');}catch(err){toast(err.message,true);}
 });
