@@ -539,9 +539,10 @@ auth.onAuthStateChanged(async (user) => {
 document.getElementById('logout-btn').onclick = () => auth.signOut();
 
 // ---- Nav ----
-document.querySelectorAll('.app-nav button').forEach(btn => {
+document.querySelectorAll('.app-nav button[data-view]').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.app-nav button').forEach(b => b.classList.remove('active'));
+    if(!btn.dataset.view) return;
+    document.querySelectorAll('.app-nav button[data-view]').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
@@ -553,6 +554,7 @@ document.querySelectorAll('.app-nav button').forEach(btn => {
       const cf=document.getElementById('creative-from');
       if(cf && !cf.value) setCreativeRange('month'); else renderCreativeControl();
       startCreativeListener();
+      setTimeout(()=>{ if(typeof activateCreativeSection==='function') activateCreativeSection('dashboard'); },30);
       startCreativeFlatlayListener();
       startCreativePlanListener();
     }
@@ -7936,6 +7938,11 @@ document.querySelectorAll('[data-creative-tab]').forEach(btn=>{
 // ================= V56 CREATIVE DASHBOARD + RELIABLE SIDEBAR =================
 function activateCreativeSection(tab){
   creativeActiveTab=tab;
+  const parent=document.getElementById('view-creative');
+  if(parent){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    parent.classList.add('active');
+  }
   document.querySelectorAll('.creative-tab-pane').forEach(p=>{
     p.classList.toggle('active',p.id===`creative-tab-${tab}`);
   });
