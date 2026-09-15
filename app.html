@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v49-creative-advanced">
+<link rel="stylesheet" href="css/app-extra.css?v=v50-creative-planner">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -2245,6 +2245,7 @@ Ahmad	60112223344"></textarea>
       <div class="creative-subtabs">
         <button class="active" data-creative-tab="video">Video</button>
         <button data-creative-tab="poster">Poster / Designer</button>
+        <button data-creative-tab="planning">Content Planning Creative</button>
       </div>
 
       <div class="creative-rangebar">
@@ -2298,13 +2299,66 @@ Ahmad	60112223344"></textarea>
 
         <section class="creative-panel">
           <div class="creative-panel-head"><div><span class="eyebrow">DESIGNER / POSTER TASK</span><h3>Poster Approved & Progress Kerja</h3><p>Website merah · TikTok hitam · WhatsApp hijau · Shopee oren · Ecommerce biru.</p></div><button class="btn btn-primary" id="creative-add-poster">+ Tambah Poster</button></div>
-          <div class="creative-table-wrap"><table class="tbl sortable-table creative-table"><thead><tr><th>Tarikh</th><th>Preview</th><th>Tajuk</th><th>Platform</th><th>Status</th><th>Nota</th><th>Aksi</th></tr></thead>
+          <div class="creative-table-wrap"><table class="tbl sortable-table creative-table"><thead><tr><th>Tarikh</th><th>Files</th><th>Tajuk</th><th>Platform</th><th>Status</th><th>Nota</th><th>Aksi</th></tr></thead>
           <tbody id="creative-poster-body"><tr><td colspan="7" class="empty-state">Belum ada poster.</td></tr></tbody></table></div>
+        </section>
+
+        <section class="creative-panel">
+          <div class="creative-panel-head">
+            <div><span class="eyebrow">FLATLAY LIBRARY</span><h3>Flatlay Produk — Google Drive</h3><p>Simpan link folder/file Google Drive supaya team boleh buka terus dari sistem.</p></div>
+            <button class="btn btn-primary" id="creative-add-flatlay">+ Tambah Flatlay</button>
+          </div>
+          <div class="creative-table-wrap">
+            <table class="tbl sortable-table creative-table">
+              <thead><tr><th>Tarikh</th><th>Tajuk</th><th>Produk / Kategori</th><th>Google Drive</th><th>Nota</th><th>Aksi</th></tr></thead>
+              <tbody id="creative-flatlay-body"><tr><td colspan="6" class="empty-state">Belum ada flatlay direkod.</td></tr></tbody>
+            </table>
+          </div>
         </section>
 
         <section class="creative-panel">
           <div class="creative-panel-head"><div><span class="eyebrow">PLATFORM ANALYSIS</span><h3>Analisis Poster Mengikut Platform</h3></div></div>
           <div class="creative-platform-grid" id="creative-platform-analysis"></div>
+        </section>
+      </section>
+
+
+      <section id="creative-tab-planning" class="creative-tab-pane">
+        <div class="creative-planning-head">
+          <div>
+            <span class="eyebrow">MONTHLY CONTENT CALENDAR</span>
+            <h3>Content Planning Creative</h3>
+            <p>Target harian 35 content: HQ 11 + Solusi 11 + Mamayyuu 9 + Manjaratu 1 + YGROW 3.</p>
+          </div>
+          <div class="creative-planning-month">
+            <button class="btn btn-ghost" id="cplan-prev">‹</button>
+            <input type="month" id="cplan-month" value="2026-09">
+            <button class="btn btn-ghost" id="cplan-next">›</button>
+          </div>
+        </div>
+
+        <div class="creative-promo-legend">
+          <span class="promo-double">1–9 Sep · Promo Double Digit</span>
+          <span class="promo-jimat">10–21 Sep · Promo September Lebih Jimat</span>
+          <span class="promo-payday">22–30 Sep · Promo Payday</span>
+        </div>
+
+        <div class="creative-calendar">
+          <div class="creative-calendar-weekdays"><span>Isnin</span><span>Selasa</span><span>Rabu</span><span>Khamis</span><span>Jumaat</span><span>Sabtu</span><span>Ahad</span></div>
+          <div class="creative-calendar-grid" id="creative-calendar-grid"></div>
+        </div>
+
+        <section class="creative-panel">
+          <div class="creative-panel-head">
+            <div><span class="eyebrow">PLANNING TABLE</span><h3>Planning Kerja Creative</h3><p>Untuk Designer, Content Creator dan Editor. Bila siap, letak link hasil kerja dan tukar status.</p></div>
+            <button class="btn btn-primary" id="creative-add-plan">+ Tambah Planning</button>
+          </div>
+          <div class="creative-table-wrap">
+            <table class="tbl sortable-table creative-table">
+              <thead><tr><th>Tarikh</th><th>Team / Role</th><th>Akaun</th><th>Jenis</th><th>Tajuk Planning</th><th>Status</th><th>Link Hasil</th><th>Nota</th><th>Aksi</th></tr></thead>
+              <tbody id="creative-plan-body"><tr><td colspan="9" class="empty-state">Belum ada planning.</td></tr></tbody>
+            </table>
+          </div>
         </section>
       </section>
 
@@ -2314,7 +2368,7 @@ Ahmad	60112223344"></textarea>
           <form id="creative-video-form">
             <div class="creative-form-grid">
               <label>Tarikh<input type="date" id="cv-date" required></label>
-              <label>Akaun<select id="cv-account"><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option></select></label>
+              <label>Akaun<select id="cv-account"><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option><option>YGROW</option></select></label>
               <label>Format<select id="cv-format"><option value="video">Video</option><option value="photoslide">Photo Slide</option></select></label>
               <label>Funnel<select id="cv-funnel"><option>Engagement</option><option>Awareness</option><option>Conversion</option><option>Highlight Live</option><option>Call To Live</option><option>Other</option></select></label>
               <label>Status<select id="cv-status"><option value="belum">Belum Start</option><option value="progress">In Progress</option><option value="posted">Dah Post</option></select></label>
@@ -2341,14 +2395,49 @@ Ahmad	60112223344"></textarea>
           <form id="creative-poster-form">
             <div class="creative-form-grid">
               <label>Tarikh<input type="date" id="cp-date" required></label>
-              <label>Platform<select id="cp-platform"><option>Website</option><option>TikTok</option><option>WhatsApp</option><option>Shopee</option><option>Ecommerce</option></select></label>
+              <label>Platform<select id="cp-platform"><option>Website</option><option>TikTok</option><option>WhatsApp</option><option>Shopee</option><option>Ecommerce</option><option>Packaging</option><option>Sosial Media</option><option>Photoshoot</option></select></label>
               <label>Status<select id="cp-status"><option value="belum">Belum Start</option><option value="progress">In Progress</option><option value="done">Done</option></select></label>
               <label class="creative-form-wide">Tajuk / Request<input type="text" id="cp-title" required></label>
-              <label class="creative-form-wide">Upload Media / Poster Approved<input type="file" id="cp-media" accept="image/*"></label>
-              <div class="creative-poster-preview" id="cp-preview-wrap"><img id="cp-preview"><span>Belum ada media</span></div>
+              <label class="creative-form-wide">Upload Media / Poster Approved (boleh pilih banyak file)<input type="file" id="cp-media" accept="image/*" multiple></label>
+              <div class="creative-poster-gallery" id="cp-preview-wrap"><span>Belum ada media</span></div>
               <label class="creative-form-wide">Nota<textarea id="cp-note" rows="3" placeholder="Contoh: dah sent group WhatsApp"></textarea></label>
             </div>
             <div class="creative-form-actions"><button type="button" class="btn btn-ghost" data-close-modal="creative-poster-modal">Batal</button><button class="btn btn-primary" type="submit">Simpan Poster</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="creative-modal" id="creative-flatlay-modal" aria-hidden="true">
+        <div class="creative-modal-card">
+          <div class="creative-modal-head"><div><span class="eyebrow">FLATLAY</span><h3 id="creative-flatlay-form-title">Tambah Flatlay</h3></div><button type="button" data-close-modal="creative-flatlay-modal">×</button></div>
+          <form id="creative-flatlay-form">
+            <div class="creative-form-grid">
+              <label>Tarikh<input type="date" id="cf-date" required></label>
+              <label>Produk / Kategori<input type="text" id="cf-category" placeholder="Contoh: YGROW"></label>
+              <label class="creative-form-wide">Tajuk<input type="text" id="cf-title" placeholder="Contoh: Flatlay YGROW September" required></label>
+              <label class="creative-form-wide">Link Google Drive<input type="url" id="cf-link" placeholder="https://drive.google.com/..." required></label>
+              <label class="creative-form-wide">Nota<textarea id="cf-note" rows="3"></textarea></label>
+            </div>
+            <div class="creative-form-actions"><button type="button" class="btn btn-ghost" data-close-modal="creative-flatlay-modal">Batal</button><button class="btn btn-primary" type="submit">Simpan Flatlay</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="creative-modal" id="creative-plan-modal" aria-hidden="true">
+        <div class="creative-modal-card">
+          <div class="creative-modal-head"><div><span class="eyebrow">CONTENT PLANNING</span><h3 id="creative-plan-form-title">Tambah Planning</h3></div><button type="button" data-close-modal="creative-plan-modal">×</button></div>
+          <form id="creative-plan-form">
+            <div class="creative-form-grid">
+              <label>Tarikh<input type="date" id="cpl-date" required></label>
+              <label>Team / Role<select id="cpl-role"><option>Designer</option><option>Content Creator</option><option>Editor</option></select></label>
+              <label>Akaun<select id="cpl-account"><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option><option>YGROW</option><option>General</option></select></label>
+              <label>Jenis<select id="cpl-type"><option>Video</option><option>Photo Slide</option><option>Poster</option><option>Thread</option><option>Flatlay</option><option>Editing</option><option>Other</option></select></label>
+              <label>Status<select id="cpl-status"><option value="belum">Belum</option><option value="progress">In Progress</option><option value="done">Done</option></select></label>
+              <label>Link Hasil<input type="url" id="cpl-link" placeholder="TikTok / Drive / Canva / lain-lain"></label>
+              <label class="creative-form-wide">Tajuk Planning<input type="text" id="cpl-title" required placeholder="Contoh: Video conversion YGROW — picky eater"></label>
+              <label class="creative-form-wide">Nota<textarea id="cpl-note" rows="3"></textarea></label>
+            </div>
+            <div class="creative-form-actions"><button type="button" class="btn btn-ghost" data-close-modal="creative-plan-modal">Batal</button><button class="btn btn-primary" type="submit">Simpan Planning</button></div>
           </form>
         </div>
       </div>
@@ -2529,7 +2618,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v49-creative-advanced"></script>
+<script src="js/app.js?v=v50-creative-planner"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
