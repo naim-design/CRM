@@ -7859,3 +7859,51 @@ document.getElementById('creative-plan-body')?.addEventListener('click',async e=
 document.getElementById('cplan-month')?.addEventListener('change',renderCreativePlanning);
 function shiftPlanMonth(delta){const el=document.getElementById('cplan-month');if(!el)return;const [y,m]=el.value.split('-').map(Number),d=new Date(y,m-1+delta,1);el.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;renderCreativePlanning();}
 document.getElementById('cplan-prev')?.addEventListener('click',()=>shiftPlanMonth(-1));document.getElementById('cplan-next')?.addEventListener('click',()=>shiftPlanMonth(1));
+
+
+// ================= V51 TEAM WORKSPACE SWITCHER =================
+const TEAM_WORKSPACE_STORAGE='mamariamTeamWorkspace';
+const TEAM_CRM_DEFAULT_VIEW='dashboard';
+const TEAM_CREATIVE_DEFAULT_VIEW='creative';
+
+function setTeamWorkspace(team, openDefault=true){
+  team = team === 'creative' ? 'creative' : 'crm';
+  try{ localStorage.setItem(TEAM_WORKSPACE_STORAGE,team); }catch(_){}
+  document.body.dataset.teamWorkspace=team;
+
+  document.querySelectorAll('.team-workspace-btn').forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.teamWorkspace===team);
+  });
+  document.querySelectorAll('[data-team-area]').forEach(el=>{
+    el.classList.toggle('team-area-hidden',el.dataset.teamArea!==team);
+  });
+
+  const badge=document.getElementById('workspace-badge');
+  if(badge) badge.textContent=team==='creative'?'Team Creative':'Team CRM';
+
+  if(openDefault){
+    const current=document.querySelector('.view.active');
+    const currentId=current?.id?.replace(/^view-/,'')||'';
+    const allowed = team==='creative'
+      ? currentId===TEAM_CREATIVE_DEFAULT_VIEW
+      : currentId!==TEAM_CREATIVE_DEFAULT_VIEW;
+    if(!allowed){
+      const target=team==='creative'?TEAM_CREATIVE_DEFAULT_VIEW:TEAM_CRM_DEFAULT_VIEW;
+      const btn=document.querySelector(`[data-view="${target}"]`);
+      if(btn) btn.click();
+    }else if(team==='creative'){
+      const btn=document.querySelector('[data-view="creative"]');
+      if(btn && currentId!=='creative') btn.click();
+    }
+  }
+}
+
+document.querySelectorAll('.team-workspace-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>setTeamWorkspace(btn.dataset.teamWorkspace,true));
+});
+
+(function initTeamWorkspace(){
+  let saved='crm';
+  try{ saved=localStorage.getItem(TEAM_WORKSPACE_STORAGE)||'crm'; }catch(_){}
+  setTimeout(()=>setTeamWorkspace(saved,true),80);
+})();
