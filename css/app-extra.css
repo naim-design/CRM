@@ -13176,3 +13176,36 @@ html[data-theme="light"] .seg-stop-section{
 .team-area-hidden{display:none!important}
 body[data-team-workspace="creative"] .team-workspace-switcher{border-color:rgba(100,210,190,.22)}
 body[data-team-workspace="creative"] .team-workspace-btn[data-team-workspace="creative"].active{background:#7259c8;border-color:#8069d5}
+
+/* V52 simple workspace selector */
+.team-workspace-switcher.team-workspace-simple{
+  margin:8px 10px 12px;
+  padding:3px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:3px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:9px;
+  background:rgba(255,255,255,.035);
+}
+.team-workspace-switcher.team-workspace-simple .team-workspace-btn{
+  margin:0;
+  min-height:31px;
+  padding:6px 7px;
+  display:block;
+  text-align:center;
+  border-radius:7px;
+  font-size:8px;
+  font-weight:800;
+  color:#a9c0c4;
+  background:transparent;
+  border:0;
+}
+.team-workspace-switcher.team-workspace-simple .team-workspace-btn.active{
+  color:#fff;
+  background:#08a98f;
+  box-shadow:none;
+}
+body[data-team-workspace="creative"] .team-workspace-switcher.team-workspace-simple .team-workspace-btn[data-team-workspace="creative"].active{
+  background:#7259c8;
+}
