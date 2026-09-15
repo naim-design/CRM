@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v53-workspace-visibility-fix">
+<link rel="stylesheet" href="css/app-extra.css?v=v54-hard-split-nav">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -32,7 +32,8 @@
         <button type="button" class="team-workspace-btn active" data-team-workspace="crm">Team CRM</button>
         <button type="button" class="team-workspace-btn" data-team-workspace="creative">Team Creative</button>
       </div>
-<nav class="app-nav">
+<nav class="app-nav team-nav" id="team-crm-nav" data-workspace-nav="crm">
+
         <button data-view="input" class="active" data-team-area="crm">Input Data</button>
         <button data-view="dashboard" data-team-area="crm">Dashboard</button>
         <button data-view="pageanalytics" data-team-area="crm">Page Analytics</button>
@@ -46,7 +47,6 @@
         <button data-view="wabotcontrol" data-team-area="crm">Wabot Control</button>
         <button data-view="projection" data-team-area="crm">Projection</button>
         <button data-view="planning" data-team-area="crm">Planning</button>
-        <button data-view="creative" data-team-area="creative">Creative</button>
         <button data-view="analyticspro" data-team-area="crm">Analytics Pro</button>
         <div class="nav-group-label">UTILITI</div>
         <button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button>
@@ -56,6 +56,10 @@
         <button data-view="todo" data-team-area="crm">To-Do</button>
         <button data-view="recap" data-team-area="crm">Recap Julai</button>
         <button data-view="salespages" data-team-area="crm">Sales Pages</button>
+      
+      </nav>
+      <nav class="app-nav team-nav" id="team-creative-nav" data-workspace-nav="creative" hidden>
+        <button data-view="creative" data-team-area="creative">Creative</button>
       </nav>
       
       <div class="crm-sidebar-footer-card">
@@ -2276,7 +2280,7 @@ Ahmad	60112223344"></textarea>
         </div>
 
         <section class="creative-panel">
-          <div class="creative-panel-head"><div><span class="eyebrow">DAILY CONTENT STRUCTURE</span><h3>Target Harian 32 Content / 4 Akaun TikTok</h3></div></div>
+          <div class="creative-panel-head"><div><span class="eyebrow">DAILY CONTENT STRUCTURE</span><h3>Target Harian 35 Content / 5 Akaun TikTok</h3></div></div>
           <div class="creative-account-grid" id="creative-account-grid"></div>
         </section>
 
@@ -2623,7 +2627,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v53-workspace-visibility-fix"></script>
+<script src="js/app.js?v=v54-hard-split-nav"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
