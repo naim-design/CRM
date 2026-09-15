@@ -13229,3 +13229,11 @@ body[data-team-workspace="crm"] .app-nav [data-team-area="crm"]{
 body[data-team-workspace="crm"] .app-nav .nav-group-label{
   display:block !important;
 }
+
+/* V54 hard-separated sidebar navs */
+#team-crm-nav,#team-creative-nav{flex-direction:column}
+body[data-team-workspace="crm"] #team-crm-nav{display:flex!important}
+body[data-team-workspace="crm"] #team-creative-nav{display:none!important}
+body[data-team-workspace="creative"] #team-crm-nav{display:none!important}
+body[data-team-workspace="creative"] #team-creative-nav{display:flex!important}
+#team-creative-nav button[data-view="creative"]{display:flex!important}
