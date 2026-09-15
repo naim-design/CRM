@@ -13245,3 +13245,12 @@ body[data-team-workspace="creative"] #view-creative .creative-subtabs{display:no
 .creative-sidebar-sub span{width:14px;text-align:center;opacity:.75}
 .creative-sidebar-sub:hover{background:rgba(255,255,255,.05);color:#fff}
 .creative-sidebar-sub.active{background:rgba(114,89,200,.22);color:#fff}
+
+/* V56 Creative Dashboard */
+.creative-dashboard-hero{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:12px}
+.creative-dashboard-hero h2{margin:3px 0;font-size:20px}.creative-dashboard-hero p{font-size:9px;color:var(--muted);margin:0}
+.creative-dashboard-target{min-width:170px;text-align:center;padding:12px 18px;border-radius:12px;background:rgba(114,89,200,.09);border:1px solid rgba(114,89,200,.2)}
+.creative-dashboard-target small,.creative-dashboard-target span{display:block;font-size:7px;color:var(--muted)}.creative-dashboard-target strong{display:block;font-size:28px;line-height:1.05;color:#7259c8}
+.creative-dashboard-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.creative-dashboard-kpis article{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}.creative-dashboard-kpis small{display:block;font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.creative-dashboard-kpis strong{display:block;font-size:22px;margin:6px 0}.creative-dashboard-kpis span{font-size:7px;color:var(--muted)}
+.creative-dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.creative-mini-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.creative-mini-kpis div{padding:12px;border-radius:9px;background:rgba(100,120,125,.05);border:1px solid var(--line)}.creative-mini-kpis small{display:block;font-size:7px;color:var(--muted)}.creative-mini-kpis b{display:block;font-size:18px;margin-top:4px}
+@media(max-width:900px){.creative-dashboard-kpis{grid-template-columns:repeat(2,1fr)}.creative-dashboard-grid{grid-template-columns:1fr}}@media(max-width:600px){.creative-dashboard-hero{align-items:stretch;flex-direction:column}.creative-mini-kpis{grid-template-columns:1fr 1fr}}
