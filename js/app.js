@@ -7874,19 +7874,18 @@ function setTeamWorkspace(team, openDefault=true){
   document.querySelectorAll('.team-workspace-btn').forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.teamWorkspace===team);
   });
-  document.querySelectorAll('[data-team-area]').forEach(el=>{
-    const shouldHide=el.dataset.teamArea!==team;
-    el.classList.toggle('team-area-hidden',shouldHide);
-    el.hidden=shouldHide;
-    el.style.setProperty('display',shouldHide?'none':'','important');
-    if(!shouldHide) el.style.removeProperty('display');
-  });
-  document.querySelectorAll('.app-nav .nav-group-label').forEach(el=>{
-    const shouldHide=team==='creative';
-    el.hidden=shouldHide;
-    el.style.setProperty('display',shouldHide?'none':'','important');
-    if(!shouldHide) el.style.removeProperty('display');
-  });
+  const crmNav=document.getElementById('team-crm-nav');
+  const creativeNav=document.getElementById('team-creative-nav');
+  if(crmNav){
+    const hide=team!=='crm';
+    crmNav.hidden=hide;
+    crmNav.style.setProperty('display',hide?'none':'flex','important');
+  }
+  if(creativeNav){
+    const hide=team!=='creative';
+    creativeNav.hidden=hide;
+    creativeNav.style.setProperty('display',hide?'none':'flex','important');
+  }
 
   const badge=document.getElementById('workspace-badge');
   if(badge) badge.textContent=team==='creative'?'Team Creative':'Team CRM';
