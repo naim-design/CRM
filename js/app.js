@@ -7781,7 +7781,7 @@ const g=document.getElementById('creative-account-grid');if(g)g.innerHTML=Object
 const body=document.getElementById('creative-video-body');if(body)body.innerHTML=rows.length?[...rows].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r=>{const ins=k=>{const x=r.insights?.[k]||{};return `<span class="creative-insight-mini">V ${cFmt(x.view)} · L ${cFmt(x.like)} · C ${cFmt(x.comment)}</span>`;};return `<tr><td>${r.date||'-'}</td><td><b>${cEsc(r.account||'-')}</b></td><td><span class="creative-type-pill ${r.format==='photoslide'?'poster':'video'}">${r.format==='photoslide'?'Photo Slide / Poster':r.format==='thread'?'Post Thread':'Video'}</span></td><td>${cEsc(r.funnel||'-')}</td><td>${cEsc(r.title||'-')}</td><td><span class="creative-status ${r.status||'belum'}">${r.status==='posted'?'Dah Post':r.status==='progress'?'In Progress':'Belum Start'}</span></td><td>${r.tiktokLink?`<a class="creative-link-btn" href="${cEsc(r.tiktokLink)}" target="_blank" rel="noopener">Buka TikTok ↗</a>`:'–'}</td><td>${ins('h24')}</td><td>${ins('d3')}</td><td>${ins('d7')}</td><td>${ins('d30')}</td><td><button class="creative-action edit" data-cedit="${r.id}">Edit</button><button class="creative-action delete" data-cdelete="${r.id}">Padam</button></td></tr>`;}).join(''):'<tr><td colspan="12" class="empty-state">Belum ada content dalam julat tarikh ini.</td></tr>';
 const s=document.getElementById('creative-insight-summary');if(s)s.innerHTML=[['h24','24 Jam'],['d3','3 Hari'],['d7','7 Hari'],['d30','1 Bulan']].map(([k,l])=>{const d=rows.reduce((a,r)=>{const x=r.insights?.[k]||{};a.v+=+x.view||0;a.l+=+x.like||0;a.c+=+x.comment||0;return a;},{v:0,l:0,c:0});return `<article><span>${l}</span><strong>${cFmt(d.v)} views</strong><small>${cFmt(d.l)} likes · ${cFmt(d.c)} komen</small></article>`;}).join('');}
 function renderCreativePoster(){const rows=cRows('poster');cSet('poster-total-task',rows.length);cSet('poster-done',rows.filter(r=>r.status==='done').length);cSet('poster-progress',rows.filter(r=>r.status==='progress').length);cSet('poster-belum',rows.filter(r=>r.status==='belum').length);const b=document.getElementById('creative-poster-body');if(b)b.innerHTML=rows.length?[...rows].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(r=>{const cls=CREATIVE_PLATFORM_META[r.platform]||'ecommerce';return `<tr><td>${r.date||'-'}</td><td>${(r.mediaFiles?.length||r.mediaData)?`<button class="creative-files-btn" data-files="${r.id}">${r.mediaFiles?.length||1} file · Lihat</button>`:'–'}</td><td><b>${cEsc(r.title||'-')}</b></td><td><span class="creative-platform-pill ${cls}">${cEsc(r.platform||'-')}</span></td><td><span class="creative-status ${r.status||'belum'}">${r.status==='done'?'Done':r.status==='progress'?'In Progress':'Belum Start'}</span></td><td class="creative-note-cell">${cEsc(r.note||'-')}</td><td><button class="creative-action edit" data-pedit="${r.id}">Edit</button><button class="creative-action delete" data-cdelete="${r.id}">Padam</button></td></tr>`;}).join(''):'<tr><td colspan="7" class="empty-state">Belum ada poster dalam julat tarikh ini.</td></tr>';const g=document.getElementById('creative-platform-analysis');if(g)g.innerHTML=Object.entries(CREATIVE_PLATFORM_META).map(([p,c])=>{const x=rows.filter(r=>r.platform===p),d=x.filter(r=>r.status==='done').length,ip=x.filter(r=>r.status==='progress').length,bs=x.filter(r=>r.status==='belum').length;return `<article class="creative-platform-card ${c}"><span>${p}</span><strong>${x.length}</strong><small>Done ${d} · In Progress ${ip} · Belum ${bs}</small></article>`;}).join('');}
-function renderCreativeControl(){renderCreativeVideo();renderCreativePoster();renderCreativeFlatlays();if(typeof initSortableTables==='function')setTimeout(()=>initSortableTables(document),20);}
+function renderCreativeControl(){renderCreativeVideo();renderCreativePoster();renderCreativeFlatlays();renderCreativeDashboard();if(typeof initSortableTables==='function')setTimeout(()=>initSortableTables(document),20);}
 function startCreativeListener(){if(creativeListenerStarted)return;creativeListenerStarted=true;db.collection('creativeTracker').onSnapshot(s=>{creativeRows=s.docs.map(d=>({id:d.id,...d.data()}));renderCreativeControl();},e=>toast('Ralat baca Creative: '+e.message,true));}
 function cOpen(type,id=null){creativeEditingId=id;const r=id?creativeRows.find(x=>x.id===id):null;if(type==='video'){document.getElementById('creative-video-form-title').textContent=r?'Edit Content':'Tambah Content';document.getElementById('cv-date').value=r?.date||cToday();document.getElementById('cv-account').value=r?.account||'HQ';document.getElementById('cv-format').value=r?.format||'video';document.getElementById('cv-funnel').value=r?.funnel||'Engagement';document.getElementById('cv-status').value=r?.status||'belum';document.getElementById('cv-link').value=r?.tiktokLink||'';document.getElementById('cv-title').value=r?.title||'';[['24','h24'],['3','d3'],['7','d7'],['30','d30']].forEach(([p,k])=>['view','like','comment'].forEach(m=>document.getElementById(`cv-${p}-${m}`).value=r?.insights?.[k]?.[m]||0));document.getElementById('creative-video-modal').classList.add('open');}else{creativePosterImageData=r?.mediaData||'';creativePosterImages=Array.isArray(r?.mediaFiles)?[...r.mediaFiles]:(creativePosterImageData?[creativePosterImageData]:[]);document.getElementById('creative-poster-form-title').textContent=r?'Edit Poster':'Tambah Poster';document.getElementById('cp-date').value=r?.date||cToday();document.getElementById('cp-platform').value=r?.platform||'Website';document.getElementById('cp-status').value=r?.status||'belum';document.getElementById('cp-title').value=r?.title||'';document.getElementById('cp-note').value=r?.note||'';cPreview();document.getElementById('creative-poster-modal').classList.add('open');}}
 function cClose(id){document.getElementById(id)?.classList.remove('open');creativeEditingId=null;}
@@ -7916,3 +7916,72 @@ document.querySelectorAll('.team-workspace-btn').forEach(btn=>{
   try{ saved=localStorage.getItem(TEAM_WORKSPACE_STORAGE)||'crm'; }catch(_){}
   setTimeout(()=>setTeamWorkspace(saved,true),80);
 })();
+
+// ================= V55 CREATIVE SIDEBAR SUBMENU =================
+function syncCreativeSidebarSubnav(tab){
+  document.querySelectorAll('[data-creative-sidebar-tab]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.creativeSidebarTab===tab);
+  });
+}
+document.querySelectorAll('[data-creative-sidebar-tab]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tab=btn.dataset.creativeSidebarTab;
+    activateCreativeSection(tab);
+  });
+});
+document.querySelectorAll('[data-creative-tab]').forEach(btn=>{
+  btn.addEventListener('click',()=>syncCreativeSidebarSubnav(btn.dataset.creativeTab));
+});
+
+// ================= V56 CREATIVE DASHBOARD + RELIABLE SIDEBAR =================
+function activateCreativeSection(tab){
+  creativeActiveTab=tab;
+  document.querySelectorAll('.creative-tab-pane').forEach(p=>{
+    p.classList.toggle('active',p.id===`creative-tab-${tab}`);
+  });
+  document.querySelectorAll('[data-creative-sidebar-tab]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.creativeSidebarTab===tab);
+  });
+  document.querySelectorAll('[data-creative-tab]').forEach(b=>{
+    b.classList.toggle('active',b.dataset.creativeTab===tab);
+  });
+  if(tab==='poster' && typeof startCreativeFlatlayListener==='function') startCreativeFlatlayListener();
+  if(tab==='planning'){
+    if(typeof startCreativePlanListener==='function') startCreativePlanListener();
+    if(typeof renderCreativePlanning==='function') renderCreativePlanning();
+  }
+  if(tab==='dashboard') renderCreativeDashboard();
+}
+function renderCreativeDashboard(){
+  const f=document.getElementById('creative-from')?.value||'', t=document.getElementById('creative-to')?.value||'';
+  let days=1;
+  if(f&&t){days=Math.max(1,Math.round((new Date(t+'T00:00:00')-new Date(f+'T00:00:00'))/86400000)+1);}
+  const rows=(creativeRows||[]).filter(r=>(!f||r.date>=f)&&(!t||r.date<=t));
+  const posted=rows.filter(r=>r.status==='posted');
+  const target=35*days, balance=Math.max(0,target-posted.length), pct=target?Math.min(100,Math.round(posted.length/target*100)):0;
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  set('cdash-target',target.toLocaleString()); set('cdash-target-note',`${days} hari × 35 content`);
+  set('cdash-posted',posted.length.toLocaleString()); set('cdash-balance',balance.toLocaleString()); set('cdash-progress',pct+'%');
+  const bar=document.getElementById('cdash-progress-bar'); if(bar)bar.style.width=pct+'%';
+
+  const ag=document.getElementById('cdash-account-grid');
+  if(ag && typeof CREATIVE_ACCOUNT_TARGETS!=='undefined'){
+    ag.innerHTML=Object.entries(CREATIVE_ACCOUNT_TARGETS).map(([name,cfg])=>{
+      const count=posted.filter(r=>r.account===name).length, tar=(cfg.total||0)*days, p=tar?Math.min(100,Math.round(count/tar*100)):0;
+      return `<article class="creative-account-card"><div class="creative-account-card-top"><div><b>${name}</b><span>${count}/${tar} posted</span></div><strong>${p}%</strong></div><div class="creative-progress"><i style="width:${p}%"></i></div><small>Target ${cfg.total} content / hari</small></article>`;
+    }).join('');
+  }
+
+  const posters=rows.filter(r=>r.type==='poster');
+  set('cdash-poster-total',posters.length); set('cdash-poster-done',posters.filter(r=>r.status==='done').length);
+  set('cdash-poster-progress',posters.filter(r=>r.status==='progress').length); set('cdash-poster-belum',posters.filter(r=>!r.status||r.status==='belum').length);
+
+  const plans=(creativePlanRows||[]).filter(r=>(!f||r.date>=f)&&(!t||r.date<=t));
+  set('cdash-plan-total',plans.length); set('cdash-plan-done',plans.filter(r=>r.status==='done').length);
+  set('cdash-plan-progress',plans.filter(r=>r.status==='progress').length); set('cdash-plan-belum',plans.filter(r=>r.status==='belum').length);
+}
+document.querySelectorAll('[data-cdash-go]').forEach(b=>b.addEventListener('click',()=>activateCreativeSection(b.dataset.cdashGo)));
+document.querySelectorAll('.team-workspace-btn[data-team-workspace="creative"]').forEach(btn=>{
+  btn.addEventListener('click',()=>setTimeout(()=>activateCreativeSection('dashboard'),40));
+});
+setTimeout(()=>{if(document.body.dataset.teamWorkspace==='creative')activateCreativeSection('dashboard');},180);
