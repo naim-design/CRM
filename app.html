@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v50-creative-planner">
+<link rel="stylesheet" href="css/app-extra.css?v=v51-team-workspace">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -27,30 +27,42 @@
         <img src="assets/logo-red.png" alt="Mamariam" class="brand-logo brand-logo-red">
         <div class="brand-name">MAMARIAM — DASHBOARD TEAM CRM</div>
       </div>
-      <nav class="app-nav">
-        <button data-view="input" class="active">Input Data</button>
-        <button data-view="dashboard">Dashboard</button>
-        <button data-view="pageanalytics">Page Analytics</button>
-        <button data-view="tiktokleads">TikTok Leads</button>
-        <button data-view="packageanalysis">Pakej Analisis</button>
-        <button data-view="poster">Poster</button>
-        <button data-view="template">Template</button>
-        <button data-view="feedback">Feedback</button>
-        <button data-view="laporan">Laporan</button>
-        <button data-view="wabotlive">Wabot Live</button>
-        <button data-view="wabotcontrol">Wabot Control</button>
-        <button data-view="projection">Projection</button>
-        <button data-view="planning">Planning</button>
-        <button data-view="creative">Creative</button>
-        <button data-view="analyticspro">Analytics Pro</button>
+      
+      <div class="team-workspace-switcher">
+        <div class="team-workspace-label">WORKSPACE</div>
+        <button type="button" class="team-workspace-btn active" data-team-workspace="crm">
+          <span class="team-workspace-icon">▣</span>
+          <span><b>Team CRM</b><small>Blasting & Sales</small></span>
+        </button>
+        <button type="button" class="team-workspace-btn" data-team-workspace="creative">
+          <span class="team-workspace-icon">✦</span>
+          <span><b>Team Creative</b><small>Content & Design</small></span>
+        </button>
+      </div>
+<nav class="app-nav">
+        <button data-view="input" class="active" data-team-area="crm">Input Data</button>
+        <button data-view="dashboard" data-team-area="crm">Dashboard</button>
+        <button data-view="pageanalytics" data-team-area="crm">Page Analytics</button>
+        <button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button>
+        <button data-view="packageanalysis" data-team-area="crm">Pakej Analisis</button>
+        <button data-view="poster" data-team-area="crm">Poster</button>
+        <button data-view="template" data-team-area="crm">Template</button>
+        <button data-view="feedback" data-team-area="crm">Feedback</button>
+        <button data-view="laporan" data-team-area="crm">Laporan</button>
+        <button data-view="wabotlive" data-team-area="crm">Wabot Live</button>
+        <button data-view="wabotcontrol" data-team-area="crm">Wabot Control</button>
+        <button data-view="projection" data-team-area="crm">Projection</button>
+        <button data-view="planning" data-team-area="crm">Planning</button>
+        <button data-view="creative" data-team-area="creative">Creative</button>
+        <button data-view="analyticspro" data-team-area="crm">Analytics Pro</button>
         <div class="nav-group-label">UTILITI</div>
-        <button data-view="campaignmanager">Campaign Manager</button>
-        <button data-view="aiinsight">AI Insight</button>
-        <button data-view="contacts">Database</button>
-        <button data-view="filter">Filter</button>
-        <button data-view="todo">To-Do</button>
-        <button data-view="recap">Recap Julai</button>
-        <button data-view="salespages">Sales Pages</button>
+        <button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button>
+        <button data-view="aiinsight" data-team-area="crm">AI Insight</button>
+        <button data-view="contacts" data-team-area="crm">Database</button>
+        <button data-view="filter" data-team-area="crm">Filter</button>
+        <button data-view="todo" data-team-area="crm">To-Do</button>
+        <button data-view="recap" data-team-area="crm">Recap Julai</button>
+        <button data-view="salespages" data-team-area="crm">Sales Pages</button>
       </nav>
       
       <div class="crm-sidebar-footer-card">
@@ -2618,7 +2630,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v50-creative-planner"></script>
+<script src="js/app.js?v=v51-team-workspace"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
