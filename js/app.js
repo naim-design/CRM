@@ -7875,7 +7875,17 @@ function setTeamWorkspace(team, openDefault=true){
     btn.classList.toggle('active',btn.dataset.teamWorkspace===team);
   });
   document.querySelectorAll('[data-team-area]').forEach(el=>{
-    el.classList.toggle('team-area-hidden',el.dataset.teamArea!==team);
+    const shouldHide=el.dataset.teamArea!==team;
+    el.classList.toggle('team-area-hidden',shouldHide);
+    el.hidden=shouldHide;
+    el.style.setProperty('display',shouldHide?'none':'','important');
+    if(!shouldHide) el.style.removeProperty('display');
+  });
+  document.querySelectorAll('.app-nav .nav-group-label').forEach(el=>{
+    const shouldHide=team==='creative';
+    el.hidden=shouldHide;
+    el.style.setProperty('display',shouldHide?'none':'','important');
+    if(!shouldHide) el.style.removeProperty('display');
   });
 
   const badge=document.getElementById('workspace-badge');
