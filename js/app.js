@@ -7963,7 +7963,10 @@ function renderCreativeDashboard(){
   const f=document.getElementById('creative-from')?.value||'', t=document.getElementById('creative-to')?.value||'';
   let days=1;
   if(f&&t){days=Math.max(1,Math.round((new Date(t+'T00:00:00')-new Date(f+'T00:00:00'))/86400000)+1);}
-  const rows=(creativeRows||[]).filter(r=>(!f||r.date>=f)&&(!t||r.date<=t));
+  const rows=(creativeRows||[]).filter(r=>{
+    const d=r.date||r.requestDate||r.createdDate||'';
+    return (!f||!d||d>=f)&&(!t||!d||d<=t);
+  });
   const posted=rows.filter(r=>r.status==='posted');
   const target=35*days, balance=Math.max(0,target-posted.length), pct=target?Math.min(100,Math.round(posted.length/target*100)):0;
   const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
@@ -7979,9 +7982,17 @@ function renderCreativeDashboard(){
     }).join('');
   }
 
-  const posters=rows.filter(r=>r.type==='poster');
-  set('cdash-poster-total',posters.length); set('cdash-poster-done',posters.filter(r=>r.status==='done').length);
-  set('cdash-poster-progress',posters.filter(r=>r.status==='progress').length); set('cdash-poster-belum',posters.filter(r=>!r.status||r.status==='belum').length);
+  const posters=rows.filter(r=>r.kind==='poster'||r.type==='poster'||r.recordType==='poster');
+  const normPosterStatus=r=>{
+    const s=String(r.status||'').trim().toLowerCase().replace(/[ _-]+/g,'');
+    if(['done','siap','completed','complete'].includes(s))return 'done';
+    if(['progress','inprogress','sedangbuat','ongoing'].includes(s))return 'progress';
+    return 'belum';
+  };
+  set('cdash-poster-total',posters.length);
+  set('cdash-poster-done',posters.filter(r=>normPosterStatus(r)==='done').length);
+  set('cdash-poster-progress',posters.filter(r=>normPosterStatus(r)==='progress').length);
+  set('cdash-poster-belum',posters.filter(r=>normPosterStatus(r)==='belum').length);
 
   const plans=(creativePlanRows||[]).filter(r=>(!f||r.date>=f)&&(!t||r.date<=t));
   set('cdash-plan-total',plans.length); set('cdash-plan-done',plans.filter(r=>r.status==='done').length);
