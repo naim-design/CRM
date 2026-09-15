@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v55-creative-sidebar-submenu">
+<link rel="stylesheet" href="css/app-extra.css?v=v56-creative-dashboard-fix2">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -61,7 +61,8 @@
       <nav class="app-nav team-nav" id="team-creative-nav" data-workspace-nav="creative" hidden>
         <button data-view="creative" data-team-area="creative">Creative</button>
         <div class="creative-sidebar-subnav">
-          <button type="button" class="creative-sidebar-sub active" data-creative-sidebar-tab="video"><span>▶</span> Video</button>
+          <button type="button" class="creative-sidebar-sub active" data-creative-sidebar-tab="dashboard"><span>⌂</span> Dashboard Creative</button>
+          <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="video"><span>▶</span> Video</button>
           <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="poster"><span>▧</span> Poster / Designer</button>
           <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="planning"><span>▦</span> Content Planning</button>
         </div>
@@ -2276,7 +2277,34 @@ Ahmad	60112223344"></textarea>
         </div>
       </div>
 
-      <section id="creative-tab-video" class="creative-tab-pane active">
+      <section id="creative-tab-dashboard" class="creative-tab-pane active">
+        <div class="creative-dashboard-hero">
+          <div><span class="eyebrow">CREATIVE CONTROL CENTER</span><h2>Dashboard Creative</h2><p>Ringkasan keseluruhan Video, Poster / Designer dan Content Planning Creative.</p></div>
+          <div class="creative-dashboard-target"><small>TARGET HARIAN</small><strong>35</strong><span>content / 5 akaun TikTok</span></div>
+        </div>
+        <div class="creative-dashboard-kpis">
+          <article><small>Target Content</small><strong id="cdash-target">0</strong><span id="cdash-target-note">–</span></article>
+          <article><small>Dah Dipost</small><strong id="cdash-posted">0</strong><span>Semua content TikTok</span></article>
+          <article><small>Baki Perlu Capai</small><strong id="cdash-balance">0</strong><span>Target − dah dipost</span></article>
+          <article><small>Progress</small><strong id="cdash-progress">0%</strong><div class="creative-progress"><i id="cdash-progress-bar" style="width:0%"></i></div></article>
+        </div>
+        <section class="creative-panel">
+          <div class="creative-panel-head"><div><span class="eyebrow">VIDEO & CONTENT</span><h3>Progress 5 Akaun TikTok</h3></div><button class="btn btn-ghost" type="button" data-cdash-go="video">Buka Video →</button></div>
+          <div id="cdash-account-grid" class="creative-account-grid"></div>
+        </section>
+        <div class="creative-dashboard-grid">
+          <section class="creative-panel">
+            <div class="creative-panel-head"><div><span class="eyebrow">DESIGNER</span><h3>Poster / Designer</h3></div><button class="btn btn-ghost" type="button" data-cdash-go="poster">Buka Poster →</button></div>
+            <div class="creative-mini-kpis"><div><small>Total Task</small><b id="cdash-poster-total">0</b></div><div><small>Done</small><b id="cdash-poster-done">0</b></div><div><small>In Progress</small><b id="cdash-poster-progress">0</b></div><div><small>Belum Start</small><b id="cdash-poster-belum">0</b></div></div>
+          </section>
+          <section class="creative-panel">
+            <div class="creative-panel-head"><div><span class="eyebrow">CONTENT PLANNING</span><h3>Planning Team Creative</h3></div><button class="btn btn-ghost" type="button" data-cdash-go="planning">Buka Planning →</button></div>
+            <div class="creative-mini-kpis"><div><small>Total Planning</small><b id="cdash-plan-total">0</b></div><div><small>Done</small><b id="cdash-plan-done">0</b></div><div><small>In Progress</small><b id="cdash-plan-progress">0</b></div><div><small>Belum</small><b id="cdash-plan-belum">0</b></div></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="creative-tab-video" class="creative-tab-pane">
         <div class="creative-overview-grid">
           <article class="creative-overview-card"><span>TARGET CONTENT</span><strong id="creative-target-all">0</strong><small id="creative-target-period">Target ikut julat tarikh</small></article>
           <article class="creative-overview-card"><span>DAH DIPOST</span><strong id="creative-posted-all">0</strong><small>Video + photoslide</small></article>
@@ -2632,7 +2660,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v55-creative-sidebar-submenu"></script>
+<script src="js/app.js?v=v56-creative-dashboard-fix2"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
