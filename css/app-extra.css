@@ -13237,3 +13237,11 @@ body[data-team-workspace="crm"] #team-creative-nav{display:none!important}
 body[data-team-workspace="creative"] #team-crm-nav{display:none!important}
 body[data-team-workspace="creative"] #team-creative-nav{display:flex!important}
 #team-creative-nav button[data-view="creative"]{display:flex!important}
+
+/* V55 Creative sub-tabs moved into sidebar */
+body[data-team-workspace="creative"] #view-creative .creative-subtabs{display:none!important}
+.creative-sidebar-subnav{display:flex;flex-direction:column;gap:3px;margin:3px 7px 8px 19px;padding-left:9px;border-left:1px solid rgba(255,255,255,.12)}
+.creative-sidebar-sub{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;color:#9fb8bd;text-align:left;padding:8px 9px;border-radius:8px;font-size:8px;font-weight:700;cursor:pointer}
+.creative-sidebar-sub span{width:14px;text-align:center;opacity:.75}
+.creative-sidebar-sub:hover{background:rgba(255,255,255,.05);color:#fff}
+.creative-sidebar-sub.active{background:rgba(114,89,200,.22);color:#fff}
