@@ -13209,3 +13209,23 @@ body[data-team-workspace="creative"] .team-workspace-btn[data-team-workspace="cr
 body[data-team-workspace="creative"] .team-workspace-switcher.team-workspace-simple .team-workspace-btn[data-team-workspace="creative"].active{
   background:#7259c8;
 }
+
+/* V53 definitive Team CRM / Team Creative sidebar visibility */
+body[data-team-workspace="creative"] .app-nav [data-team-area="crm"]{
+  display:none !important;
+}
+body[data-team-workspace="creative"] .app-nav .nav-group-label{
+  display:none !important;
+}
+body[data-team-workspace="creative"] .app-nav [data-team-area="creative"]{
+  display:flex !important;
+}
+body[data-team-workspace="crm"] .app-nav [data-team-area="creative"]{
+  display:none !important;
+}
+body[data-team-workspace="crm"] .app-nav [data-team-area="crm"]{
+  display:flex !important;
+}
+body[data-team-workspace="crm"] .app-nav .nav-group-label{
+  display:block !important;
+}
