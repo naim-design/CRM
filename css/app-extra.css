@@ -13254,3 +13254,61 @@ body[data-team-workspace="creative"] #view-creative .creative-subtabs{display:no
 .creative-dashboard-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.creative-dashboard-kpis article{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}.creative-dashboard-kpis small{display:block;font-size:7px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.creative-dashboard-kpis strong{display:block;font-size:22px;margin:6px 0}.creative-dashboard-kpis span{font-size:7px;color:var(--muted)}
 .creative-dashboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.creative-mini-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.creative-mini-kpis div{padding:12px;border-radius:9px;background:rgba(100,120,125,.05);border:1px solid var(--line)}.creative-mini-kpis small{display:block;font-size:7px;color:var(--muted)}.creative-mini-kpis b{display:block;font-size:18px;margin-top:4px}
 @media(max-width:900px){.creative-dashboard-kpis{grid-template-columns:repeat(2,1fr)}.creative-dashboard-grid{grid-template-columns:1fr}}@media(max-width:600px){.creative-dashboard-hero{align-items:stretch;flex-direction:column}.creative-mini-kpis{grid-template-columns:1fr 1fr}}
+
+
+/* =========================================================
+   V59 CREATIVE COLOR IDENTITY
+   Setiap akaun TikTok & platform designer ada identiti warna.
+   ========================================================= */
+
+/* TikTok account cards */
+.creative-account-card{
+  position:relative;
+  overflow:hidden;
+  border-top:4px solid var(--line);
+  transition:transform .16s ease,box-shadow .16s ease;
+}
+.creative-account-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(15,40,45,.08)}
+.creative-account-card::after{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.055;
+  background:linear-gradient(135deg,currentColor,transparent 55%);
+}
+.creative-account-card.acc-hq{border-top-color:#16a6d9;color:#087da5;background:linear-gradient(180deg,rgba(22,166,217,.10),var(--surface) 48%)}
+.creative-account-card.acc-solusi{border-top-color:#7357d8;color:#6247c4;background:linear-gradient(180deg,rgba(115,87,216,.10),var(--surface) 48%)}
+.creative-account-card.acc-mamayyuu{border-top-color:#e75b91;color:#c53f76;background:linear-gradient(180deg,rgba(231,91,145,.10),var(--surface) 48%)}
+.creative-account-card.acc-manjaratu{border-top-color:#e89b35;color:#bd7214;background:linear-gradient(180deg,rgba(232,155,53,.11),var(--surface) 48%)}
+.creative-account-card.acc-ygrow{border-top-color:#32a868;color:#23804d;background:linear-gradient(180deg,rgba(50,168,104,.11),var(--surface) 48%)}
+.creative-account-card .creative-account-card-top b{color:var(--text)}
+.creative-account-card .creative-account-card-top span,
+.creative-account-card > small{color:var(--muted)}
+.creative-account-card.acc-hq .creative-progress i{background:#16a6d9}
+.creative-account-card.acc-solusi .creative-progress i{background:#7357d8}
+.creative-account-card.acc-mamayyuu .creative-progress i{background:#e75b91}
+.creative-account-card.acc-manjaratu .creative-progress i{background:#e89b35}
+.creative-account-card.acc-ygrow .creative-progress i{background:#32a868}
+
+/* Designer platform pills + analysis cards: stronger visual distinction */
+.creative-platform-pill.website{background:#d84b4b}
+.creative-platform-pill.tiktok{background:#171717}
+.creative-platform-pill.whatsapp{background:#20a96b}
+.creative-platform-pill.shopee{background:#ee7425}
+.creative-platform-pill.ecommerce{background:#3478d4}
+.creative-platform-pill.packaging{background:#7b5bc7}
+.creative-platform-pill.socialmedia{background:#d95592}
+.creative-platform-pill.photoshoot{background:#607d8b}
+
+.creative-platform-card{position:relative;overflow:hidden;border-top-width:4px!important}
+.creative-platform-card.website{border-top-color:#d84b4b;background:linear-gradient(180deg,rgba(216,75,75,.10),var(--surface) 55%)}
+.creative-platform-card.tiktok{border-top-color:#171717;background:linear-gradient(180deg,rgba(20,20,20,.08),var(--surface) 55%)}
+.creative-platform-card.whatsapp{border-top-color:#20a96b;background:linear-gradient(180deg,rgba(32,169,107,.10),var(--surface) 55%)}
+.creative-platform-card.shopee{border-top-color:#ee7425;background:linear-gradient(180deg,rgba(238,116,37,.11),var(--surface) 55%)}
+.creative-platform-card.ecommerce{border-top-color:#3478d4;background:linear-gradient(180deg,rgba(52,120,212,.10),var(--surface) 55%)}
+.creative-platform-card.packaging{border-top-color:#7b5bc7;background:linear-gradient(180deg,rgba(123,91,199,.10),var(--surface) 55%)}
+.creative-platform-card.socialmedia{border-top-color:#d95592;background:linear-gradient(180deg,rgba(217,85,146,.10),var(--surface) 55%)}
+.creative-platform-card.photoshoot{border-top-color:#607d8b;background:linear-gradient(180deg,rgba(96,125,139,.11),var(--surface) 55%)}
+
+/* Dashboard Designer / Planning status KPI differentiation */
+.creative-dashboard-grid .creative-mini-kpis div:nth-child(1){border-top:3px solid #3478d4;background:rgba(52,120,212,.055)}
+.creative-dashboard-grid .creative-mini-kpis div:nth-child(2){border-top:3px solid #20a96b;background:rgba(32,169,107,.055)}
+.creative-dashboard-grid .creative-mini-kpis div:nth-child(3){border-top:3px solid #e89b35;background:rgba(232,155,53,.06)}
+.creative-dashboard-grid .creative-mini-kpis div:nth-child(4){border-top:3px solid #d84b4b;background:rgba(216,75,75,.055)}
