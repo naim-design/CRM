@@ -13312,3 +13312,55 @@ body[data-team-workspace="creative"] #view-creative .creative-subtabs{display:no
 .creative-dashboard-grid .creative-mini-kpis div:nth-child(2){border-top:3px solid #20a96b;background:rgba(32,169,107,.055)}
 .creative-dashboard-grid .creative-mini-kpis div:nth-child(3){border-top:3px solid #e89b35;background:rgba(232,155,53,.06)}
 .creative-dashboard-grid .creative-mini-kpis div:nth-child(4){border-top:3px solid #d84b4b;background:rgba(216,75,75,.055)}
+
+/* V60 - Content Planning: larger presentation-friendly calendar text */
+#creative-tab-planning .creative-calendar,
+#creative-tab-planning #creative-calendar-grid { font-size: 12px !important; }
+
+#creative-tab-planning .creative-calendar-weekday,
+#creative-tab-planning .calendar-weekday {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+#creative-tab-planning .creative-calendar-day,
+#creative-tab-planning .calendar-day,
+#creative-tab-planning #creative-calendar-grid > * {
+  min-height: 185px !important;
+  padding: 10px !important;
+}
+
+#creative-tab-planning .day-number,
+#creative-tab-planning .calendar-day > b,
+#creative-tab-planning .creative-calendar-day > b,
+#creative-tab-planning #creative-calendar-grid > * > b {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+}
+
+#creative-tab-planning .promo-name,
+#creative-tab-planning .calendar-day strong,
+#creative-tab-planning .creative-calendar-day strong {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+}
+
+#creative-tab-planning .calendar-day small,
+#creative-tab-planning .creative-calendar-day small,
+#creative-tab-planning #creative-calendar-grid small {
+  font-size: 9px !important;
+  line-height: 1.5 !important;
+}
+
+#creative-tab-planning .creative-calendar-legend,
+#creative-tab-planning .calendar-legend {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+
+#creative-tab-planning .creative-calendar-legend span,
+#creative-tab-planning .calendar-legend span {
+  padding: 7px 11px !important;
+}
