@@ -7484,12 +7484,17 @@ function renderRefTrend(){
     d.setDate(today.getDate()-i);
     const ds = d.toISOString().slice(0,10);
     const dayRows = rows.filter(r => r.tarikh === ds);
+    const sales = dayRows.reduce((s,r)=>s+Number(r.sales||0),0);
+    const sent = dayRows.reduce((s,r)=>s+Number(r.sent||0),0);
+    const cost = costRM(sent);
     points.push({
       date: ds,
-      sales: dayRows.reduce((s,r)=>s+Number(r.sales||0),0),
-      sent: dayRows.reduce((s,r)=>s+Number(r.sent||0),0),
+      sales,
+      sent,
       reply: dayRows.reduce((s,r)=>s+Number(r.reply||0),0),
-      buyer: dayRows.reduce((s,r)=>s+Number(r.buyer||0),0)
+      buyer: dayRows.reduce((s,r)=>s+Number(r.buyer||0),0),
+      cost,
+      roi: cost ? (sales-cost)/cost : null
     });
   }
 
@@ -7528,7 +7533,24 @@ function renderRefTrend(){
     }
   });
 
-  wrap.innerHTML=`<svg class="ref-trend-svg" viewBox="0 0 ${W} ${H}" role="img">${grid}${lines}${labels}</svg>`;
+  // Make daily Sales obvious on the chart instead of requiring hover.
+  let salesValueLabels='';
+  points.forEach((p,i)=>{
+    if(!p.sales) return;
+    const yy=Math.max(T+11,y(p.sales)-9);
+    salesValueLabels+=`<text x="${x(i)}" y="${yy}" text-anchor="middle" class="ref-sales-value">RM${Number(p.sales).toLocaleString('en-MY',{maximumFractionDigits:0})}</text>`;
+  });
+
+  const dailyCards=points.map(p=>{
+    const d=new Date(p.date+'T12:00:00');
+    const dateLabel=`${d.getDate()}/${d.getMonth()+1}`;
+    const salesLabel=`RM ${Number(p.sales||0).toLocaleString('en-MY',{maximumFractionDigits:2})}`;
+    const roiLabel=p.roi===null?'–':`${p.roi.toFixed(2)}x`;
+    const roiClass=p.roi===null?'none':(p.roi>=0?'positive':'negative');
+    return `<div class="ref-trend-day-card"><span class="date">${dateLabel}</span><strong>${salesLabel}</strong><span class="roi ${roiClass}">ROI ${roiLabel}</span><small>Sent ${Number(p.sent||0).toLocaleString('en-MY')}</small></div>`;
+  }).join('');
+
+  wrap.innerHTML=`<svg class="ref-trend-svg" viewBox="0 0 ${W} ${H}" role="img">${grid}${lines}${salesValueLabels}${labels}</svg><div class="ref-trend-daily-breakdown">${dailyCards}</div>`;
 }
 
 function refDetectChannel(source){
@@ -8066,9 +8088,34 @@ document.querySelectorAll('.team-workspace-btn[data-team-workspace="creative"]')
 setTimeout(()=>{if(document.body.dataset.teamWorkspace==='creative')activateCreativeSection('dashboard');},180);
 
 
-/* ================= V65 PRICING CALCULATOR ================= */
-document.addEventListener("click", function(e){
-  const btn = e.target && e.target.closest ? e.target.closest("#pricing-open-new") : null;
-  if(!btn) return;
-  window.open("tools/pricing-calculator.html", "_blank", "noopener");
-});
+
+
+/* ================= V67 NATIVE PRICING CALCULATOR ================= */
+(()=>{
+const KEY='mamariam-crm-pricing-v67';
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const n=v=>Number.isFinite(parseFloat(v))?parseFloat(v):0;
+const rm=v=>'RM '+Number(v||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct=v=>(Number(v||0)*100).toFixed(1)+'%'; const x=v=>Number(v||0).toFixed(2)+'x';
+function calcDefault(){return {settings:{cost:10,pack:0,tag:100,rrp:20},tag:'',notes:'Tidak termasuk Caj COD.\nFree postage untuk online / cash transfer.',packages:[{name:'A',units:1,postage:7,cod:0,freegift:0,selling:100,promo:100},{name:'B',units:2,postage:7,cod:0,freegift:0,selling:180,promo:180},{name:'C',units:3,postage:7,cod:0,freegift:0,selling:250,promo:250}]};}
+function product(name){return {id:'p'+Date.now()+Math.random().toString(16).slice(2),name,current:calcDefault(),versions:[]};}
+function fresh(){const a=product('Produk A'),b=product('Produk B'),c=product('Produk C');return {products:[a,b,c],activeId:a.id};}
+let S;try{S=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){S=fresh()} if(!S.products?.length)S=fresh(); if(!S.products.some(p=>p.id===S.activeId))S.activeId=S.products[0].id;
+const A=()=>S.products.find(p=>p.id===S.activeId), C=()=>A().current;
+function save(){localStorage.setItem(KEY,JSON.stringify(S));}
+function rows(){const s=C().settings,ratio=(s.rrp/100)||.2;const a=C().packages.map(p=>{const unitTotal=s.cost*p.units,comboCost=unitTotal+s.pack,totalCost=comboCost+p.postage+p.cod+p.freegift,origTag=s.tag*p.units,rrp=totalCost/ratio,margin=p.promo-totalCost,marginPct=p.promo?margin/p.promo:0,roi=totalCost?margin/totalCost:0,avgSet=p.units?p.promo/p.units:0,discount=origTag-p.promo,discountPct=origTag?discount/origTag:0,bepRoas=margin?p.promo/margin:0;return {...p,unitTotal,comboCost,totalCost,origTag,rrp,margin,marginPct,roi,avgSet,discount,discountPct,bepRoas}});a.forEach((r,i)=>r.pkgDiff=i?r.promo-a[i-1].promo:null);return a}
+const defs=()=>[['INPUTS','section'],['Units / package','input','units',1],['Postage (RM)','input','postage','.01'],['COD (RM)','input','cod','.01'],['Freegift (RM)','input','freegift','.01'],['Selling price (RM)','input','selling','.01'],['Promo price (RM)','input','promo','.01'],['COSTS','section'],['Unit total cost','calc','unitTotal',rm],['Combo cost','calc','comboCost',rm],['Total cost','calc','totalCost',rm,'key'],['PRICING','section'],['Original price tag','calc','origTag',rm],['RRP','calc','rrp',rm],['Avg price / set','calc','avgSet',rm],['Discount','calc','discount',rm],['Discount %','calc','discountPct',pct],['Package diff','calc','pkgDiff',v=>v==null?'—':rm(v)],['PROFITABILITY','section'],['Margin','calc','margin',rm,'key'],['Margin %','calc','marginPct',pct,'margin'],['ROI','calc','roi',x],['BEP ROAS','calc','bepRoas',x]];
+function render(){if(!document.getElementById('pc-table'))return; const a=A(),c=C(),s=c.settings;
+document.getElementById('pc-products').innerHTML=S.products.map(p=>`<button class="pc-prod ${p.id===S.activeId?'active':''}" data-pc-product="${p.id}">${esc(p.name)}${S.products.length>1?`<span data-pc-delete="${p.id}">×</span>`:''}</button>`).join('');
+document.getElementById('pc-product-name').value=a.name;document.getElementById('pc-tag').value=c.tag||'';document.getElementById('pc-cost').value=s.cost;document.getElementById('pc-pack').value=s.pack;document.getElementById('pc-price-tag').value=s.tag;document.getElementById('pc-rrp').value=s.rrp;document.getElementById('pc-notes').value=c.notes||'';
+document.getElementById('pc-versions').innerHTML=a.versions.length?a.versions.slice().reverse().map(v=>`<div class="pc-version"><b>${esc(v.label)}</b><small>${new Date(v.savedAt).toLocaleString('en-MY')}</small><div><button data-pc-load="${v.id}">Load</button><button data-pc-vdelete="${v.id}">Delete</button></div></div>`).join(''):'<small class="pc-empty">Belum ada version.</small>';
+const R=rows(),P=c.packages;let t='<thead><tr><th>Items / Variations</th>'+P.map((p,i)=>`<th><input class="pc-pkg-name" data-pc-i="${i}" value="${esc(p.name)}"></th>`).join('')+'</tr></thead><tbody>';
+if(P.length>1)t+='<tr><td>remove</td>'+P.map((p,i)=>`<td><button class="pc-x" data-pc-remove="${i}">×</button></td>`).join('')+'</tr>';
+defs().forEach(d=>{if(d[1]==='section'){t+=`<tr class="pc-section"><td>${d[0]}</td><td colspan="${P.length}"></td></tr>`;return}t+=`<tr class="${d[4]==='key'?'pc-key':''}"><td>${d[0]}</td>`;R.forEach((r,i)=>{if(d[1]==='input')t+=`<td><input type="number" step="${d[3]}" data-pc-field="${d[2]}" data-pc-i="${i}" value="${r[d[2]]}"></td>`;else{const v=r[d[2]],cl=d[4]==='margin'?(v>=.5?'pc-good':v<.2?'pc-warn':''):'';t+=`<td class="${cl}">${d[3](v)}</td>`}});t+='</tr>'});document.getElementById('pc-table').innerHTML=t+'</tbody>';
+document.getElementById('pc-pricing').innerHTML=`<div class="pc-price-head"><b>Senarai Harga · ${esc(a.name)}</b><span>${esc(c.tag||'')} Finalized pricing (promo)</span></div><table><thead><tr><th>Pakej</th><th>Unit Combo</th><th>Jimat</th><th>Harga</th></tr></thead><tbody>${R.map(r=>`<tr><td><b>${esc(r.name)}</b></td><td>${r.units} unit</td><td>${r.discount>0?'jimat '+rm(r.discount)+' ('+pct(r.discountPct)+')':'—'}</td><td><b>${rm(r.promo)}</b></td></tr>`).join('')}</tbody></table>`;}
+function commit(){save();render()}
+document.addEventListener('click',e=>{const q=s=>e.target.closest(s);let el;if(el=q('[data-pc-product]')){S.activeId=el.dataset.pcProduct;commit()}else if(el=q('[data-pc-delete]')){e.stopPropagation();if(confirm('Padam produk ini?')){S.products=S.products.filter(p=>p.id!==el.dataset.pcDelete);S.activeId=S.products[0].id;commit()}}else if(el=q('[data-pc-remove]')){C().packages.splice(+el.dataset.pcRemove,1);commit()}else if(e.target.id==='pc-add-package'){const p=C().packages,last=p[p.length-1]||{name:'A',units:0,postage:7,cod:0,freegift:0,selling:0,promo:0};p.push({...last,name:String.fromCharCode(Math.min(90,(last.name.charCodeAt(0)||64)+1)),units:last.units+1});commit()}else if(e.target.id==='pc-add-product'){const p=product('Produk '+String.fromCharCode(65+(S.products.length%26)));S.products.push(p);S.activeId=p.id;commit()}else if(e.target.id==='pc-version-save'||e.target.id==='pc-save-version'){const inp=document.getElementById('pc-version-label'),label=inp.value.trim()||'Version '+(A().versions.length+1);A().versions.push({id:'v'+Date.now(),label,savedAt:new Date().toISOString(),data:JSON.parse(JSON.stringify(C()))});inp.value='';commit()}else if(el=q('[data-pc-load]')){const v=A().versions.find(v=>v.id===el.dataset.pcLoad);if(v&&confirm('Load version ini?')){A().current=JSON.parse(JSON.stringify(v.data));commit()}}else if(el=q('[data-pc-vdelete]')){A().versions=A().versions.filter(v=>v.id!==el.dataset.pcVdelete);commit()}else if(e.target.id==='pc-print'){window.print()}});
+document.addEventListener('change',e=>{if(e.target.matches('[data-pc-field]')){C().packages[+e.target.dataset.pcI][e.target.dataset.pcField]=n(e.target.value);commit()}else if(e.target.matches('.pc-pkg-name')){C().packages[+e.target.dataset.pcI].name=e.target.value;commit()}else if(e.target.id==='pc-product-name'){A().name=e.target.value.trim()||A().name;commit()}else if(e.target.id==='pc-tag'){C().tag=e.target.value;commit()}else if(e.target.id==='pc-notes'){C().notes=e.target.value;commit()}});
+[['pc-cost','cost'],['pc-pack','pack'],['pc-price-tag','tag'],['pc-rrp','rrp']].forEach(([id,k])=>document.addEventListener('input',e=>{if(e.target.id===id){C().settings[k]=n(e.target.value);save();render()}}));
+window.addEventListener('DOMContentLoaded',render); setTimeout(render,300);
+})();
