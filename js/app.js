@@ -8063,3 +8063,11 @@ document.querySelectorAll('.team-workspace-btn[data-team-workspace="creative"]')
   btn.addEventListener('click',()=>setTimeout(()=>activateCreativeSection('dashboard'),40));
 });
 setTimeout(()=>{if(document.body.dataset.teamWorkspace==='creative')activateCreativeSection('dashboard');},180);
+
+
+/* ================= V65 PRICING CALCULATOR ================= */
+document.addEventListener("click", function(e){
+  const btn = e.target && e.target.closest ? e.target.closest("#pricing-open-new") : null;
+  if(!btn) return;
+  window.open("tools/pricing-calculator.html", "_blank", "noopener");
+});
