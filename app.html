@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v63-poster-multifile">
+<link rel="stylesheet" href="css/app-extra.css?v=v64-creative-analytics">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -65,6 +65,7 @@
           <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="video"><span>▶</span> Video</button>
           <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="poster"><span>▧</span> Poster / Designer</button>
           <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="planning"><span>▦</span> Content Planning</button>
+          <button type="button" class="creative-sidebar-sub" data-creative-sidebar-tab="analytics"><span>◈</span> Analytics</button>
         </div>
       </nav>
       
@@ -2261,6 +2262,7 @@ Ahmad	60112223344"></textarea>
         <button class="active" data-creative-tab="video">Video</button>
         <button data-creative-tab="poster">Poster / Designer</button>
         <button data-creative-tab="planning">Content Planning Creative</button>
+        <button data-creative-tab="analytics">Analytics</button>
       </div>
 
       <div class="creative-rangebar">
@@ -2403,6 +2405,21 @@ Ahmad	60112223344"></textarea>
           </div>
         </section>
       </section>
+
+      <section id="creative-tab-analytics" class="creative-tab-pane">
+        <div class="creative-analytics-hero"><div><span class="eyebrow">DAILY SOCIAL PERFORMANCE</span><h3>Creative Analytics</h3><p>Team update follower, komen dan bukti screenshot setiap hari untuk setiap akaun TikTok.</p></div><button class="btn btn-primary" id="creative-add-analytics">+ Update Hari Ini</button></div>
+        <div class="creative-analytics-kpis">
+          <article><small>REKOD HARIAN</small><strong id="ca-total">0</strong><span>Update dalam julat tarikh</span></article>
+          <article><small>FOLLOWER TERKINI</small><strong id="ca-followers">0</strong><span>Jumlah follower latest semua akaun</span></article>
+          <article><small>FOLLOWER BERTAMBAH</small><strong id="ca-growth">+0</strong><span>Pertambahan dalam tempoh</span></article>
+          <article><small>TOTAL KOMEN</small><strong id="ca-comments">0</strong><span>Komen direkod dalam tempoh</span></article>
+          <article><small>BUKTI UPLOAD</small><strong id="ca-proof">0</strong><span>Rekod dengan screenshot</span></article>
+        </div>
+        <section class="creative-panel"><div class="creative-panel-head"><div><span class="eyebrow">ACCOUNT SNAPSHOT</span><h3>Prestasi 5 Akaun TikTok</h3><p>Warna akaun sama seperti Dashboard Creative.</p></div></div><div id="ca-account-grid" class="creative-account-grid"></div></section>
+        <section class="creative-panel"><div class="creative-panel-head"><div><span class="eyebrow">DAILY LOG</span><h3>Update Harian Team Creative</h3><p>Klik bukti untuk tengok screenshot. Data boleh edit atau padam.</p></div></div><div class="creative-table-wrap"><table class="tbl sortable-table creative-table"><thead><tr><th>Tarikh</th><th>Akaun</th><th>Follower</th><th>+ Follower</th><th>Komen</th><th>Bukti</th><th>Nota</th><th>Aksi</th></tr></thead><tbody id="ca-body"><tr><td colspan="8" class="empty-state">Belum ada update analytics.</td></tr></tbody></table></div></section>
+      </section>
+
+      <div class="creative-modal" id="creative-analytics-modal" aria-hidden="true"><div class="creative-modal-card"><div class="creative-modal-head"><div><span class="eyebrow">CREATIVE ANALYTICS</span><h3 id="ca-form-title">Update Analytics Harian</h3></div><button type="button" data-close-modal="creative-analytics-modal">×</button></div><form id="creative-analytics-form"><div class="creative-form-grid"><label>Tarikh<input type="date" id="ca-date" required></label><label>Akaun<select id="ca-account"><option>HQ</option><option>Solusi</option><option>Mamayyuu</option><option>Manjaratu V+</option><option>YGROW</option></select></label><label>Follower Terkini<input type="number" min="0" id="ca-follower" required></label><label>Follower Bertambah Hari Ini<input type="number" id="ca-gain" value="0"></label><label>Komen Hari Ini<input type="number" min="0" id="ca-comment" value="0"></label><label>Bukti Screenshot<input type="file" accept="image/*" id="ca-proof-file"></label><label class="creative-form-wide">Nota<input type="text" id="ca-note" placeholder="Contoh: Content engagement perform paling tinggi"></label></div><div id="ca-proof-preview" class="ca-proof-preview"></div><div class="creative-form-actions"><button type="button" class="btn btn-ghost" data-close-modal="creative-analytics-modal">Batal</button><button class="btn btn-primary" type="submit">Simpan Update</button></div></form></div></div>
 
       <div class="creative-modal" id="creative-video-modal" aria-hidden="true">
         <div class="creative-modal-card creative-modal-wide">
@@ -2660,7 +2677,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v63-poster-multifile"></script>
+<script src="js/app.js?v=v64-creative-analytics"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
