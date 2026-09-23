@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v64-creative-analytics">
+<link rel="stylesheet" href="css/app-extra.css?v=v68-daily-roi">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -449,7 +449,7 @@
             <div class="ref-panel-head">
               <div>
                 <h3>TREND HARIAN</h3>
-                <p>Prestasi harian (Sales, Sent, Reply, Buyer)</p>
+                <p>Prestasi harian (Sales, Sent, Reply, Buyer) + ROI harian</p>
               </div>
               <select id="ref-trend-range" aria-label="Trend range">
                 <option value="7">7 Hari Terakhir</option>
@@ -2505,18 +2505,20 @@ Ahmad	60112223344"></textarea>
     </div>
 
 
-    <!-- ================= PRICING CALCULATOR ================= -->
-    <div id="view-pricingcalculator" class="view pricing-calculator-view">
-      <div class="pricing-crm-head">
-        <div>
-          <div class="pricing-crm-kicker">TEAM CRM · PRICING TOOL</div>
-          <h2>Pricing Calculator</h2>
-          <p>Kira kos, harga promo, margin, ROI dan BEP ROAS menggunakan calculator yang sama seperti reference asal.</p>
-        </div>
-        <button type="button" class="btn" id="pricing-open-new">Buka Full Screen ↗</button>
-      </div>
-      <div class="pricing-crm-frame-card">
-        <iframe id="pricing-calculator-frame" title="Pricing Calculator" src="tools/pricing-calculator.html"></iframe>
+    <!-- ================= PRICING CALCULATOR NATIVE V67 ================= -->
+    <div id="view-pricingcalculator" class="view pricing-native-view">
+      <div class="pc-head"><div><div class="pc-kicker">TEAM CRM · PRICING TOOL</div><h2>Pricing Calculator</h2><p>Kira kos, harga promo, margin, ROI dan BEP ROAS terus dalam sistem CRM.</p></div><div class="pc-actions"><button class="btn" id="pc-add-product">+ Produk</button><button class="btn" id="pc-save-version">Simpan Version</button><button class="btn" id="pc-print">Print / PDF</button></div></div>
+      <div class="pc-layout">
+        <aside class="pc-side"><h3>PRODUK</h3><div id="pc-products"></div><h3>VERSION</h3><div class="pc-version-add"><input id="pc-version-label" placeholder="Contoh: Promo Sept"><button id="pc-version-save">Simpan</button></div><div id="pc-versions"></div></aside>
+        <section class="pc-main">
+          <div class="pc-title-row"><input id="pc-product-name" class="pc-product-name" aria-label="Nama produk"><input id="pc-tag" class="pc-tag" placeholder="cth: @Sept2026"></div>
+          <div class="pc-panel"><h3>GLOBAL SETTINGS</h3><div class="pc-globals"><label>Kos / unit (RM)<input id="pc-cost" type="number" step="0.01"></label><label>Packaging / pkg (RM)<input id="pc-pack" type="number" step="0.01"></label><label>Price tag / unit (RM)<input id="pc-price-tag" type="number" step="0.01"></label><label>RRP cost ratio (%)<input id="pc-rrp" type="number" step="1"></label></div></div>
+          <div class="pc-table-wrap"><table class="pc-table" id="pc-table"></table></div>
+          <button class="btn pc-add-package" id="pc-add-package">+ Tambah Pakej</button>
+          <div class="pc-pricing" id="pc-pricing"></div>
+          <div class="pc-panel"><h3>NOTA</h3><textarea id="pc-notes" rows="4" placeholder="Nota pricing..."></textarea></div>
+          <div class="pc-panel pc-formulas"><h3>FORMULA</h3><div><b>Margin</b> = Harga Promo − Total Cost</div><div><b>ROI</b> = Margin ÷ Total Cost</div><div><b>BEP ROAS</b> = Harga Promo ÷ Margin</div><div><b>Discount %</b> = (Original Price − Promo) ÷ Original Price</div></div>
+        </section>
       </div>
     </div>
 
@@ -2695,7 +2697,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v64-creative-analytics"></script>
+<script src="js/app.js?v=v68-daily-roi"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
