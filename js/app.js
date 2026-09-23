@@ -1578,6 +1578,7 @@ function updateEntryLivePreview() {
 
 
 const CRM_PROMO_CATALOG = {
+  TRIAL69:{label:'Promo Trial RM69',price:69},
   CRM169:{label:'Promo CRM RM169',price:169},
   CRM179:{label:'Promo CRM RM179',price:179},
   CRM185:{label:'Promo CRM RM185',price:185},
