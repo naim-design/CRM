@@ -13316,3 +13316,24 @@ body[data-team-workspace="creative"] #view-creative .creative-subtabs{display:no
 
 /* V64 Creative Analytics */
 .creative-analytics-hero{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;margin-bottom:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(135deg,rgba(0,194,154,.10),rgba(115,87,216,.08),var(--surface))}.creative-analytics-hero h3{font-size:24px;margin:3px 0}.creative-analytics-hero p{margin:0;color:var(--muted)}.creative-analytics-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}.creative-analytics-kpis article{padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--surface);border-top:4px solid #08b89b}.creative-analytics-kpis article:nth-child(2){border-top-color:#3478d4}.creative-analytics-kpis article:nth-child(3){border-top-color:#7357d8}.creative-analytics-kpis article:nth-child(4){border-top-color:#e89b35}.creative-analytics-kpis article:nth-child(5){border-top-color:#e75b91}.creative-analytics-kpis small,.creative-analytics-kpis span{display:block;color:var(--muted);font-size:8px}.creative-analytics-kpis strong{display:block;font-size:25px;margin:7px 0}.ca-account-stats{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}.ca-account-stats span{padding:4px 7px;border-radius:999px;background:rgba(0,0,0,.05);font-size:8px;font-weight:700}.ca-positive{font-weight:800;color:#0a9f72}.ca-proof-preview{margin-top:10px}.ca-proof-preview img{max-height:230px;max-width:100%;border-radius:10px;border:1px solid var(--line)}@media(max-width:1000px){.creative-analytics-kpis{grid-template-columns:repeat(2,1fr)}}
+
+
+/* ================= V65 · TEAM CRM PRICING CALCULATOR ================= */
+.pricing-calculator-view{padding-top:36px}
+.pricing-crm-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.pricing-crm-head h2{margin:3px 0 5px;font-size:28px;line-height:1.1}
+.pricing-crm-head p{margin:0;color:var(--muted);font-size:13px;max-width:760px}
+.pricing-crm-kicker{font-size:10px;letter-spacing:1.5px;font-weight:800;color:#00a98f}
+.pricing-crm-frame-card{
+  background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  box-shadow:0 8px 30px rgba(0,40,45,.06);
+}
+#pricing-calculator-frame{
+  display:block;width:100%;height:calc(100vh - 225px);min-height:680px;border:0;background:#f6f6f6;
+}
+@media(max-width:820px){
+  #pricing-calculator-frame{height:900px;min-height:900px}
+}
