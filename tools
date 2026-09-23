@@ -1,1 +1,796 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing Calculator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --bg:#f6f6f6; --panel:#ffffff; --ink:#141414; --muted:#6f6f6f;
+    --line:#e4e4e4; --red:#c8102e; --red-dark:#9e0c24; --black:#141414;
+    --input-bg:#fafafa; --input-line:#d6d6d6; --head:#f0f0f0;
+    --radius:10px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+  .app{display:flex;min-height:100vh}
+
+  /* ---------- sidebar ---------- */
+  aside{width:250px;flex-shrink:0;background:var(--black);color:#fff;padding:18px 14px;
+        display:flex;flex-direction:column;gap:20px}
+  .brand{font-weight:800;font-size:15px;letter-spacing:1.5px;line-height:1.3}
+  .brand span{color:var(--red);}
+  aside h3{margin:0 0 8px;font-size:10.5px;text-transform:uppercase;letter-spacing:1.4px;color:#9a9a9a}
+  .prodlist,.verlist{display:flex;flex-direction:column;gap:4px}
+  .proditem{display:flex;align-items:center;gap:6px;padding:7px 9px;border-radius:7px;cursor:pointer;
+        border:1px solid transparent;font-weight:600;font-size:13px;color:#e8e8e8}
+  .proditem:hover{background:#242424}
+  .proditem.active{background:#fff;color:var(--black);border-color:#fff}
+  .proditem.active .dot{background:var(--red)}
+  .dot{width:8px;height:8px;border-radius:50%;background:#555;flex-shrink:0}
+  .proditem .del{margin-left:auto;background:none;border:none;color:#888;cursor:pointer;font-size:12px;padding:1px 4px;border-radius:4px}
+  .proditem .del:hover{color:var(--red)}
+  .proditem.active .del{color:#aaa}
+  .sideadd{background:var(--red);border:none;color:#fff;font:700 12px inherit;padding:8px 10px;
+        border-radius:7px;cursor:pointer;width:100%;margin-top:6px}
+  .sideadd:hover{background:var(--red-dark)}
+
+  .veritem{padding:7px 9px;border-radius:7px;background:#1f1f1f;font-size:12px;border:1px solid #2c2c2c}
+  .veritem .vlabel{font-weight:700;color:#fff}
+  .veritem .vdate{color:#9a9a9a;font-size:11px;margin-top:1px}
+  .veritem .vactions{margin-top:5px;display:flex;gap:6px}
+  .veritem .vactions button{background:#2e2e2e;border:1px solid #3c3c3c;color:#ddd;font:600 11px inherit;
+        padding:3px 8px;border-radius:5px;cursor:pointer}
+  .veritem .vactions button:hover{border-color:var(--red);color:#fff}
+  .versave{display:flex;gap:6px;margin-bottom:8px}
+  .versave input{flex:1;min-width:0;background:#1f1f1f;border:1px solid #3a3a3a;color:#fff;
+        border-radius:6px;padding:6px 8px;font:600 12px inherit}
+  .versave input::placeholder{color:#777}
+  .versave button{background:var(--red);border:none;color:#fff;font:700 11.5px inherit;
+        padding:6px 10px;border-radius:6px;cursor:pointer;white-space:nowrap}
+  .versave button:hover{background:var(--red-dark)}
+  .empty{color:#8a8a8a;font-size:12px;font-style:italic}
+  .syncbtns{display:flex;gap:6px;margin-bottom:8px}
+  .syncbtns button{flex:1;background:#2e2e2e;border:1px solid #3c3c3c;color:#ddd;font:600 11px inherit;
+        padding:5px 4px;border-radius:6px;cursor:pointer}
+  .syncbtns button:hover{border-color:var(--red);color:#fff}
+  #syncStatus.ok{color:#7ec98f;font-style:normal}
+  #syncStatus.err{color:#ff8f8f;font-style:normal}
+  #syncStatus.busy{color:#e8c76a;font-style:normal}
+  .synchelp{margin-top:10px;font-size:11.5px;color:#9a9a9a}
+  .synchelp summary{cursor:pointer;color:#bbb;font-weight:600}
+  .synchelp ol{padding-left:18px;margin:8px 0}
+  .synchelp li{margin:3px 0}
+  .synchelp b{color:#ddd}
+  .backup{margin-top:auto;display:flex;gap:6px}
+  .backup button{flex:1;background:none;border:1px solid #3a3a3a;color:#bbb;font:600 11px inherit;
+        padding:6px 4px;border-radius:6px;cursor:pointer}
+  .backup button:hover{border-color:#fff;color:#fff}
+
+  /* ---------- main ---------- */
+  main{flex:1;min-width:0;padding:22px 24px 60px}
+  .mainwrap{max-width:1050px;margin:0 auto}
+  header{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+  .titleblock h1{margin:0;font-size:22px}
+  .titleblock h1 input{font:inherit;font-weight:800;border:none;background:transparent;color:var(--ink);
+       border-bottom:2px solid var(--red);padding:2px 4px;width:240px}
+  .titleblock .tag input{font:12px inherit;border:none;background:transparent;color:var(--muted);
+       border-bottom:1px dashed var(--input-line);padding:2px 4px;width:130px;margin-top:4px}
+  .exports{display:flex;gap:8px;flex-wrap:wrap}
+  button{font-family:inherit}
+  .btn{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+       padding:8px 14px;border-radius:8px;font:600 13px inherit;transition:.15s}
+  .btn:hover{border-color:var(--black)}
+  .btn.red{background:var(--red);color:#fff;border-color:var(--red)}
+  .btn.red:hover{background:var(--red-dark);border-color:var(--red-dark)}
+  .btn.black{background:var(--black);color:#fff;border-color:var(--black)}
+  .btn.black:hover{background:#000}
+  .btn.small{padding:3px 9px;font-size:12px;border-radius:6px}
+  .btn.ghost:hover{border-color:var(--red);color:var(--red)}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+       padding:16px 18px;margin-bottom:16px}
+  .panel h2{margin:0 0 12px;font-size:12px;text-transform:uppercase;letter-spacing:1.4px;color:var(--black);
+       border-left:3px solid var(--red);padding-left:8px}
+  .globals{display:flex;flex-wrap:wrap;gap:18px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .field input{width:120px;padding:7px 9px;border:1px solid var(--input-line);border-radius:7px;
+       background:var(--input-bg);font:600 14px inherit;color:var(--ink)}
+  input:focus,textarea:focus{outline:2px solid var(--red);outline-offset:1px}
+
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:16px}
+  table.calc{border-collapse:collapse;width:100%;min-width:640px}
+  .calc th,.calc td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:right;white-space:nowrap}
+  .calc th:first-child,.calc td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);
+       font-weight:600;min-width:170px;border-right:1px solid var(--line)}
+  .calc thead th{background:var(--black);color:#fff;position:sticky;top:0;font-size:13px}
+  .calc thead th:first-child{background:var(--black);z-index:2}
+  .calc thead th .pkgname{width:110px;text-align:center;font:700 13px inherit;border:none;background:transparent;
+       border-bottom:1px dashed #555;padding:2px;color:#fff}
+  .calc td input{width:90px;padding:4px 6px;text-align:right;border:1px solid var(--input-line);
+       border-radius:6px;background:var(--input-bg);font:600 13px inherit;color:var(--ink)}
+  tr.section td{background:var(--head);font-size:11px;text-transform:uppercase;
+       letter-spacing:1px;color:var(--black);font-weight:700;padding:5px 10px}
+  tr.section td:first-child{background:var(--head);border-right:none}
+  tr.key td{font-weight:700}
+  td.pct{color:var(--muted)}
+  td.good{color:var(--black);font-weight:800}
+  td.warn{color:var(--red);font-weight:800}
+  .removecell{text-align:center !important}
+  .xbtn{background:none;border:1px solid var(--input-line);color:var(--muted);cursor:pointer;
+       border-radius:5px;font-size:11px;padding:2px 7px}
+  .xbtn:hover{border-color:var(--red);color:var(--red)}
+
+  /* ---------- finalized pricing display ---------- */
+  .pricing-display{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+       overflow:hidden;margin-bottom:16px}
+  .pricing-display .pd-head{background:var(--black);color:#fff;padding:14px 18px;display:flex;
+       justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  .pd-head .pd-title{font-size:15px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+  .pd-head .pd-title em{color:var(--red);font-style:normal}
+  .pd-head .pd-sub{font-size:12px;color:#bbb}
+  table.pricetable{width:100%;border-collapse:collapse}
+  .pricetable th{background:var(--red);color:#fff;text-transform:uppercase;font-size:11.5px;
+       letter-spacing:1px;padding:9px 18px;text-align:left}
+  .pricetable th:last-child,.pricetable td:last-child{text-align:right}
+  .pricetable td{padding:11px 18px;border-bottom:1px solid var(--line);font-size:14px}
+  .pricetable tr:last-child td{border-bottom:none}
+  .pricetable td.pkg{font-weight:700}
+  .pricetable td.price{font-weight:800;color:var(--red);font-size:16px}
+  .pricetable td.units{color:var(--muted)}
+  .pricetable .save{color:var(--black);font-size:12px;font-weight:600}
+
+  textarea#notesBox{width:100%;min-height:70px;border:1px solid var(--input-line);border-radius:8px;
+       background:var(--input-bg);padding:10px 12px;font:13px/1.6 inherit;color:var(--ink);resize:vertical}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:6px}
+
+  .glossary{font-size:12.5px;color:var(--muted);line-height:1.7}
+  .glossary b{color:var(--ink)}
+  .glossary sup{color:var(--red);font-weight:700}
+  sup.fn{color:var(--red);font-weight:700;font-size:10px;margin-left:1px}
+
+  .offline{display:none;margin:10px 0 0;color:var(--red);font-size:12px}
+  footer{margin-top:20px;color:var(--muted);font-size:12px}
+
+  @media(max-width:820px){
+    .app{flex-direction:column}
+    aside{width:100%;flex-direction:column}
+  }
+  @media print{
+    body{background:#fff}
+    aside,.exports,.btn,.xbtn,.versave,.offline{display:none !important}
+    main{padding:0}
+    .tablewrap,.panel,.pricing-display{border:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside>
+    <div class="brand">PRICING<br>CALCULATOR<span>.</span></div>
+
+    <section>
+      <h3>Product Records</h3>
+      <div class="prodlist" id="prodList"></div>
+      <button class="sideadd" onclick="addProduct()">+ Add product</button>
+    </section>
+
+    <section>
+      <h3>Calculation Versions</h3>
+      <div class="versave">
+        <input id="verLabel" placeholder="Version label…">
+        <button onclick="saveVersion()">Save</button>
+      </div>
+      <div class="verlist" id="verList"></div>
+    </section>
+
+    <section>
+      <h3>Drive Sync</h3>
+      <div class="versave">
+        <input id="syncUrl" placeholder="Apps Script Web App URL…">
+        <button onclick="connectSync()">Connect</button>
+      </div>
+      <div class="syncbtns">
+        <button onclick="drivePush(true)">⬆ Sync now</button>
+        <button onclick="drivePullManual()">⬇ Load from Drive</button>
+      </div>
+      <div id="syncStatus" class="empty">Not connected.</div>
+      <details class="synchelp">
+        <summary>How to set up</summary>
+        <ol>
+          <li>Open <b>script.google.com</b> → New project.</li>
+          <li>Paste the sync script (provided with this calculator).</li>
+          <li>Optional: paste your Drive folder link in <b>FOLDER_LINK</b>.</li>
+          <li>Deploy → New deployment → <b>Web app</b> → Execute as <b>Me</b>, access <b>Anyone</b>.</li>
+          <li>Copy the <b>/exec</b> URL here → Connect.</li>
+        </ol>
+        <p>Anyone with the URL can read/write this data — share it only with your team.</p>
+      </details>
+    </section>
+
+    <div class="backup">
+      <button onclick="backupJSON()" title="Download all products & versions as a JSON file">⬇ Backup data</button>
+      <button onclick="document.getElementById('restoreFile').click()" title="Restore from a JSON backup">⬆ Restore</button>
+      <input type="file" id="restoreFile" accept=".json" style="display:none" onchange="restoreJSON(this)">
+    </div>
+  </aside>
+
+  <main><div class="mainwrap">
+    <header>
+      <div class="titleblock">
+        <h1><input id="productName" aria-label="Product name" onchange="setProductName(this.value)"></h1>
+        <div class="tag"><input id="versionTag" placeholder="cth: @Sept2026" aria-label="Version tag" onchange="setField('tag2',this.value)"></div>
+      </div>
+      <div class="exports">
+        <button class="btn ghost" onclick="addPackage()">+ Add package</button>
+        <button class="btn black" onclick="exportXLSX()">Export XLSX</button>
+        <button class="btn black" onclick="exportCSV()">Export CSV</button>
+        <button class="btn red" onclick="exportPDF()">Export PDF</button>
+      </div>
+    </header>
+
+    <div class="panel">
+      <h2>Global Settings</h2>
+      <div class="globals">
+        <div class="field"><label>Kos / unit (RM)</label><input id="gCost" type="number" step="0.01"></div>
+        <div class="field"><label>Packaging / pkg (RM)</label><input id="gPack" type="number" step="0.01"></div>
+        <div class="field"><label>Price tag / unit (RM)</label><input id="gTag" type="number" step="0.01"></div>
+        <div class="field"><label>RRP<sup class="fn">1</sup> cost ratio (%)</label><input id="gRRP" type="number" step="1"></div>
+      </div>
+      <p class="offline" id="offlineNote">Offline mode: XLSX/PDF libraries didn't load — CSV export and Print-to-PDF still work.</p>
+    </div>
+
+    <div class="tablewrap">
+      <table class="calc" id="calcTable"></table>
+    </div>
+
+    <div class="pricing-display" id="pricingDisplay"></div>
+
+    <div class="panel">
+      <h2>Notes</h2>
+      <textarea id="notesBox" onchange="setField('notes',this.value)"></textarea>
+      <div class="hint">One note per line — notes appear under the pricing table and in every export.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Footnotes &amp; Short Forms</h2>
+      <div class="glossary" id="glossary">
+        <div><sup>1</sup> <b>RRP</b> — Recommended Retail Price (harga runcit cadangan). Dikira: Total cost ÷ RRP cost ratio.</div>
+        <div><sup>2</sup> <b>COD</b> — Cash on Delivery (caj bayaran semasa penghantaran).</div>
+        <div><sup>3</sup> <b>ROI</b> — Return on Investment. Dikira: Margin ÷ Total cost.</div>
+        <div><sup>4</sup> <b>BEP ROAS</b> — Break-Even Point Return on Ad Spend (ROAS minimum untuk pulang modal iklan). Dikira: Promo price ÷ Margin.</div>
+        <div><sup>5</sup> <b>Margin %</b> — Peratus untung atas harga jual. Dikira: Margin ÷ Promo price.</div>
+        <div><sup>6</sup> <b>Kos / unit</b> — Kos produk bagi satu unit (belum termasuk pos, packaging, freegift).</div>
+        <div><sup>7</sup> <b>Package diff</b> — Beza harga promo dengan pakej sebelumnya (kenaikan harga antara pakej). Dikira: Promo price pakej ini − Promo price pakej sebelum.</div>
+        <div><b>RM</b> — Ringgit Malaysia · <b>Pkg</b> — Package/Pakej · <b>Freegift</b> — Kos hadiah percuma per pakej.</div>
+      </div>
+    </div>
+
+    <footer>Data is saved automatically in this browser (per device). Connect <b>Drive Sync</b> in the sidebar to auto-save to your Google Drive, or use <b>Backup data</b> to move it manually.</footer>
+  </div></main>
+</div>
+
+<script>
+"use strict";
+/* ================= storage (safe: falls back to memory) ================= */
+const STORE_KEY = "eskoba-pricing-calculator-v2";
+let memoryStore = null;
+function safeLoad(){
+  try{ const s = localStorage.getItem(STORE_KEY); return s ? JSON.parse(s) : memoryStore; }
+  catch(e){ return memoryStore; }
+}
+function safeSave(data){
+  data.updatedAt = new Date().toISOString();
+  memoryStore = data;
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }catch(e){}
+  scheduleDrivePush();
+}
+
+/* ================= defaults ================= */
+const DEFAULT_NOTES = "Tidak termasuk Caj COD.\nFree postage untuk online / cash transfer.";
+function defaultCalc(){
+  return {
+    settings:{cost:10, pack:0, tag:100, rrp:20},
+    tag2:"",
+    notes: DEFAULT_NOTES,
+    packages:[
+      {name:"A", units:1, postage:7, cod:0, freegift:0, selling:100, promo:100},
+      {name:"B", units:2, postage:7, cod:0, freegift:0, selling:180, promo:180},
+      {name:"C", units:3, postage:7, cod:0, freegift:0, selling:250, promo:250},
+    ]
+  };
+}
+function newProduct(name){
+  return {id:"p"+Date.now()+Math.floor(Math.random()*1e4), name, createdAt:new Date().toISOString(),
+          current:defaultCalc(), versions:[]};
+}
+function defaultState(){
+  return {products:[newProduct("Produk A"), newProduct("Produk B"), newProduct("Produk C")],
+          activeId:null};
+}
+
+let state = safeLoad() || defaultState();
+if(!state.products || !state.products.length) state = defaultState();
+if(!state.activeId || !state.products.find(p=>p.id===state.activeId)) state.activeId = state.products[0].id;
+
+const active = () => state.products.find(p=>p.id===state.activeId);
+const cur    = () => active().current;
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+
+/* ================= calculation engine ================= */
+function compute(){
+  const s = cur().settings;
+  const rrpRatio = (s.rrp/100) || 0.2;
+  const rows = cur().packages.map(p=>{
+    const unitTotal = s.cost * p.units;
+    const comboCost = unitTotal + s.pack;
+    const totalCost = comboCost + p.postage + p.cod + p.freegift;
+    const origTag   = s.tag * p.units;
+    const rrp       = totalCost / rrpRatio;
+    const margin    = p.promo - totalCost;
+    const marginPct = p.promo ? margin/p.promo : 0;
+    const roi       = totalCost ? margin/totalCost : 0;
+    const avgSet    = p.units ? p.promo/p.units : 0;
+    const discount  = origTag - p.promo;
+    const discountPct = origTag ? discount/origTag : 0;
+    const bepRoas   = margin ? p.promo/margin : 0;
+    return {...p, unitTotal, comboCost, totalCost, origTag, rrp, margin, marginPct, roi,
+            avgSet, discount, discountPct, bepRoas};
+  });
+  rows.forEach((r,i)=>{ r.pkgDiff = i===0 ? null : r.promo - rows[i-1].promo; });
+  return rows;
+}
+
+/* ================= formatting ================= */
+const fmtRM  = v => "RM " + Number(v).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtPct = v => (v*100).toFixed(1) + "%";
+const fmtN   = v => Number(v).toLocaleString("en-MY",{maximumFractionDigits:1});
+const fmtX   = v => Number(v).toFixed(2) + "×";
+const round2 = v => Math.round(v*100)/100;
+const pct1   = v => Math.round(v*1000)/10 + "%";
+const escapeHtml = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;");
+
+/* ================= row schema ================= */
+function rowDefs(){
+  return [
+    ["INPUTS","section"],
+    ["Units / package","input-int","units"],
+    ["Postage (RM)","input","postage"],
+    ["COD (RM)<sup class='fn'>2</sup>","input","cod"],
+    ["Freegift (RM)","input","freegift"],
+    ["Selling price (RM)","input","selling"],
+    ["Promo price (RM)","input","promo"],
+    ["COSTS","section"],
+    ["Unit total cost","calc",r=>r.unitTotal,fmtRM],
+    ["Combo cost","calc",r=>r.comboCost,fmtRM],
+    ["Total cost","calc",r=>r.totalCost,fmtRM,"key"],
+    ["PRICING","section"],
+    ["Original price tag","calc",r=>r.origTag,fmtRM],
+    ["RRP<sup class='fn'>1</sup>","calc",r=>r.rrp,fmtRM],
+    ["Avg price / set","calc",r=>r.avgSet,fmtRM],
+    ["Discount","calc",r=>r.discount,fmtRM],
+    ["Discount %","calc",r=>r.discountPct,fmtPct,"pct"],
+    ["Package diff<sup class='fn'>7</sup>","calc",r=>r.pkgDiff==null?"—":fmtRM(r.pkgDiff),v=>v],
+    ["PROFITABILITY","section"],
+    ["Margin","calc",r=>r.margin,fmtRM,"key"],
+    ["Margin %<sup class='fn'>5</sup>","calc",r=>r.marginPct,fmtPct,"margin"],
+    ["ROI<sup class='fn'>3</sup>","calc",r=>r.roi,fmtX],
+    ["BEP ROAS<sup class='fn'>4</sup>","calc",r=>r.bepRoas,fmtX],
+  ];
+}
+
+/* ================= render: sidebar ================= */
+function renderSidebar(){
+  const pl = document.getElementById("prodList");
+  pl.innerHTML = state.products.map(p=>{
+    const act = p.id===state.activeId ? " active":"";
+    const del = state.products.length>1
+      ? `<button class="del" onclick="event.stopPropagation();deleteProduct('${p.id}')" title="Delete product">✕</button>` : "";
+    return `<div class="proditem${act}" onclick="selectProduct('${p.id}')"><span class="dot"></span>${escapeHtml(p.name)}${del}</div>`;
+  }).join("");
+
+  const vl = document.getElementById("verList");
+  const vs = active().versions;
+  vl.innerHTML = vs.length===0 ? `<div class="empty">No saved versions yet.</div>` :
+    vs.slice().reverse().map(v=>`
+      <div class="veritem">
+        <div class="vlabel">${escapeHtml(v.label)}</div>
+        <div class="vdate">${new Date(v.savedAt).toLocaleString("en-MY",{dateStyle:"medium",timeStyle:"short"})}</div>
+        <div class="vactions">
+          <button onclick="loadVersion('${v.id}')">Load</button>
+          <button onclick="deleteVersion('${v.id}')">Delete</button>
+        </div>
+      </div>`).join("");
+}
+
+/* ================= render: main ================= */
+function renderMain(){
+  const c = cur(), s = c.settings;
+  document.getElementById("productName").value = active().name;
+  document.getElementById("versionTag").value = c.tag2 || "";
+  document.getElementById("gCost").value = s.cost;
+  document.getElementById("gPack").value = s.pack;
+  document.getElementById("gTag").value  = s.tag;
+  document.getElementById("gRRP").value  = s.rrp;
+  document.getElementById("notesBox").value = c.notes;
+  renderCalc();
+  renderPricing();
+}
+
+function renderCalc(){
+  const rows = compute();
+  const pkgs = cur().packages;
+  const tbl = document.getElementById("calcTable");
+  let html = "<thead><tr><th>Items / Variations</th>";
+  pkgs.forEach((p,i)=>{
+    html += `<th><input class="pkgname" value="${escapeHtml(p.name)}" onchange="setPkg(${i},'name',this.value)"></th>`;
+  });
+  html += "</tr></thead><tbody>";
+  if(pkgs.length>1){
+    html += "<tr><td style='color:var(--muted);font-weight:400'>remove</td>";
+    pkgs.forEach((p,i)=>{ html += `<td class="removecell"><button class="xbtn" onclick="removePackage(${i})">✕</button></td>`; });
+    html += "</tr>";
+  }
+  rowDefs().forEach(def=>{
+    const [label, kind, key, fmt, cls] = def;
+    if(kind==="section"){
+      html += `<tr class="section"><td>${label}</td><td colspan="${pkgs.length}"></td></tr>`; return;
+    }
+    html += `<tr${cls==="key"?" class='key'":""}><td>${label}</td>`;
+    rows.forEach((r,i)=>{
+      if(kind.startsWith("input")){
+        const step = kind==="input-int" ? "1" : "0.01";
+        html += `<td><input type="number" step="${step}" value="${r[key]}" onchange="setPkg(${i},'${key}',this.value)"></td>`;
+      }else{
+        const v = key(r);
+        let tdCls = "calc" + (cls==="pct" ? " pct":"");
+        let out = (typeof v==="string") ? v : fmt(v);
+        if(cls==="margin"){ tdCls += (v>=0.5 ? " good" : v<0.2 ? " warn" : ""); }
+        html += `<td class="${tdCls}">${out}</td>`;
+      }
+    });
+    html += "</tr>";
+  });
+  tbl.innerHTML = html + "</tbody>";
+}
+
+/* finalized pricing display (package list) */
+function renderPricing(){
+  const rows = compute();
+  const c = cur();
+  const notes = (c.notes||"").split("\n").map(t=>t.trim()).filter(Boolean);
+  let html = `
+    <div class="pd-head">
+      <div class="pd-title">Senarai Harga <em>·</em> ${escapeHtml(active().name)}</div>
+      <div class="pd-sub">${escapeHtml(c.tag2||"")}&nbsp; Finalized pricing (promo)</div>
+    </div>
+    <table class="pricetable">
+      <thead><tr><th>Pakej</th><th>Unit Combo</th><th>Jimat</th><th>Harga</th></tr></thead><tbody>`;
+  rows.forEach(r=>{
+    const save = r.discount>0 ? `jimat ${fmtRM(r.discount)} (${fmtPct(r.discountPct)})` : "—";
+    html += `<tr>
+      <td class="pkg">${escapeHtml(r.name)}</td>
+      <td class="units">${r.units} unit</td>
+      <td class="save">${save}</td>
+      <td class="price">${fmtRM(r.promo)}</td></tr>`;
+  });
+  html += "</tbody></table>";
+  if(notes.length){
+    html += `<div style="padding:10px 18px;font-size:12px;color:var(--muted)">` +
+            notes.map(n=>"• "+escapeHtml(n)).join("<br>") + "</div>";
+  }
+  document.getElementById("pricingDisplay").innerHTML = html;
+}
+
+/* ================= mutations ================= */
+function commit(){ safeSave(state); renderSidebar(); renderMain(); }
+
+function setPkg(i,key,val){
+  cur().packages[i][key] = key==="name" ? val : num(val);
+  safeSave(state); renderCalc(); renderPricing();
+}
+function setField(key,val){ cur()[key]=val; safeSave(state); renderPricing(); }
+function setProductName(v){ active().name = v.trim() || active().name; commit(); }
+function addPackage(){
+  const ps = cur().packages, last = ps[ps.length-1];
+  const nextName = String.fromCharCode(Math.min(90, (last.name.charCodeAt(0)||64)+1));
+  ps.push({name:nextName, units:last.units+1, postage:last.postage, cod:last.cod,
+           freegift:last.freegift, selling:last.selling, promo:last.promo});
+  commit();
+}
+function removePackage(i){ cur().packages.splice(i,1); commit(); }
+
+function addProduct(){
+  const n = state.products.length;
+  const name = "Produk " + String.fromCharCode(65 + (n % 26)) + (n>=26 ? Math.floor(n/26) : "");
+  const p = newProduct(name);
+  state.products.push(p); state.activeId = p.id; commit();
+}
+function selectProduct(id){ state.activeId = id; commit(); }
+function deleteProduct(id){
+  const p = state.products.find(x=>x.id===id);
+  if(!confirm(`Delete "${p.name}" and all its versions?`)) return;
+  state.products = state.products.filter(x=>x.id!==id);
+  if(state.activeId===id) state.activeId = state.products[0].id;
+  commit();
+}
+
+/* ================= versions ================= */
+function saveVersion(){
+  const inp = document.getElementById("verLabel");
+  const label = inp.value.trim() || ("Version " + (active().versions.length+1));
+  active().versions.push({id:"v"+Date.now(), label, savedAt:new Date().toISOString(),
+                          data: JSON.parse(JSON.stringify(cur()))});
+  inp.value = "";
+  commit();
+}
+function loadVersion(id){
+  const v = active().versions.find(x=>x.id===id);
+  if(!v) return;
+  if(!confirm(`Load "${v.label}"? Current unsaved numbers will be replaced.`)) return;
+  active().current = JSON.parse(JSON.stringify(v.data));
+  commit();
+}
+function deleteVersion(id){
+  const v = active().versions.find(x=>x.id===id);
+  if(!confirm(`Delete version "${v.label}"?`)) return;
+  active().versions = active().versions.filter(x=>x.id!==id);
+  commit();
+}
+
+/* ================= global setting inputs ================= */
+[["gCost","cost"],["gPack","pack"],["gTag","tag"],["gRRP","rrp"]].forEach(([id,key])=>{
+  document.getElementById(id).addEventListener("input", e=>{
+    cur().settings[key] = num(e.target.value);
+    safeSave(state); renderCalc(); renderPricing();
+  });
+});
+
+/* ================= exports ================= */
+function stripTags(s){ return String(s).replace(/<[^>]*>/g,""); }
+function exportMatrix(){
+  const rows = compute();
+  const c = cur(), s = c.settings;
+  const title = active().name + (c.tag2 ? " " + c.tag2 : "");
+  const M = [];
+  M.push([title + " — Pricing Calculator"]);
+  M.push([]);
+  M.push(["Items / Variations", ...rows.map(r=>r.name)]);
+  const push=(l,vals)=>M.push([l,...vals]);
+  push("Kos / unit (RM) [6]",   rows.map(()=>s.cost));
+  push("Units / package",       rows.map(r=>r.units));
+  push("Packaging (RM)",        rows.map(()=>s.pack));
+  push("Postage (RM)",          rows.map(r=>r.postage));
+  push("COD (RM) [2]",          rows.map(r=>r.cod));
+  push("Freegift (RM)",         rows.map(r=>r.freegift));
+  push("Unit total cost (RM)",  rows.map(r=>round2(r.unitTotal)));
+  push("Combo cost (RM)",       rows.map(r=>round2(r.comboCost)));
+  push("Total cost (RM)",       rows.map(r=>round2(r.totalCost)));
+  M.push([]);
+  push("Original price tag (RM)",rows.map(r=>round2(r.origTag)));
+  push("RRP (RM) [1]",          rows.map(r=>round2(r.rrp)));
+  push("Selling price (RM)",    rows.map(r=>r.selling));
+  push("Promo price (RM)",      rows.map(r=>r.promo));
+  push("Avg price / set (RM)",  rows.map(r=>round2(r.avgSet)));
+  push("Discount (RM)",         rows.map(r=>round2(r.discount)));
+  push("Discount %",            rows.map(r=>pct1(r.discountPct)));
+  push("Package diff (RM) [7]", rows.map(r=>r.pkgDiff==null?"":round2(r.pkgDiff)));
+  M.push([]);
+  push("Margin (RM)",           rows.map(r=>round2(r.margin)));
+  push("Margin % [5]",          rows.map(r=>pct1(r.marginPct)));
+  push("ROI (×) [3]",           rows.map(r=>round2(r.roi)));
+  push("BEP ROAS (×) [4]",      rows.map(r=>round2(r.bepRoas)));
+  M.push([]);
+  M.push(["FINALIZED PRICING"]);
+  M.push(["Pakej","Unit Combo","Jimat (RM)","Jimat %","Harga (RM)"]);
+  rows.forEach(r=>M.push([r.name, r.units, round2(Math.max(0,r.discount)), pct1(Math.max(0,r.discountPct)), round2(r.promo)]));
+  M.push([]);
+  const notes = (c.notes||"").split("\n").map(t=>t.trim()).filter(Boolean);
+  notes.forEach(n=>M.push(["Nota: " + n]));
+  M.push([]);
+  M.push(["[1] RRP = Recommended Retail Price (Total cost ÷ RRP cost ratio)"]);
+  M.push(["[2] COD = Cash on Delivery"]);
+  M.push(["[3] ROI = Return on Investment (Margin ÷ Total cost)"]);
+  M.push(["[4] BEP ROAS = Break-Even Return on Ad Spend (Promo price ÷ Margin)"]);
+  M.push(["[5] Margin % = Margin ÷ Promo price"]);
+  M.push(["[6] Kos/unit = product cost per unit"]);
+  M.push(["[7] Package diff = promo price difference vs previous package"]);
+  return M;
+}
+const fileBase = () => (active().name + "-pricing" + (cur().tag2 ? "-"+cur().tag2 : "")).replace(/[^\w.-]+/g,"_");
+
+function exportCSV(){
+  const csv = exportMatrix().map(row=>row.map(cell=>{
+    const t = String(cell ?? "");
+    return /[",\n]/.test(t) ? '"'+t.replace(/"/g,'""')+'"' : t;
+  }).join(",")).join("\r\n");
+  downloadBlob(new Blob(["﻿"+csv],{type:"text/csv;charset=utf-8"}), fileBase()+".csv");
+}
+function exportXLSX(){
+  if(typeof XLSX==="undefined"){ alert("XLSX library not loaded (no internet). Use CSV export instead."); return; }
+  const ws = XLSX.utils.aoa_to_sheet(exportMatrix());
+  ws["!cols"] = [{wch:28}, ...cur().packages.map(()=>({wch:14}))];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Pricing");
+  XLSX.writeFile(wb, fileBase()+".xlsx");
+}
+function exportPDF(){
+  if(!(window.jspdf && window.jspdf.jsPDF)){ window.print(); return; }
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:"landscape", unit:"pt", format:"a4"});
+  const M = exportMatrix();
+  const rows = compute();
+  const c = cur();
+  doc.setFontSize(15); doc.setFont(undefined,"bold"); doc.setTextColor(20,20,20);
+  doc.text(M[0][0], 40, 42);
+  doc.setFontSize(9); doc.setFont(undefined,"normal"); doc.setTextColor(120);
+  doc.text("Generated " + new Date().toLocaleDateString("en-MY") + " · all prices in RM (MYR)", 40, 58);
+  // main table
+  const fpIdx = M.findIndex(r=>r[0]==="FINALIZED PRICING");
+  const body = M.slice(3, fpIdx).filter(r=>r.length>1);
+  doc.autoTable({
+    startY: 70, head:[M[2]], body,
+    styles:{fontSize:8, cellPadding:3.2, halign:"right"},
+    headStyles:{fillColor:[20,20,20], halign:"right"},
+    columnStyles:{0:{halign:"left", fontStyle:"bold", cellWidth:150}},
+    didParseCell(d){ if(d.section==="head" && d.column.index===0) d.cell.styles.halign="left"; }
+  });
+  // finalized pricing table
+  let y = doc.lastAutoTable.finalY + 24;
+  doc.setFontSize(12); doc.setFont(undefined,"bold"); doc.setTextColor(200,16,46);
+  doc.text("SENARAI HARGA — FINALIZED PRICING", 40, y);
+  doc.autoTable({
+    startY: y+8,
+    head:[["Pakej","Unit Combo","Jimat (RM)","Jimat %","Harga (RM)"]],
+    body: rows.map(r=>[r.name, r.units+" unit", round2(Math.max(0,r.discount)), pct1(Math.max(0,r.discountPct)), fmtRM(r.promo)]),
+    styles:{fontSize:9.5, cellPadding:4},
+    headStyles:{fillColor:[200,16,46]},
+    columnStyles:{0:{fontStyle:"bold"},4:{fontStyle:"bold", halign:"right"}},
+    tableWidth: 420
+  });
+  y = doc.lastAutoTable.finalY + 16;
+  doc.setFontSize(8.5); doc.setFont(undefined,"normal"); doc.setTextColor(90);
+  (c.notes||"").split("\n").map(t=>t.trim()).filter(Boolean).forEach(n=>{ doc.text("• "+n, 40, y); y+=12; });
+  y += 4;
+  doc.setTextColor(130); doc.setFontSize(7.5);
+  M.slice(M.findIndex(r=>String(r[0]||"").startsWith("[1]"))).forEach(r=>{
+    if(r.length){ doc.text(String(r[0]), 40, y); y+=10; }
+  });
+  doc.save(fileBase()+".pdf");
+}
+
+/* ================= JSON backup / restore ================= */
+function backupJSON(){
+  downloadBlob(new Blob([JSON.stringify(state,null,1)],{type:"application/json"}),
+    "pricing-calculator-backup-" + new Date().toISOString().slice(0,10) + ".json");
+}
+function restoreJSON(input){
+  const f = input.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const data = JSON.parse(rd.result);
+      if(!data.products || !Array.isArray(data.products)) throw new Error("bad file");
+      state = data;
+      if(!state.products.find(p=>p.id===state.activeId)) state.activeId = state.products[0].id;
+      commit();
+    }catch(e){ alert("Could not read that backup file."); }
+    input.value = "";
+  };
+  rd.readAsText(f);
+}
+
+/* ================= Google Drive sync (via Apps Script web app) ================= */
+let syncTimer = null, pushing = false;
+function syncStatus(msg, cls){
+  const el = document.getElementById("syncStatus");
+  el.textContent = msg; el.className = cls || "empty";
+}
+function connectSync(){
+  const u = document.getElementById("syncUrl").value.trim();
+  if(!u){ state.syncUrl = ""; safeSave(state); syncStatus("Not connected."); return; }
+  if(!/^https:\/\/script\.google(usercontent)?\.com\/.+/.test(u)){
+    alert("That doesn't look like an Apps Script Web App URL (it should start with https://script.google.com/ and end with /exec)."); return;
+  }
+  state.syncUrl = u; safeSave(state);
+  initialSync(true);
+}
+function scheduleDrivePush(){
+  if(!state.syncUrl) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>drivePush(), 2500);
+}
+async function drivePush(manual){
+  if(!state.syncUrl){ if(manual) alert("Connect an Apps Script Web App URL first (Drive Sync in the sidebar)."); return; }
+  if(pushing) return;
+  pushing = true;
+  syncStatus("Saving to Drive…","busy");
+  try{
+    const res = await fetch(state.syncUrl, {method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify(state)});
+    const j = await res.json();
+    if(!j || !j.ok) throw new Error(j && j.error || "save failed");
+    syncStatus("Synced ✓ " + new Date().toLocaleTimeString("en-MY",{hour:"2-digit",minute:"2-digit"}), "ok");
+  }catch(e){
+    syncStatus("Sync failed — data kept locally, will retry on next change.","err");
+  }
+  pushing = false;
+}
+async function driveFetch(){
+  const url = state.syncUrl + (state.syncUrl.includes("?")?"&":"?") + "t=" + Date.now();
+  const res = await fetch(url);
+  return await res.json();
+}
+function adoptRemote(remote){
+  const keepUrl = state.syncUrl;
+  state = remote;
+  state.syncUrl = keepUrl;
+  if(!state.products || !state.products.length){ state = defaultState(); state.syncUrl = keepUrl; }
+  if(!state.products.find(p=>p.id===state.activeId)) state.activeId = state.products[0].id;
+  memoryStore = state;
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  renderSidebar(); renderMain();
+}
+async function initialSync(justConnected){
+  syncStatus("Checking Drive…","busy");
+  try{
+    const remote = await driveFetch();
+    if(remote && remote.products){
+      const rT = Date.parse(remote.updatedAt || 0) || 0;
+      const lT = Date.parse(state.updatedAt || 0) || 0;
+      if(rT > lT){
+        adoptRemote(remote);
+        syncStatus("Loaded latest from Drive ✓","ok");
+      }else{
+        await drivePush();
+      }
+    }else{
+      await drivePush(); // nothing in Drive yet — seed it
+    }
+  }catch(e){
+    syncStatus(justConnected ? "Could not reach that URL — check the deployment (access: Anyone)." :
+               "Drive unreachable — using local data.","err");
+  }
+}
+async function drivePullManual(){
+  if(!state.syncUrl){ alert("Connect an Apps Script Web App URL first (Drive Sync in the sidebar)."); return; }
+  if(!confirm("Load data from Drive? This replaces what is currently on screen.")) return;
+  syncStatus("Loading from Drive…","busy");
+  try{
+    const remote = await driveFetch();
+    if(remote && remote.products){ adoptRemote(remote); syncStatus("Loaded from Drive ✓","ok"); }
+    else syncStatus("No data in Drive yet — use Sync now to seed it.","err");
+  }catch(e){ syncStatus("Could not load from Drive.","err"); }
+}
+
+function downloadBlob(blob,name){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},500);
+}
+
+window.addEventListener("load", ()=>{
+  if(typeof XLSX==="undefined" || !(window.jspdf && window.jspdf.jsPDF)){
+    document.getElementById("offlineNote").style.display="block";
+  }
+});
+
+renderSidebar();
+renderMain();
+if(state.syncUrl){
+  document.getElementById("syncUrl").value = state.syncUrl;
+  initialSync(false);
+}
+</script>
+</body>
+</html>
