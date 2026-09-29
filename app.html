@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v72-survey-colors">
+<link rel="stylesheet" href="css/app-extra.css?v=v73-staff-leads-projects">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -122,7 +122,7 @@
                 <option>Projek Susu</option><option>Projek Susu YGROW</option>
                 <option>Promo TikTok</option>
                 <option>Database WS/Lead</option>
-                <option>Projek Leads Ikhtiar (NaimFani)</option>
+                <option>Projek Leads Ikhtiar (NaimFani)</option><option>Projek Leads Wawa</option><option>Projek Leads Pika</option><option>Projek Leads Ain</option><option>Projek Leads Dayah</option>
               </select>
             </div>
             <div class="field"><label>Akaun WABOT digunakan</label>
@@ -302,7 +302,8 @@
           <div class="field" style="margin:0;"><label>Projek</label>
             <select id="filter-kategori" class="filter-box">
               <option value="">Semua Projek</option>
-              <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="__ALL_STAFF_LEADS__">Semua Projek Leads Staff</option>
+              <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option><option>Projek Leads Wawa</option><option>Projek Leads Pika</option><option>Projek Leads Ain</option><option>Projek Leads Dayah</option>
             </select>
           </div>
         </div>
@@ -846,7 +847,7 @@
               <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
-              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option><option value="Projek Leads Wawa">Projek Leads Wawa</option><option value="Projek Leads Pika">Projek Leads Pika</option><option value="Projek Leads Ain">Projek Leads Ain</option><option value="Projek Leads Dayah">Projek Leads Dayah</option>
               <option value="Lain-lain">Lain-lain</option>
             </select>
           </div>
@@ -898,7 +899,7 @@
               <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
-              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option><option value="Projek Leads Wawa">Projek Leads Wawa</option><option value="Projek Leads Pika">Projek Leads Pika</option><option value="Projek Leads Ain">Projek Leads Ain</option><option value="Projek Leads Dayah">Projek Leads Dayah</option>
             </select>
           </div>
         </div>
@@ -925,7 +926,7 @@
               <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
-              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option><option value="Projek Leads Wawa">Projek Leads Wawa</option><option value="Projek Leads Pika">Projek Leads Pika</option><option value="Projek Leads Ain">Projek Leads Ain</option><option value="Projek Leads Dayah">Projek Leads Dayah</option>
               <option value="Lain-lain">Lain-lain</option>
             </select>
             <input type="search" id="tmpl-library-search" placeholder="Cari nama / skrip / angle...">
@@ -1318,7 +1319,7 @@
               <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
-              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option><option value="Projek Leads Wawa">Projek Leads Wawa</option><option value="Projek Leads Pika">Projek Leads Pika</option><option value="Projek Leads Ain">Projek Leads Ain</option><option value="Projek Leads Dayah">Projek Leads Dayah</option>
             </select>
           </div>
         </div>
@@ -1391,7 +1392,7 @@
         <div class="field" style="margin:0;"><label>Kategori Laporan</label>
           <select id="lap-filter-kategori" class="filter-box">
             <option value="">Semua (Keseluruhan)</option>
-            <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option>
+            <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Promo TikTok</option><option>Database WS/Lead</option><option>Projek Leads Ikhtiar (NaimFani)</option><option>Projek Leads Wawa</option><option>Projek Leads Pika</option><option>Projek Leads Ain</option><option>Projek Leads Dayah</option>
           </select>
         </div>
       </div>
@@ -2071,7 +2072,7 @@ Ahmad	60112223344"></textarea>
               <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
-              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option><option value="Projek Leads Wawa">Projek Leads Wawa</option><option value="Projek Leads Pika">Projek Leads Pika</option><option value="Projek Leads Ain">Projek Leads Ain</option><option value="Projek Leads Dayah">Projek Leads Dayah</option>
               <option value="Lain-lain">Lain-lain</option>
             </select>
           </div>
@@ -2169,7 +2170,7 @@ Ahmad	60112223344"></textarea>
               <option value="Projek Susu">Projek Susu</option><option value="Projek Susu YGROW">Projek Susu YGROW</option>
               <option value="Promo TikTok">Promo TikTok</option>
               <option value="Database WS/Lead">Database WS/Lead</option>
-              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option>
+              <option value="Projek Leads Ikhtiar (NaimFani)">Projek Leads Ikhtiar (NaimFani)</option><option value="Projek Leads Wawa">Projek Leads Wawa</option><option value="Projek Leads Pika">Projek Leads Pika</option><option value="Projek Leads Ain">Projek Leads Ain</option><option value="Projek Leads Dayah">Projek Leads Dayah</option>
               <option value="Lain-lain">Lain-lain</option>
             </select>
             <input type="search" id="planning-search" placeholder="Cari planning / poster...">
@@ -2840,7 +2841,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v71-survey"></script>
+<script src="js/app.js?v=v73-staff-leads-projects"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
