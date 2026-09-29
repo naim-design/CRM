@@ -8167,3 +8167,47 @@ document.addEventListener('change',e=>{if(e.target.matches('[data-pc-field]')){C
 [['pc-cost','cost'],['pc-pack','pack'],['pc-price-tag','tag'],['pc-rrp','rrp']].forEach(([id,k])=>document.addEventListener('input',e=>{if(e.target.id===id){C().settings[k]=n(e.target.value);save();render()}}));
 window.addEventListener('DOMContentLoaded',render); setTimeout(render,300);
 })();
+
+/* ================= V71 CUSTOMER SURVEY ================= */
+let svBlasts=[],svReplies=[],svPosterData="";
+const sv$=id=>document.getElementById(id);
+function svMoney(n){return 'RM'+Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function svEsc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function svAnswerLabel(v){return ({tenaga:'Tenaga',hamil:'Hamil',ttc:'Usaha Hamil',lain:'Lain-lain'})[v]||v||'-'}
+function svDate(){return new Date().toISOString().slice(0,10)}
+function svInit(){
+ if(sv$('sv-date')&&!sv$('sv-date').value)sv$('sv-date').value=svDate();
+ db.collection('surveyBlasts').onSnapshot(s=>{svBlasts=s.docs.map(d=>({id:d.id,...d.data()}));svBlasts.sort((a,b)=>(b.date||'').localeCompare(a.date||''));svRender()},e=>toast('Ralat baca Survey Blast: '+e.message,true));
+ db.collection('surveyReplies').onSnapshot(s=>{svReplies=s.docs.map(d=>({id:d.id,...d.data()}));svReplies.sort((a,b)=>(b.date||'').localeCompare(a.date||''));svRender()},e=>toast('Ralat baca Survey Reply: '+e.message,true));
+}
+function svRender(){
+ if(!sv$('sv-kpi-blast'))return;
+ const blast=svBlasts.reduce((a,x)=>a+Number(x.sent||0),0), cost=svBlasts.reduce((a,x)=>a+Number(x.cost||0),0), failed=svBlasts.reduce((a,x)=>a+Number(x.failed||0),0);
+ const counts={tenaga:0,hamil:0,ttc:0,lain:0};svReplies.forEach(x=>counts[x.answer]=(counts[x.answer]||0)+1);const total=svReplies.length;
+ sv$('sv-kpi-blast').textContent=blast.toLocaleString();sv$('sv-kpi-reply').textContent=total.toLocaleString();sv$('sv-kpi-rate').textContent=(blast?total/blast*100:0).toFixed(1)+'% reply rate';
+ sv$('sv-kpi-energy').textContent=counts.tenaga;sv$('sv-kpi-preg').textContent=counts.hamil;sv$('sv-kpi-ttc').textContent=counts.ttc;sv$('sv-kpi-cost').textContent=svMoney(cost);sv$('sv-kpi-failed').textContent=failed.toLocaleString()+' failed';
+ ['energy','preg','ttc'].forEach((k,i)=>{const v=[counts.tenaga,counts.hamil,counts.ttc][i];sv$('sv-pct-'+k).textContent=(total?v/total*100:0).toFixed(0)+'% daripada reply'});
+ const mx=Math.max(1,...Object.values(counts));[['energy','tenaga'],['preg','hamil'],['ttc','ttc'],['other','lain']].forEach(([id,k])=>{sv$('sv-bar-'+id).style.width=(counts[k]/mx*100)+'%';sv$('sv-bar-'+id+'-label').textContent=counts[k]});
+ const top=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0];sv$('sv-top-reason').textContent=top&&top[1]?`Paling ramai: ${svAnswerLabel(top[0])} (${top[1]})`:'Belum ada data';
+ const sel=sv$('sv-reply-blast'),cur=sel?.value;if(sel){sel.innerHTML='<option value="">- Pilih rekod blasting -</option>'+svBlasts.map(x=>`<option value="${x.id}">${svEsc(x.date)} · ${svEsc(x.name)}</option>`).join('');if(svBlasts.some(x=>x.id===cur))sel.value=cur}
+ svRenderBlastTable();svRenderReplyTable();
+}
+function svRenderBlastTable(){
+ const body=sv$('sv-blast-body');if(!body)return;const q=(sv$('sv-search-blast')?.value||'').toLowerCase();
+ const rows=svBlasts.filter(x=>!q||`${x.name} ${x.date}`.toLowerCase().includes(q));
+ body.innerHTML=rows.length?rows.map(x=>{const replies=svReplies.filter(r=>r.blastId===x.id).length,rate=Number(x.sent)?replies/Number(x.sent)*100:0;return `<tr><td>${svEsc(x.date)}</td><td><b>${svEsc(x.name)}</b><br><small>${svEsc(x.source||'')}</small></td><td>${Number(x.contacts||0).toLocaleString()}</td><td>${Number(x.sent||0).toLocaleString()}</td><td><b>${replies}</b></td><td>${Number(x.failed||0).toLocaleString()}</td><td>${svMoney(x.cost)}</td><td>${rate.toFixed(1)}%</td><td>${x.posterData?`<button class="sv-view-poster btn" data-id="${x.id}">Lihat</button>`:'-'}</td><td><div class="sv-actions"><button data-sv-edit="${x.id}">Edit</button><button data-sv-del="${x.id}">Padam</button></div></td></tr>`}).join(''):'<tr><td colspan="10">Belum ada data.</td></tr>';
+}
+function svRenderReplyTable(){
+ const body=sv$('sv-reply-body');if(!body)return;const f=sv$('sv-answer-filter')?.value||'',q=(sv$('sv-search-phone')?.value||'').toLowerCase();
+ const rows=svReplies.filter(x=>(!f||x.answer===f)&&(!q||`${x.phone} ${x.customerName||''}`.toLowerCase().includes(q)));
+ body.innerHTML=rows.length?rows.map(x=>{const b=svBlasts.find(z=>z.id===x.blastId);return `<tr><td>${svEsc(x.date||'')}</td><td><b>${svEsc(x.phone)}</b></td><td>${svEsc(x.customerName||'-')}</td><td><span class="sv-pill ${svEsc(x.answer)}">${svAnswerLabel(x.answer)}</span></td><td>${svEsc(x.replyText||'-')}</td><td>${svEsc(b?.name||'-')}</td><td>${svEsc(x.follow||'-')}</td><td><div class="sv-actions"><button data-sv-copy="${svEsc(x.phone)}">Copy</button><button data-sv-rdel="${x.id}">Padam</button></div></td></tr>`}).join(''):'<tr><td colspan="8">Belum ada customer reply.</td></tr>';
+}
+sv$('sv-poster')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{let w=im.width,h=im.height,s=Math.min(1,900/w,900/h);const c=document.createElement('canvas');c.width=w*s;c.height=h*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);svPosterData=c.toDataURL('image/jpeg',.65);sv$('sv-poster-preview').innerHTML=`<img src="${svPosterData}">`};im.src=r.result};r.readAsDataURL(f)});
+sv$('survey-blast-form')?.addEventListener('submit',async e=>{e.preventDefault();const id=sv$('sv-blast-id').value,d={date:sv$('sv-date').value,name:sv$('sv-name').value.trim(),script:sv$('sv-script').value.trim(),contacts:+sv$('sv-contacts').value||0,sent:+sv$('sv-sent').value||0,failed:+sv$('sv-failed').value||0,cost:+sv$('sv-cost').value||0,received:+sv$('sv-received').value||0,source:sv$('sv-source').value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};if(svPosterData)d.posterData=svPosterData;try{if(id)await db.collection('surveyBlasts').doc(id).update(d);else{d.createdAt=firebase.firestore.FieldValue.serverTimestamp();await db.collection('surveyBlasts').add(d)}toast('Rekod blasting survey disimpan ✓');svResetBlast()}catch(err){toast('Gagal simpan survey: '+err.message,true)}});
+function svResetBlast(){sv$('survey-blast-form')?.reset();if(sv$('sv-date'))sv$('sv-date').value=svDate();if(sv$('sv-blast-id'))sv$('sv-blast-id').value='';svPosterData='';if(sv$('sv-poster-preview'))sv$('sv-poster-preview').innerHTML=''}
+sv$('sv-blast-reset')?.addEventListener('click',svResetBlast);
+sv$('survey-reply-form')?.addEventListener('submit',async e=>{e.preventDefault();const phone=(sv$('sv-phone').value||'').replace(/\D/g,'');if(!phone)return toast('Masukkan nombor customer.',true);const d={blastId:sv$('sv-reply-blast').value,phone,answer:sv$('sv-answer').value,replyText:sv$('sv-reply-text').value.trim(),customerName:sv$('sv-customer-name').value.trim(),follow:sv$('sv-follow').value,note:sv$('sv-reply-note').value.trim(),date:svDate(),createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await db.collection('surveyReplies').add(d);toast('Customer reply disimpan ✓');sv$('survey-reply-form').reset()}catch(err){toast('Gagal simpan customer: '+err.message,true)}});
+sv$('sv-search-blast')?.addEventListener('input',svRenderBlastTable);sv$('sv-answer-filter')?.addEventListener('change',svRenderReplyTable);sv$('sv-search-phone')?.addEventListener('input',svRenderReplyTable);
+sv$('sv-copy-visible')?.addEventListener('click',async()=>{const f=sv$('sv-answer-filter').value,q=(sv$('sv-search-phone').value||'').toLowerCase(),nums=[...new Set(svReplies.filter(x=>(!f||x.answer===f)&&(!q||`${x.phone} ${x.customerName||''}`.toLowerCase().includes(q))).map(x=>x.phone).filter(Boolean))];if(!nums.length)return toast('Tiada nombor untuk dicopy.',true);await navigator.clipboard.writeText(nums.join('\n'));toast(`${nums.length} nombor dicopy ✓`)});
+document.addEventListener('click',async e=>{const t=e.target;if(t.matches('[data-sv-copy]')){await navigator.clipboard.writeText(t.dataset.svCopy);toast('Nombor dicopy ✓')}if(t.matches('[data-sv-rdel]')&&confirm('Padam reply customer ini?'))await db.collection('surveyReplies').doc(t.dataset.svRdel).delete();if(t.matches('[data-sv-del]')&&confirm('Padam rekod blasting ini?'))await db.collection('surveyBlasts').doc(t.dataset.svDel).delete();if(t.matches('[data-sv-edit]')){const x=svBlasts.find(z=>z.id===t.dataset.svEdit);if(!x)return;sv$('sv-blast-id').value=x.id;sv$('sv-date').value=x.date||'';sv$('sv-name').value=x.name||'';sv$('sv-script').value=x.script||'';sv$('sv-contacts').value=x.contacts||0;sv$('sv-sent').value=x.sent||0;sv$('sv-failed').value=x.failed||0;sv$('sv-cost').value=x.cost||0;sv$('sv-received').value=x.received||0;sv$('sv-source').value=x.source||'TikTok Buyer';svPosterData=x.posterData||'';sv$('sv-poster-preview').innerHTML=svPosterData?`<img src="${svPosterData}">`:'';sv$('view-survey').scrollIntoView({behavior:'smooth'})}if(t.matches('.sv-view-poster')){const x=svBlasts.find(z=>z.id===t.dataset.id);if(x?.posterData){const w=window.open();w.document.write(`<img src="${x.posterData}" style="max-width:100%;height:auto">`)}}});
+setTimeout(svInit,900);
