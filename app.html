@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v70-reply-filter">
+<link rel="stylesheet" href="css/app-extra.css?v=v72-survey-colors">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -49,6 +49,7 @@
         <button data-view="planning" data-team-area="crm">Planning</button>
         <button data-view="analyticspro" data-team-area="crm">Analytics Pro</button>
         <button data-view="pricingcalculator" data-team-area="crm">Pricing Calculator</button>
+        <button data-view="survey" data-team-area="crm">Survey</button>
         <div class="nav-group-label">UTILITI</div>
         <button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button>
         <button data-view="aiinsight" data-team-area="crm">AI Insight</button>
@@ -2572,6 +2573,81 @@ Ahmad	60112223344"></textarea>
     </div>
 
 
+
+    <!-- ================= CUSTOMER SURVEY V71 ================= -->
+    <div id="view-survey" class="view survey-view">
+      <div class="survey-hero">
+        <div><div class="survey-kicker">TEAM CRM · CUSTOMER INSIGHT</div><h2>Survey Customer TikTok</h2>
+        <p>Track survey selepas pembelian Jus Mamariam: Tenaga, Hamil atau Usaha Hamil — sekali dengan prestasi blasting dan senarai customer untuk follow up.</p></div>
+        <button class="btn btn-primary" id="survey-new-blast">+ Rekod Blasting</button>
+      </div>
+
+      <div class="survey-kpis">
+        <div class="survey-kpi"><span>Total Blast</span><strong id="sv-kpi-blast">0</strong><small>mesej dihantar</small></div>
+        <div class="survey-kpi"><span>Total Reply</span><strong id="sv-kpi-reply">0</strong><small id="sv-kpi-rate">0% reply rate</small></div>
+        <div class="survey-kpi sv-energy"><span>Untuk Tenaga</span><strong id="sv-kpi-energy">0</strong><small id="sv-pct-energy">0% daripada reply</small></div>
+        <div class="survey-kpi sv-preg"><span>Hamil</span><strong id="sv-kpi-preg">0</strong><small id="sv-pct-preg">0% daripada reply</small></div>
+        <div class="survey-kpi sv-ttc"><span>Usaha Hamil</span><strong id="sv-kpi-ttc">0</strong><small id="sv-pct-ttc">0% daripada reply</small></div>
+        <div class="survey-kpi"><span>Total Kos</span><strong id="sv-kpi-cost">RM0.00</strong><small id="sv-kpi-failed">0 failed</small></div>
+      </div>
+
+      <div class="survey-grid">
+        <section class="survey-card">
+          <div class="survey-card-head"><div><small>REKOD KEMPEN</small><h3>Input Blasting Survey</h3></div></div>
+          <form id="survey-blast-form" class="survey-form">
+            <input type="hidden" id="sv-blast-id">
+            <label>Tarikh<input type="date" id="sv-date" required></label>
+            <label>Nama Blast / Kempen<input id="sv-name" placeholder="Contoh: Survey Buyer TikTok 29/9" required></label>
+            <label class="wide">Ayat / Skrip Blast<textarea id="sv-script" rows="4" placeholder="Paste skrip WhatsApp yang digunakan..."></textarea></label>
+            <label class="wide">Poster Digunakan<input type="file" id="sv-poster" accept="image/*"><div id="sv-poster-preview" class="survey-poster-preview"></div></label>
+            <label>Contact Diblast<input type="number" min="0" id="sv-contacts" value="0"></label>
+            <label>Mesej Dihantar<input type="number" min="0" id="sv-sent" value="0"></label>
+            <label>Failed<input type="number" min="0" id="sv-failed" value="0"></label>
+            <label>Kos (RM)<input type="number" min="0" step="0.01" id="sv-cost" value="0"></label>
+            <label>Mesej Diterima / Reply<input type="number" min="0" id="sv-received" value="0"></label>
+            <label>Sumber<select id="sv-source"><option>TikTok Buyer</option><option>WhatsApp</option><option>CRM</option><option>Lain-lain</option></select></label>
+            <div class="wide survey-form-actions"><button class="btn btn-primary" type="submit">Simpan Blasting</button><button class="btn" type="button" id="sv-blast-reset">Reset</button></div>
+          </form>
+        </section>
+
+        <section class="survey-card">
+          <div class="survey-card-head"><div><small>REPLY CUSTOMER</small><h3>Masukkan Customer Reply</h3></div></div>
+          <form id="survey-reply-form" class="survey-form">
+            <label class="wide">Pilih Blasting<select id="sv-reply-blast" required><option value="">- Pilih rekod blasting -</option></select></label>
+            <label>Nombor Customer<input id="sv-phone" placeholder="60123456789" required></label>
+            <label>Pilihan Survey<select id="sv-answer" required><option value="tenaga">Untuk Tenaga</option><option value="hamil">Hamil</option><option value="ttc">Usaha Hamil</option><option value="lain">Lain-lain</option></select></label>
+            <label class="wide">Apa Customer Reply?<textarea id="sv-reply-text" rows="3" placeholder="Contoh: Saya beli sebab nak tambah tenaga"></textarea></label>
+            <label>Nama Customer (optional)<input id="sv-customer-name" placeholder="Nama"></label>
+            <label>Status Follow Up<select id="sv-follow"><option>Belum Follow Up</option><option>Dah Follow Up</option><option>Tak Perlu Follow Up</option></select></label>
+            <label class="wide">Nota<input id="sv-reply-note" placeholder="Nota follow up..."></label>
+            <div class="wide survey-form-actions"><button class="btn btn-primary" type="submit">+ Simpan Customer Reply</button></div>
+          </form>
+        </section>
+      </div>
+
+      <section class="survey-card survey-chart-card">
+        <div class="survey-card-head"><div><small>ANALISIS SEBAB BELI</small><h3>Customer Beli Jus Mamariam Untuk Apa?</h3></div><div id="sv-top-reason" class="survey-top-reason">Belum ada data</div></div>
+        <div class="survey-bars">
+          <div><span>Tenaga</span><div class="sv-bar"><i id="sv-bar-energy"></i></div><b id="sv-bar-energy-label">0</b></div>
+          <div><span>Hamil</span><div class="sv-bar"><i id="sv-bar-preg"></i></div><b id="sv-bar-preg-label">0</b></div>
+          <div><span>Usaha Hamil</span><div class="sv-bar"><i id="sv-bar-ttc"></i></div><b id="sv-bar-ttc-label">0</b></div>
+          <div><span>Lain-lain</span><div class="sv-bar"><i id="sv-bar-other"></i></div><b id="sv-bar-other-label">0</b></div>
+        </div>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-card-head"><div><small>HISTORY</small><h3>Prestasi Blasting Survey</h3></div><input id="sv-search-blast" placeholder="Cari kempen..."></div>
+        <div class="table-wrap"><table class="survey-table"><thead><tr><th>Tarikh</th><th>Kempen</th><th>Contact</th><th>Sent</th><th>Reply</th><th>Failed</th><th>Kos</th><th>Reply Rate</th><th>Poster</th><th>Aksi</th></tr></thead><tbody id="sv-blast-body"><tr><td colspan="10">Belum ada data.</td></tr></tbody></table></div>
+      </section>
+
+      <section class="survey-card">
+        <div class="survey-card-head"><div><small>FOLLOW UP DATABASE</small><h3>Customer Yang Dah Reply Survey</h3></div>
+          <div class="survey-filter-actions"><select id="sv-answer-filter"><option value="">Semua Pilihan</option><option value="tenaga">Tenaga</option><option value="hamil">Hamil</option><option value="ttc">Usaha Hamil</option><option value="lain">Lain-lain</option></select><input id="sv-search-phone" placeholder="Cari nombor / nama..."><button class="btn" id="sv-copy-visible" type="button">Copy Nombor Dipapar</button></div>
+        </div>
+        <div class="table-wrap"><table class="survey-table"><thead><tr><th>Tarikh</th><th>Nombor</th><th>Nama</th><th>Pilihan</th><th>Reply Customer</th><th>Kempen</th><th>Follow Up</th><th>Aksi</th></tr></thead><tbody id="sv-reply-body"><tr><td colspan="8">Belum ada customer reply.</td></tr></tbody></table></div>
+      </section>
+    </div>
+
     <!-- ================= PRICING CALCULATOR NATIVE V67 ================= -->
     <div id="view-pricingcalculator" class="view pricing-native-view">
       <div class="pc-head"><div><div class="pc-kicker">TEAM CRM · PRICING TOOL</div><h2>Pricing Calculator</h2><p>Kira kos, harga promo, margin, ROI dan BEP ROAS terus dalam sistem CRM.</p></div><div class="pc-actions"><button class="btn" id="pc-add-product">+ Produk</button><button class="btn" id="pc-save-version">Simpan Version</button><button class="btn" id="pc-print">Print / PDF</button></div></div>
@@ -2764,7 +2840,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v70-reply-filter"></script>
+<script src="js/app.js?v=v71-survey"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
