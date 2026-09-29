@@ -1753,7 +1753,8 @@ function filteredEntries() {
     if (from && en.tarikh < from) return false;
     if (to && en.tarikh > to) return false;
     if (staff && en.staffId !== staff) return false;
-    if (kategori && en.kategori !== kategori) return false;
+    if (kategori===ALL_STAFF_LEADS_KEY && !STAFF_LEADS_PROJECTS.includes(en.kategori)) return false;
+    if (kategori && kategori!==ALL_STAFF_LEADS_KEY && en.kategori !== kategori) return false;
     return true;
   });
 }
@@ -1818,7 +1819,8 @@ const DASH_KPI_TARGETS_DEFAULT = {
 
 function getDashKpiTargets() {
   const kategori = document.getElementById('filter-kategori') ? document.getElementById('filter-kategori').value : '';
-  const overrides = DASH_TARGETS_BY_KATEGORI[kategori] || {};
+  const targetKey = kategori===ALL_STAFF_LEADS_KEY ? 'Projek Leads Ikhtiar (NaimFani)' : kategori;
+  const overrides = DASH_TARGETS_BY_KATEGORI[targetKey] || {};
   return Object.assign({}, DASH_KPI_TARGETS_DEFAULT, overrides);
 }
 
@@ -1854,7 +1856,8 @@ function dashScopedRowsForDate(date, kategoriOverride) {
   return allEntries.filter(en => {
     if (en.tarikh !== date) return false;
     if (staff && en.staffId !== staff) return false;
-    if (kategori && en.kategori !== kategori) return false;
+    if (kategori===ALL_STAFF_LEADS_KEY && !STAFF_LEADS_PROJECTS.includes(en.kategori)) return false;
+    if (kategori && kategori!==ALL_STAFF_LEADS_KEY && en.kategori !== kategori) return false;
     return true;
   });
 }
@@ -2096,6 +2099,8 @@ function renderMonthlyContactDashboard(){
     const monthlyTargets=getDashTargets();
     set('monthly-sales-target','RM '+Number(monthlyTargets.sales||30000).toLocaleString('en-MY'));
     set('monthly-roi-target',Number(monthlyTargets.roi||7.08).toFixed(2)+'x');
+  setTimeout(applyMonthlyTargetOverride,0);
+    setTimeout(applyMonthlyTargetOverride,0);
     const alert=document.getElementById('monthly-frequency-alert');
     if(alert){alert.className='monthly-frequency-alert neutral';alert.textContent='Masukkan Total Contact di Input Data untuk aktifkan kiraan frequency bulanan.';}
     return;
@@ -8222,3 +8227,36 @@ sv$('sv-search-blast')?.addEventListener('input',svRenderBlastTable);sv$('sv-ans
 sv$('sv-copy-visible')?.addEventListener('click',async()=>{const f=sv$('sv-answer-filter').value,q=(sv$('sv-search-phone').value||'').toLowerCase(),nums=[...new Set(svReplies.filter(x=>(!f||x.answer===f)&&(!q||`${x.phone} ${x.customerName||''}`.toLowerCase().includes(q))).map(x=>x.phone).filter(Boolean))];if(!nums.length)return toast('Tiada nombor untuk dicopy.',true);await navigator.clipboard.writeText(nums.join('\n'));toast(`${nums.length} nombor dicopy ✓`)});
 document.addEventListener('click',async e=>{const t=e.target;if(t.matches('[data-sv-copy]')){await navigator.clipboard.writeText(t.dataset.svCopy);toast('Nombor dicopy ✓')}if(t.matches('[data-sv-rdel]')&&confirm('Padam reply customer ini?'))await db.collection('surveyReplies').doc(t.dataset.svRdel).delete();if(t.matches('[data-sv-del]')&&confirm('Padam rekod blasting ini?'))await db.collection('surveyBlasts').doc(t.dataset.svDel).delete();if(t.matches('[data-sv-edit]')){const x=svBlasts.find(z=>z.id===t.dataset.svEdit);if(!x)return;sv$('sv-blast-id').value=x.id;sv$('sv-date').value=x.date||'';sv$('sv-name').value=x.name||'';sv$('sv-script').value=x.script||'';sv$('sv-contacts').value=x.contacts||0;sv$('sv-sent').value=x.sent||0;sv$('sv-failed').value=x.failed||0;sv$('sv-cost').value=x.cost||0;sv$('sv-received').value=x.received||0;sv$('sv-source').value=x.source||'TikTok Buyer';svPosterData=x.posterData||'';sv$('sv-poster-preview').innerHTML=svPosterData?`<img src="${svPosterData}">`:'';sv$('view-survey').scrollIntoView({behavior:'smooth'})}if(t.matches('.sv-view-poster')){const x=svBlasts.find(z=>z.id===t.dataset.id);if(x?.posterData){const w=window.open();w.document.write(`<img src="${x.posterData}" style="max-width:100%;height:auto">`)}}});
 setTimeout(svInit,900);
+
+/* ================= V74 EDITABLE MONTHLY TARGETS ================= */
+function monthlyTargetScopeKey(){
+  const k=document.getElementById('filter-kategori')?.value||'__ALL_PROJECTS__';
+  return 'crmMonthlyTargets:'+k;
+}
+function readMonthlyTargetOverride(){
+  try{return JSON.parse(localStorage.getItem(monthlyTargetScopeKey())||'{}')}catch(e){return {}}
+}
+function applyMonthlyTargetOverride(){
+  const o=readMonthlyTargetOverride();
+  const base=getDashTargets();
+  const sales=(o.sales!=null?o.sales:base.sales)||30000;
+  const roi=(o.roi!=null?o.roi:base.roi)||7.08;
+  const s=document.getElementById('monthly-sales-target'),r=document.getElementById('monthly-roi-target');
+  if(s)s.textContent='RM '+Number(sales).toLocaleString('en-MY');
+  if(r)r.textContent=Number(roi).toFixed(2)+'x';
+}
+function editMonthlyTarget(type){
+  const o=readMonthlyTargetOverride(),base=getDashTargets();
+  const current=o[type]!=null?o[type]:base[type];
+  const label=type==='sales'?'Sales Target (RM)':'ROI Target';
+  const raw=prompt(label,current);
+  if(raw===null)return;
+  const val=Number(String(raw).replace(/[^\d.-]/g,''));
+  if(!Number.isFinite(val)||val<0)return toast('Nilai target tidak sah.',true);
+  o[type]=val;localStorage.setItem(monthlyTargetScopeKey(),JSON.stringify(o));
+  applyMonthlyTargetOverride();toast('Target Dashboard dikemaskini ✓');
+}
+document.getElementById('monthly-sales-target-edit')?.addEventListener('click',()=>editMonthlyTarget('sales'));
+document.getElementById('monthly-roi-target-edit')?.addEventListener('click',()=>editMonthlyTarget('roi'));
+document.getElementById('filter-kategori')?.addEventListener('change',()=>setTimeout(applyMonthlyTargetOverride,30));
+setTimeout(applyMonthlyTargetOverride,1100);
