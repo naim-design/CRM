@@ -2607,8 +2607,8 @@ const CONTACT_TAGS = [
   { key: 'hamil', label: 'Hamil' },
   { key: 'ikhtiar', label: 'Ikhtiar' },
   { key: 'reply', label: 'Dah Reply' },
-  {value:'bersalin',label:'Dah Bersalin'},
-  {value:'ada_anak',label:'Dah Ada Anak'}];
+  {key:'bersalin',label:'Dah Bersalin'},
+  {key:'ada_anak',label:'Dah Ada Anak'}];
 function renderTagBadges(tags) {
   if (!tags || !tags.length) return '<span style="color:var(--muted-2); font-size:11px;">–</span>';
   return tags.map(t => {
@@ -4486,6 +4486,60 @@ document.getElementById('seg-saved-list')?.addEventListener('click',async e=>{
   }
 });
 
+
+
+// ================= V70 CUSTOMER REPLY FILTER =================
+const RF_LABELS={stop:'Stop / Tak Nak Iklan',bersalin:'Dah Bersalin',ada_anak:'Dah Ada Anak',buyer:'Buyer',hamil:'Hamil',ikhtiar:'Ikhtiar',reply:'Dah Reply',lain:'Lain-lain'};
+let rfRows=[],rfUnsub=null;
+function rfParseRows(raw){
+  const out=[],seen=new Set();
+  String(raw||'').split(/\n+/).forEach(line=>{
+    line=line.trim(); if(!line)return;
+    const matches=line.match(/(?:\+?6?0?1\d[\d\s-]{7,12})/g)||[];
+    const candidate=matches.length?matches[matches.length-1]:line;
+    const phone=segNormalizePhone(candidate);
+    if(!phone||phone.length<9||seen.has(phone))return;
+    seen.add(phone);
+    let name=line.replace(candidate,'').replace(/[|,:;\-]+$/,'').trim();
+    out.push({name:name||'',phone});
+  });
+  return out;
+}
+function rfEsc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function rfDate(v){const d=v?.toDate?v.toDate():(v?new Date(v):null);return d&&!isNaN(d)?d.toLocaleDateString('ms-MY',{day:'2-digit',month:'2-digit',year:'numeric'}):'–';}
+function rfRender(){
+  const cat=document.getElementById('rf-list-category')?.value||'';
+  const q=(document.getElementById('rf-list-search')?.value||'').toLowerCase().trim();
+  const filtered=rfRows.filter(r=>(!cat||r.category===cat)&&(!q||[r.phone,r.name,r.replyText,r.source,RF_LABELS[r.category]].join(' ').toLowerCase().includes(q)));
+  window.__rfVisible=filtered;
+  const body=document.getElementById('rf-table-body');
+  if(body)body.innerHTML=filtered.length?filtered.map(r=>`<tr><td><b>${rfEsc(r.name||r.phone)}</b>${r.name?`<small>${rfEsc(r.phone)}</small>`:''}</td><td><span class="rf-cat rf-${rfEsc(r.category)}">${rfEsc(RF_LABELS[r.category]||r.category)}</span></td><td>${rfEsc(r.replyText||'–')}</td><td>${rfDate(r.createdAt)}</td><td>${rfEsc(r.source||'–')}</td><td><button class="rf-copy-one" data-phone="${rfEsc(r.phone)}">Copy</button><button class="rf-delete" data-id="${r.id}">Padam</button></td></tr>`).join(''):'<tr><td colspan="6" class="empty-state">Tiada rekod untuk filter ini.</td></tr>';
+  const counts={};rfRows.forEach(r=>counts[r.category]=(counts[r.category]||0)+1);
+  const k=document.getElementById('rf-kpis');
+  if(k)k.innerHTML=['stop','bersalin','ada_anak','buyer','hamil','ikhtiar','reply'].map(x=>`<button type="button" class="rf-kpi rf-kpi-${x}" data-rfcat="${x}"><span>${rfEsc(RF_LABELS[x])}</span><b>${fmt(counts[x]||0)}</b><small>nombor</small></button>`).join('');
+  const t=document.getElementById('rf-total-saved');if(t)t.textContent=fmt(new Set(rfRows.map(r=>r.phone)).size);
+}
+function rfStart(){
+  if(rfUnsub)return;
+  rfUnsub=db.collection('customerReplyFilters').orderBy('createdAt','desc').limit(1000).onSnapshot(s=>{rfRows=s.docs.map(d=>({id:d.id,...d.data()}));rfRender();},e=>toast('Ralat baca Customer Reply Filter: '+e.message,true));
+}
+document.getElementById('rf-phone-paste')?.addEventListener('input',e=>{const n=rfParseRows(e.target.value).length;const el=document.getElementById('rf-detected');if(el)el.textContent=fmt(n);});
+document.getElementById('rf-save-btn')?.addEventListener('click',async()=>{
+  const rows=rfParseRows(document.getElementById('rf-phone-paste')?.value||'');if(!rows.length){toast('Paste nombor customer dahulu',true);return;}
+  const category=document.getElementById('rf-category').value, replyText=document.getElementById('rf-reply-text').value.trim(),source=document.getElementById('rf-source').value;
+  const btn=document.getElementById('rf-save-btn');btn.disabled=true;btn.textContent='Menyimpan...';
+  try{
+    let batch=db.batch(),n=0,commits=[];
+    for(const r of rows){const ref=db.collection('customerReplyFilters').doc();batch.set(ref,{...r,category,replyText,source,createdBy:currentProfile?.name||currentUser?.email||'Staff',createdAt:firebase.firestore.FieldValue.serverTimestamp()});n++;if(n===400){commits.push(batch.commit());batch=db.batch();n=0;}}
+    if(n)commits.push(batch.commit());await Promise.all(commits);
+    document.getElementById('rf-phone-paste').value='';document.getElementById('rf-detected').textContent='0';toast(fmt(rows.length)+' nombor disimpan ke '+(RF_LABELS[category]||category)+' ✓');
+  }catch(e){toast('Gagal simpan reply filter: '+e.message,true);}finally{btn.disabled=false;btn.textContent='Simpan ke Filter';}
+});
+document.getElementById('rf-list-category')?.addEventListener('change',rfRender);document.getElementById('rf-list-search')?.addEventListener('input',rfRender);
+document.getElementById('rf-kpis')?.addEventListener('click',e=>{const b=e.target.closest('[data-rfcat]');if(!b)return;document.getElementById('rf-list-category').value=b.dataset.rfcat;rfRender();document.querySelector('.reply-filter-library')?.scrollIntoView({behavior:'smooth'});});
+document.getElementById('rf-copy-visible')?.addEventListener('click',async()=>{const nums=[...new Set((window.__rfVisible||[]).map(r=>r.phone))];if(!nums.length){toast('Tiada nombor untuk disalin',true);return;}await navigator.clipboard.writeText(nums.join('\n'));toast(fmt(nums.length)+' nombor disalin ✓');});
+document.getElementById('rf-table-body')?.addEventListener('click',async e=>{const c=e.target.closest('.rf-copy-one');if(c){await navigator.clipboard.writeText(c.dataset.phone);toast('Nombor disalin ✓');return;}const d=e.target.closest('.rf-delete');if(d&&confirm('Padam rekod reply ini?')){try{await db.collection('customerReplyFilters').doc(d.dataset.id).delete();toast('Rekod dipadam ✓');}catch(err){toast('Gagal padam: '+err.message,true);}}});
+setTimeout(rfStart,800);
 
 // ---- Bulk Tag sebagai Buyer — paste nombor, padan dgn database, tanda status=buyer terus ----
 document.getElementById('seg-buyer-paste').addEventListener('input', () => {
@@ -7533,24 +7587,18 @@ function renderRefTrend(){
     }
   });
 
-  // Make daily Sales obvious on the chart instead of requiring hover.
-  let salesValueLabels='';
-  points.forEach((p,i)=>{
-    if(!p.sales) return;
-    const yy=Math.max(T+11,y(p.sales)-9);
-    salesValueLabels+=`<text x="${x(i)}" y="${yy}" text-anchor="middle" class="ref-sales-value">RM${Number(p.sales).toLocaleString('en-MY',{maximumFractionDigits:0})}</text>`;
-  });
-
+  const highestSales=Math.max(0,...points.map(p=>Number(p.sales||0)));
   const dailyCards=points.map(p=>{
     const d=new Date(p.date+'T12:00:00');
     const dateLabel=`${d.getDate()}/${d.getMonth()+1}`;
     const salesLabel=`RM ${Number(p.sales||0).toLocaleString('en-MY',{maximumFractionDigits:2})}`;
     const roiLabel=p.roi===null?'–':`${p.roi.toFixed(2)}x`;
     const roiClass=p.roi===null?'none':(p.roi>=0?'positive':'negative');
-    return `<div class="ref-trend-day-card"><span class="date">${dateLabel}</span><strong>${salesLabel}</strong><span class="roi ${roiClass}">ROI ${roiLabel}</span><small>Sent ${Number(p.sent||0).toLocaleString('en-MY')}</small></div>`;
+    const isHighest=highestSales>0 && Number(p.sales||0)===highestSales;
+    return `<div class="ref-trend-day-card${isHighest?' is-highest':''}"><div class="ref-trend-card-top"><span class="date">${dateLabel}</span>${isHighest?'<span class="ref-trend-highest">Highest Sales</span>':''}</div><strong>${salesLabel}</strong><span class="roi ${roiClass}">ROI ${roiLabel}</span><small>Sent ${Number(p.sent||0).toLocaleString('en-MY')}</small></div>`;
   }).join('');
 
-  wrap.innerHTML=`<svg class="ref-trend-svg" viewBox="0 0 ${W} ${H}" role="img">${grid}${lines}${salesValueLabels}${labels}</svg><div class="ref-trend-daily-breakdown">${dailyCards}</div>`;
+  wrap.innerHTML=`<svg class="ref-trend-svg" viewBox="0 0 ${W} ${H}" role="img">${grid}${lines}${labels}</svg><div class="ref-trend-daily-breakdown">${dailyCards}</div>`;
 }
 
 function refDetectChannel(source){
