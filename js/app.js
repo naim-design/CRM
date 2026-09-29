@@ -1771,6 +1771,15 @@ const DASH_TARGETS_DEFAULT = {
 
 // Target khas ikut Projek (Kategori Laporan) — override nilai default di atas.
 // Tambah entri baru di sini bila-bila untuk set target khas projek lain.
+const STAFF_LEADS_PROJECTS = [
+  'Projek Leads Ikhtiar (NaimFani)',
+  'Projek Leads Wawa',
+  'Projek Leads Pika',
+  'Projek Leads Ain',
+  'Projek Leads Dayah'
+];
+const ALL_STAFF_LEADS_KEY = '__ALL_STAFF_LEADS__';
+
 const DASH_TARGETS_BY_KATEGORI = {
   'Projek Leads Ikhtiar (NaimFani)': {
     sales: 1000,
@@ -1788,7 +1797,8 @@ const DASH_TARGETS_BY_KATEGORI = {
 
 function getDashTargets() {
   const kategori = document.getElementById('filter-kategori') ? document.getElementById('filter-kategori').value : '';
-  const overrides = DASH_TARGETS_BY_KATEGORI[kategori] || {};
+  const targetKey = kategori===ALL_STAFF_LEADS_KEY ? 'Projek Leads Ikhtiar (NaimFani)' : kategori;
+  const overrides = DASH_TARGETS_BY_KATEGORI[targetKey] || {};
   return Object.assign({}, DASH_TARGETS_DEFAULT, overrides);
 }
 
@@ -1934,14 +1944,15 @@ function renderProjectTrends() {
     'Database WS/Lead':'Database WS/Lead'
   };
 
-  const trendKey = selectedKategori ? normalizeLoose(selectedKategori) || 'selected' : 'semua-projek';
-  const trendLabel = selectedKategori ? (projectLabelMap[selectedKategori] || selectedKategori) : 'Semua Projek';
+  const trendKey = selectedKategori===ALL_STAFF_LEADS_KEY ? 'semua-projek-leads-staff' : (selectedKategori ? normalizeLoose(selectedKategori) || 'selected' : 'semua-projek');
+  const trendLabel = selectedKategori===ALL_STAFF_LEADS_KEY ? 'Semua Projek Leads Staff' : (selectedKategori ? (projectLabelMap[selectedKategori] || selectedKategori) : 'Semua Projek');
 
   const rows = allEntries.filter(en => {
     if (from && en.tarikh < from) return false;
     if (to && en.tarikh > to) return false;
     if (staff && en.staffId !== staff) return false;
-    if (selectedKategori && en.kategori !== selectedKategori) return false;
+    if (selectedKategori===ALL_STAFF_LEADS_KEY && !STAFF_LEADS_PROJECTS.includes(en.kategori)) return false;
+    if (selectedKategori && selectedKategori!==ALL_STAFF_LEADS_KEY && en.kategori !== selectedKategori) return false;
     return true;
   });
 
