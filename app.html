@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v68-daily-roi">
+<link rel="stylesheet" href="css/app-extra.css?v=v70-reply-filter">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -1725,6 +1725,71 @@ Ahmad	60112223344"></textarea>
         </div>
       </section>
 
+      <section class="reply-filter-workspace">
+        <div class="reply-filter-hero">
+          <div>
+            <span class="reply-filter-kicker">CUSTOMER REPLY FILTER</span>
+            <h2>Simpan Reply Customer</h2>
+            <p>Lepas blasting, pilih kategori reply dan paste nombor daripada Wabot. Sistem simpan sebagai senarai filter untuk blasting seterusnya.</p>
+          </div>
+          <div class="reply-filter-hero-stat"><b id="rf-total-saved">0</b><span>Nombor tersimpan</span></div>
+        </div>
+
+        <div class="reply-filter-form-grid">
+          <div class="field">
+            <label>Kategori Reply</label>
+            <select id="rf-category">
+              <option value="stop">Stop / Tak Nak Iklan</option>
+              <option value="bersalin">Dah Bersalin</option>
+              <option value="ada_anak">Dah Ada Anak</option>
+              <option value="buyer">Buyer</option>
+              <option value="hamil">Hamil</option>
+              <option value="ikhtiar">Ikhtiar</option>
+              <option value="reply">Dah Reply</option>
+              <option value="lain">Lain-lain</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Sumber</label>
+            <select id="rf-source">
+              <option value="Wabot">Wabot</option><option value="WhatsApp">WhatsApp</option><option value="TikTok">TikTok</option><option value="Manual">Manual</option>
+            </select>
+          </div>
+          <div class="field reply-filter-reply-field">
+            <label>Apa customer reply?</label>
+            <input id="rf-reply-text" type="text" placeholder="Contoh: stop, dah tak nak, saya dah bersalin...">
+            <small>Ayat ini akan disimpan bersama nombor supaya senang semak semula.</small>
+          </div>
+        </div>
+
+        <div class="reply-filter-paste-wrap">
+          <div class="field">
+            <label>Paste Nombor dari Wabot <span>— satu nombor satu baris, nama + nombor pun boleh</span></label>
+            <textarea id="rf-phone-paste" rows="6" placeholder="60123456789
+60198765432
+Ahmad 60112223344"></textarea>
+          </div>
+          <div class="reply-filter-paste-foot">
+            <div><b id="rf-detected">0</b> nombor dikesan <span>• duplicate akan dibuang</span></div>
+            <button type="button" class="btn btn-primary" id="rf-save-btn">Simpan ke Filter</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="reply-filter-library">
+        <div class="section-head">
+          <div><span class="reply-filter-kicker">DATABASE FILTER</span><h2>Senarai Reply Tersimpan</h2><p>Pilih kategori untuk dapatkan exclusion/retarget list dan copy semua nombor sekali klik.</p></div>
+          <button type="button" class="btn btn-primary" id="rf-copy-visible">Copy Semua Nombor Dipapar</button>
+        </div>
+        <div class="reply-filter-kpis" id="rf-kpis"></div>
+        <div class="reply-filter-toolbar">
+          <select id="rf-list-category"><option value="">Semua Kategori</option><option value="stop">Stop / Tak Nak Iklan</option><option value="bersalin">Dah Bersalin</option><option value="ada_anak">Dah Ada Anak</option><option value="buyer">Buyer</option><option value="hamil">Hamil</option><option value="ikhtiar">Ikhtiar</option><option value="reply">Dah Reply</option><option value="lain">Lain-lain</option></select>
+          <input id="rf-list-search" type="text" placeholder="Cari nombor, nama atau ayat reply...">
+        </div>
+        <div class="reply-filter-table-wrap"><table class="tbl reply-filter-table"><thead><tr><th>Nama / Nombor</th><th>Kategori</th><th>Reply Customer</th><th>Tarikh</th><th>Sumber</th><th>Aksi</th></tr></thead><tbody id="rf-table-body"><tr><td colspan="6" class="empty-state">Belum ada reply customer disimpan.</td></tr></tbody></table></div>
+      </section>
+
+      <details class="reply-filter-legacy"><summary>Tools Filter Lama / Buyer Bulk / Batch Import</summary>
       <div class="form-card" style="margin-bottom:18px;">
         <div class="field">
           <label>🏷️ Tag Bulk sebagai Buyer — Paste Nombor (satu nombor / baris, boleh sekali dengan nama)</label>
@@ -1826,6 +1891,8 @@ Ahmad	60112223344"></textarea>
           </table>
         </div>
       </section>
+
+      </details>
 
       <section class="seg-saved-section">
         <div class="section-head">
@@ -2697,7 +2764,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v68-daily-roi"></script>
+<script src="js/app.js?v=v70-reply-filter"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
