@@ -2259,6 +2259,8 @@ function renderDashboard() {
 
   renderProjectTrends();
   renderDashboardWeekly();
+
+  setTimeout(applyMonthlyTargetOverride,0);
 }
 
 function renderTemplateReport() {
@@ -8238,19 +8240,21 @@ function readMonthlyTargetOverride(){
   try{return JSON.parse(localStorage.getItem(monthlyTargetScopeKey())||'{}')}catch(e){return {}}
 }
 function applyMonthlyTargetOverride(){
-  const o=readMonthlyTargetOverride();
-  const base=getDashTargets();
-  const sales=(o.sales!=null?o.sales:base.sales)||30000;
-  const roi=(o.roi!=null?o.roi:base.roi)||7.08;
+  const o=readMonthlyTargetOverride(), base=getDashTargets();
+  const sales=o.sales!=null?o.sales:(base.sales||30000), roi=o.roi!=null?o.roi:(base.roi||7.08);
   const s=document.getElementById('monthly-sales-target'),r=document.getElementById('monthly-roi-target');
-  if(s)s.textContent='RM '+Number(sales).toLocaleString('en-MY');
-  if(r)r.textContent=Number(roi).toFixed(2)+'x';
-  const fmt0=n=>Number(n||0).toLocaleString('en-MY',{maximumFractionDigits:0});
-  if(o.totalContact!=null&&document.getElementById('monthly-total-contact'))document.getElementById('monthly-total-contact').textContent=fmt0(o.totalContact);
-  if(o.totalSent!=null&&document.getElementById('monthly-total-sent'))document.getElementById('monthly-total-sent').textContent=fmt0(o.totalSent);
-  if(o.frequency!=null&&document.getElementById('monthly-frequency'))document.getElementById('monthly-frequency').textContent=Number(o.frequency).toFixed(2)+'x';
-  if(o.remaining!=null&&document.getElementById('monthly-send-capacity'))document.getElementById('monthly-send-capacity').textContent=fmt0(o.remaining);
-  if(o.cost2x!=null&&document.getElementById('monthly-cost-2x'))document.getElementById('monthly-cost-2x').textContent='RM '+Number(o.cost2x).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(s)s.textContent='RM '+Number(sales).toLocaleString('en-MY'); if(r)r.textContent=Number(roi).toFixed(2)+'x';
+  const ce=document.getElementById('monthly-total-contact'),se=document.getElementById('monthly-total-sent');
+  const ac=Number(String(ce?.textContent||'0').replace(/[^\d.-]/g,''))||0, as=Number(String(se?.textContent||'0').replace(/[^\d.-]/g,''))||0;
+  const tc=o.totalContact!=null?Number(o.totalContact):ac, ts=o.totalSent!=null?Number(o.totalSent):as;
+  const max=tc*2, freq=tc?ts/tc:0, rem=Math.max(0,max-ts), c2=costRM(max);
+  if(ce)ce.textContent=tc.toLocaleString('en-MY'); if(se)se.textContent=ts.toLocaleString('en-MY');
+  const fe=document.getElementById('monthly-frequency');if(fe)fe.textContent=freq.toFixed(2)+'x';
+  const cap=document.getElementById('monthly-send-capacity');if(cap)cap.textContent=rem.toLocaleString('en-MY',{maximumFractionDigits:0});
+  const co=document.getElementById('monthly-cost-2x');if(co)co.textContent='RM '+c2.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cn=document.getElementById('monthly-capacity-note');if(cn)cn.textContent=tc?'Had 2x = '+max.toLocaleString('en-MY')+' mesej':'Belum ada total contact';
+  const kn=document.getElementById('monthly-cost-2x-note');if(kn)kn.textContent=tc?max.toLocaleString('en-MY')+' mesej × €'+RATE_EUR_PER_SENT.toFixed(4)+' × RM'+EUR_TO_MYR.toFixed(2):'Kos jika seluruh database diblast 2 kali';
+  const al=document.getElementById('monthly-frequency-alert');if(al){if(!tc){al.className='monthly-frequency-alert neutral';al.textContent='Masukkan Total Contact untuk aktifkan kiraan frequency bulanan.'}else if(freq>2){al.className='monthly-frequency-alert danger';al.textContent='Frequency '+freq.toFixed(2)+'x — sudah melebihi sasaran 2x untuk 1 nombor bulan ini.'}else if(freq>=1.7){al.className='monthly-frequency-alert warn';al.textContent='Frequency '+freq.toFixed(2)+'x — hampir capai sasaran maksimum 2x bulan ini.'}else{al.className='monthly-frequency-alert good';al.textContent='Frequency '+freq.toFixed(2)+'x — masih dalam sasaran maksimum 2x untuk 1 nombor bulan ini.'}}
 }
 function editMonthlyTarget(type){
   const o=readMonthlyTargetOverride(),base=getDashTargets();
