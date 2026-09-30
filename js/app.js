@@ -1777,7 +1777,8 @@ const STAFF_LEADS_PROJECTS = [
   'Projek Leads Wawa',
   'Projek Leads Pika',
   'Projek Leads Ain',
-  'Projek Leads Dayah'
+  'Projek Leads Dayah',
+  'Projek Leads Nadia'
 ];
 const ALL_STAFF_LEADS_KEY = '__ALL_STAFF_LEADS__';
 
@@ -8244,6 +8245,12 @@ function applyMonthlyTargetOverride(){
   const s=document.getElementById('monthly-sales-target'),r=document.getElementById('monthly-roi-target');
   if(s)s.textContent='RM '+Number(sales).toLocaleString('en-MY');
   if(r)r.textContent=Number(roi).toFixed(2)+'x';
+  const fmt0=n=>Number(n||0).toLocaleString('en-MY',{maximumFractionDigits:0});
+  if(o.totalContact!=null&&document.getElementById('monthly-total-contact'))document.getElementById('monthly-total-contact').textContent=fmt0(o.totalContact);
+  if(o.totalSent!=null&&document.getElementById('monthly-total-sent'))document.getElementById('monthly-total-sent').textContent=fmt0(o.totalSent);
+  if(o.frequency!=null&&document.getElementById('monthly-frequency'))document.getElementById('monthly-frequency').textContent=Number(o.frequency).toFixed(2)+'x';
+  if(o.remaining!=null&&document.getElementById('monthly-send-capacity'))document.getElementById('monthly-send-capacity').textContent=fmt0(o.remaining);
+  if(o.cost2x!=null&&document.getElementById('monthly-cost-2x'))document.getElementById('monthly-cost-2x').textContent='RM '+Number(o.cost2x).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function editMonthlyTarget(type){
   const o=readMonthlyTargetOverride(),base=getDashTargets();
@@ -8260,3 +8267,19 @@ document.getElementById('monthly-sales-target-edit')?.addEventListener('click',(
 document.getElementById('monthly-roi-target-edit')?.addEventListener('click',()=>editMonthlyTarget('roi'));
 document.getElementById('filter-kategori')?.addEventListener('change',()=>setTimeout(applyMonthlyTargetOverride,30));
 setTimeout(applyMonthlyTargetOverride,1100);
+
+/* ================= V76 EDIT ALL MONTHLY KPI CARDS ================= */
+function editMonthlyMetric(type){
+  const ids={totalContact:'monthly-total-contact',totalSent:'monthly-total-sent',frequency:'monthly-frequency',remaining:'monthly-send-capacity',cost2x:'monthly-cost-2x'};
+  const labels={totalContact:'Total Contact',totalSent:'Total Sent',frequency:'Frequency / Nombor',remaining:'Baki Kapasiti 2X',cost2x:'Anggaran Kos Blasting 2X (RM)'};
+  const o=readMonthlyTargetOverride(),el=document.getElementById(ids[type]);
+  const shown=el?String(el.textContent).replace(/[^\d.-]/g,''):'0';
+  const current=o[type]!=null?o[type]:Number(shown||0);
+  const raw=prompt(labels[type],current);
+  if(raw===null)return;
+  const val=Number(String(raw).replace(/[^\d.-]/g,''));
+  if(!Number.isFinite(val)||val<0)return toast('Nilai tidak sah.',true);
+  o[type]=val;localStorage.setItem(monthlyTargetScopeKey(),JSON.stringify(o));
+  applyMonthlyTargetOverride();toast(labels[type]+' dikemaskini ✓');
+}
+document.querySelectorAll('[data-monthly-edit]').forEach(btn=>btn.addEventListener('click',()=>editMonthlyMetric(btn.dataset.monthlyEdit)));
