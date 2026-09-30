@@ -13405,3 +13405,5 @@ body.crm-sidebar-layout #view-dashboard .ref-trend-highest{font-size:7px!importa
 .monthly-edit-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .monthly-edit-btn{border:1px solid var(--line);background:var(--card);color:#008c78;border-radius:8px;padding:5px 9px;font-size:10px;font-weight:800;cursor:pointer}
 .monthly-edit-btn:hover{background:#e8faf5}
+
+.monthly-auto-pill{font-size:9px;font-weight:900;color:#008c78;background:#e8faf5;border:1px solid #cceee5;border-radius:999px;padding:5px 8px}
