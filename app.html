@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v82-global">
+<link rel="stylesheet" href="css/app-extra.css?v=v84-sidebar-top-switch">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -91,6 +91,7 @@
   </header>
 
   <div class="crm-reference-topbar">
+    <button type="button" id="crm-sidebar-toggle" class="crm-hamburger" aria-label="Buka / tutup sidebar" title="Menu"><span></span><span></span><span></span></button>
     <div class="crm-reference-title">
       <strong>MAMARIAM — DASHBOARD TEAM CRM</strong>
       <span>Control Room</span>
@@ -2826,7 +2827,14 @@ Ahmad	60112223344"></textarea>
         <form id="todo-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
           <div class="field" style="flex:2; min-width:200px; margin:0;"><label>Tugasan</label><input type="text" id="todo-text" placeholder="cth: Follow up 20 rekod baru" required></div>
           <div class="field" style="margin:0;"><label>Tarikh</label><input type="date" id="todo-date" required></div>
+          <div class="field todo-upload-field" style="margin:0;">
+            <label>Gambar / Nota Kertas</label>
+            <input type="file" id="todo-images" accept="image/*" multiple hidden>
+            <button type="button" class="btn btn-ghost todo-upload-btn" id="todo-upload-btn">📷 Upload Gambar</button>
+            <span id="todo-upload-count" class="todo-upload-count">Tiada gambar</span>
+          </div>
           <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah</button>
+          <div id="todo-upload-preview" class="todo-upload-preview"></div>
         </form>
       </div>
       <div class="table-controls">
@@ -2882,7 +2890,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v82-global"></script>
+<script src="js/app.js?v=v84-sidebar-top-switch"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
