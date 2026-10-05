@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v78-ygrow">
+<link rel="stylesheet" href="css/app-extra.css?v=v80-calendar-service-filter">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -36,7 +36,9 @@
 
         <button data-view="input" class="active" data-team-area="crm">Input Data</button>
         <button data-view="dashboard" data-team-area="crm">Dashboard</button>
+        <button data-view="blastcalendar" data-team-area="crm">Kalendar Blast</button>
         <button data-view="ygrowhub" data-team-area="crm">YGROW</button>
+        <button data-view="ygrowservice" data-team-area="crm">Servicing YGROW</button>
         <button data-view="pageanalytics" data-team-area="crm">Page Analytics</button>
         <button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button>
         <button data-view="packageanalysis" data-team-area="crm">Pakej Analisis</button>
@@ -687,6 +689,34 @@
       <section class="yg-card"><div class="yg-head"><div><small>PACKAGE MIX</small><h3>Pakej Ikut Platform</h3></div><span class="yg-hint">Boleh sama atau berbeza</span></div><div id="yg-packages"></div></section></div>
       <section class="yg-card"><div class="yg-head"><div><small>PERBANDINGAN</small><h3>Sales, Unit & ROAS Platform</h3></div></div><div id="yg-bars" class="yg-bars"></div></section>
       <section class="yg-card"><div class="yg-head"><div><small>HISTORY</small><h3>Rekod YGROW Semua Platform</h3></div><div class="yg-tools"><select id="yg-filter"><option value="">Semua Platform</option><option>TikTok</option><option>WhatsApp</option><option>Ecommerce</option><option>Leads</option></select><input id="yg-search" placeholder="Cari kempen / pakej"></div></div><div class="table-wrap"><table class="yg-table"><thead><tr><th>Tarikh</th><th>Platform</th><th>Kempen</th><th>Pakej</th><th>Order</th><th>Unit</th><th>Sales</th><th>Kos</th><th>ROAS</th><th>Aksi</th></tr></thead><tbody id="yg-body"><tr><td colspan="10">Belum ada data.</td></tr></tbody></table></div></section>
+    </div>
+
+    <!-- ================= V80 BLAST CALENDAR ================= -->
+    <div id="view-blastcalendar" class="view v80-page">
+      <div class="v80-title"><div><span>BLASTING CONTROL</span><h2>Kalendar Blast & Topup</h2><p>Nampak terus hari yang capai target 3,000 mesej, promo aktif dan jangkaan bila baki Euro perlu ditopup.</p></div><div class="v80-month-nav"><button id="bc-prev">‹</button><strong id="bc-month-label">—</strong><button id="bc-next">›</button></div></div>
+      <section class="bc-kpis">
+        <article><span>TARGET HARIAN</span><strong>3,000</strong><small>mesej / hari</small></article>
+        <article><span>KOS / 3,000</span><strong id="bc-daily-eur">€34.80</strong><small>€0.0116 / mesej</small></article>
+        <article><span>BAKI EURO</span><strong id="bc-balance-show">€0.00</strong><button id="bc-edit-balance">Tetapkan Baki</button></article>
+        <article><span>TOPUP STANDARD</span><strong>€120</strong><small>setiap kali topup</small></article>
+        <article><span>ANGGARAN TOPUP SETERUSNYA</span><strong id="bc-next-topup">—</strong><small id="bc-next-topup-note">Ikut target 3,000/hari</small></article>
+      </section>
+      <section class="bc-promo-legend">
+        <span><i class="p1"></i>1–6 · Promo Gaji Awal Bulan</span><span><i class="p2"></i>7–14 · Promo Double Digit 10.10</span><span><i class="p3"></i>15–22 · Oktober Lebih Jimat</span><span><i class="p4"></i>23–31 · Promo Payday Sales</span>
+      </section>
+      <section class="bc-calendar-card"><div class="bc-week"><b>Ahad</b><b>Isnin</b><b>Selasa</b><b>Rabu</b><b>Khamis</b><b>Jumaat</b><b>Sabtu</b></div><div id="bc-grid" class="bc-grid"></div></section>
+      <section class="bc-help"><b>Warna Sent:</b> <span class="ok">Hijau = 3,000 atau lebih</span><span class="bad">Merah = bawah 3,000</span><span class="future">Kelabu = tarikh akan datang</span><b>Topup:</b> simbol € menunjukkan hari sistem anggar baki perlu ditambah €120.</section>
+    </div>
+
+    <!-- ================= V80 YGROW SERVICING ================= -->
+    <div id="view-ygrowservice" class="view v80-page">
+      <div class="v80-title"><div><span>AFTER SALES · YGROW</span><h2>Servicing Customer YGROW</h2><p>Follow up pembeli YGROW: tinggi anak, pengalaman minum, masalah dan siapa yang perlu dihubungi semula.</p></div></div>
+      <section class="ys-kpis"><article><span>CONTACT BLAST</span><strong id="ys-contact">0</strong></article><article><span>MESSAGE SENT</span><strong id="ys-sent">0</strong></article><article><span>REPLY</span><strong id="ys-reply">0</strong></article><article><span>REPLY RATE</span><strong id="ys-rate">0.0%</strong></article><article><span>COST BLAST</span><strong id="ys-cost">RM 0</strong></article><article><span>PERLU FOLLOW UP</span><strong id="ys-follow">0</strong></article></section>
+      <div class="ys-two">
+        <section class="yg-card"><div class="yg-head"><div><small>BLAST SESSION</small><h3>Rekod Blasting Servicing</h3></div></div><form id="ys-blast-form" class="yg-form"><label>Tarikh<input id="ysb-date" type="date" required></label><label>Contact<input id="ysb-contact" type="number" min="0"></label><label>Sent<input id="ysb-sent" type="number" min="0"></label><label>Failed<input id="ysb-failed" type="number" min="0"></label><label>Reply<input id="ysb-reply" type="number" min="0"></label><label>Kos (RM)<input id="ysb-cost" type="number" min="0" step=".01"></label><label class="wide">Skrip / Nota<input id="ysb-note" placeholder="Contoh: Follow up tinggi anak selepas 30 hari"></label><div class="wide"><button class="btn btn-primary">Simpan Blast</button></div></form></section>
+        <section class="yg-card"><div class="yg-head"><div><small>CUSTOMER SERVICING</small><h3>Tambah Reply Customer</h3></div></div><form id="ys-cust-form" class="yg-form"><label>Nombor Telefon<input id="ysc-phone" required placeholder="60123456789"></label><label>Nama<input id="ysc-name" placeholder="Optional"></label><label>Tinggi Sebelum (cm)<input id="ysc-before" type="number" step=".1"></label><label>Tinggi Sekarang (cm)<input id="ysc-now" type="number" step=".1"></label><label>Rasa / Pengalaman<select id="ysc-feel"><option>Okey / Suka</option><option>Biasa</option><option>Tak Suka</option><option>Belum Cuba</option></select></label><label>Status<select id="ysc-status"><option value="done">Dah Reply</option><option value="follow">Perlu Follow Up</option><option value="problem">Ada Masalah</option><option value="noreply">Belum Reply</option></select></label><label class="wide">Masalah / Feedback<input id="ysc-feedback" placeholder="Apa customer bagitahu?"></label><label>Tarikh Follow Up<input id="ysc-followdate" type="date"></label><div class="wide"><button class="btn btn-primary">Simpan Customer</button></div></form></section>
+      </div>
+      <section class="yg-card"><div class="yg-head"><div><small>FOLLOW UP LIST</small><h3>Customer Servicing</h3></div><div class="yg-tools"><select id="ys-filter"><option value="">Semua Status</option><option value="follow">Perlu Follow Up</option><option value="problem">Ada Masalah</option><option value="done">Dah Reply</option><option value="noreply">Belum Reply</option></select><input id="ys-search" placeholder="Cari nombor / nama"></div></div><div class="table-wrap"><table class="yg-table"><thead><tr><th>Nombor</th><th>Nama</th><th>Tinggi</th><th>Perubahan</th><th>Pengalaman</th><th>Feedback</th><th>Status</th><th>Follow Up</th><th>Aksi</th></tr></thead><tbody id="ys-body"><tr><td colspan="9">Belum ada customer servicing.</td></tr></tbody></table></div></section>
     </div>
     <!-- ================= PAGE ANALYTICS ================= -->
     <div id="view-pageanalytics" class="view">
@@ -1643,7 +1673,8 @@ Ahmad	60112223344"></textarea>
 
     <!-- ================= FILTER / SEGMENTASI DATABASE ================= -->
     <div id="view-filter" class="view">
-      <div class="section-head" style="padding-top:36px;"><h2>Filter Database</h2></div>
+      <div class="v80-title filter-v80-title"><div><span>CUSTOMER DATABASE CONTROL</span><h2>Filter & Exclusion Customer</h2><p>Paste nombor sekali, pilih status, kemudian copy semula senarai yang kau perlukan untuk blast atau follow up.</p></div></div>
+      <div class="rf-v80-quick"><button data-rfquick="buyer">✓ Dah Beli</button><button data-rfquick="stop">⛔ Stop / Tak Nak</button><button data-rfquick="bersalin">♥ Dah Bersalin</button><button data-rfquick="ada_anak">● Dah Ada Anak</button><button data-rfquick="reply">↩ Dah Reply</button></div>
       <p style="font-size:12.5px; color:var(--muted); margin-bottom:18px;">Cari & senaraikan kontak ikut status (Buyer, Dah Reply, dll) dan sumber — sesuai untuk buat senarai follow-up atau kempen susulan.</p>
 
       <section class="reply-tracker-card">
@@ -2851,7 +2882,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v78-ygrow"></script>
+<script src="js/app.js?v=v80-calendar-service-filter"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
