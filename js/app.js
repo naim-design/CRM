@@ -9,6 +9,7 @@ let unsubTodos = null;
 let unsubPosters = null;
 let allEntries = [];
 let allTodos = [];
+let todoPendingImages = [];
 let allPosters = [];
 let allTemplateLibrary = [];
 let unsubTemplateLibrary = null;
@@ -3100,13 +3101,29 @@ document.getElementById('todo-form').addEventListener('submit', async (e) => {
   const date = document.getElementById('todo-date').value;
   if (!text || !date) return;
   try {
-    await db.collection('todos').add({
+    const todoRef = await db.collection('todos').add({
       text, date, done: false,
+      imageCount: todoPendingImages.length,
       staffId: currentUser.uid, staffName: currentProfile.name,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     });
+    if (todoPendingImages.length) {
+      const batch = db.batch();
+      todoPendingImages.forEach((img, idx) => {
+        const ref = db.collection('todoMedia').doc();
+        batch.set(ref, {
+          todoId: todoRef.id, dataUrl: img.dataUrl, name: img.name || ('Gambar '+(idx+1)),
+          sort: idx, staffId: currentUser.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      await batch.commit();
+    }
     document.getElementById('todo-text').value = '';
-    toast('Tugasan ditambah ✓');
+    todoPendingImages = [];
+    document.getElementById('todo-images').value = '';
+    todoRenderPendingImages();
+    toast('Tugasan ditambah' + (todoPendingImages.length ? ' bersama gambar' : '') + ' ✓');
   } catch (err) {
     toast('Gagal tambah tugasan: ' + err.message, true);
   }
@@ -3126,16 +3143,58 @@ function renderTodoItem(container, t) {
     <div style="flex:1;">
       <div class="todo-text">${t.text}</div>
       <div class="todo-meta">${displayStaffName(t.staffName || '')}</div>
+      ${(+t.imageCount||0)>0 ? `<button type="button" class="todo-photo-view" data-todo-photo="${t.id}">📷 ${t.imageCount} gambar</button>` : ''}
     </div>
     <button class="todo-del" data-id="${t.id}">✕</button>`;
   item.querySelector('.todo-check').onclick = async () => {
     await db.collection('todos').doc(t.id).update({ done: !t.done });
   };
   item.querySelector('.todo-del').onclick = async () => {
-    if (confirm('Padam tugasan ni?')) await db.collection('todos').doc(t.id).delete();
+    if (confirm('Padam tugasan ni?')) {
+      const media = await db.collection('todoMedia').where('todoId','==',t.id).get();
+      const batch=db.batch(); media.docs.forEach(d=>batch.delete(d.ref)); batch.delete(db.collection('todos').doc(t.id)); await batch.commit();
+    }
   };
   container.appendChild(item);
 }
+
+
+const todoImgInput=document.getElementById('todo-images');
+document.getElementById('todo-upload-btn')?.addEventListener('click',()=>todoImgInput?.click());
+todoImgInput?.addEventListener('change', async e=>{
+  const files=[...(e.target.files||[])];
+  if(!files.length)return;
+  try{
+    for(const f of files){
+      const dataUrl=await compressImageToBase64(f,900,0.62);
+      if(dataUrl.length>800000) throw new Error('Salah satu gambar terlalu besar. Cuba gambar yang lebih kecil.');
+      todoPendingImages.push({name:f.name,dataUrl});
+    }
+    todoRenderPendingImages();
+  }catch(err){toast('Gagal proses gambar: '+err.message,true)}
+});
+function todoRenderPendingImages(){
+  const box=document.getElementById('todo-upload-preview'),count=document.getElementById('todo-upload-count');
+  if(!box||!count)return;
+  count.textContent=todoPendingImages.length?`${todoPendingImages.length} gambar dipilih`:'Tiada gambar';
+  box.innerHTML=todoPendingImages.map((x,i)=>`<div class="todo-thumb"><img src="${x.dataUrl}" alt=""><button type="button" data-todo-rm="${i}">×</button></div>`).join('');
+}
+document.getElementById('todo-upload-preview')?.addEventListener('click',e=>{
+  const b=e.target.closest('[data-todo-rm]'); if(!b)return;
+  todoPendingImages.splice(+b.dataset.todoRm,1); todoRenderPendingImages();
+});
+document.getElementById('todo-list')?.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-todo-photo]'); if(!b)return;
+  try{
+    const s=await db.collection('todoMedia').where('todoId','==',b.dataset.todoPhoto).get();
+    const imgs=s.docs.map(d=>d.data()).sort((a,b)=>(a.sort||0)-(b.sort||0));
+    if(!imgs.length)return toast('Tiada gambar dijumpai',true);
+    let modal=document.getElementById('todo-photo-modal');
+    if(!modal){modal=document.createElement('div');modal.id='todo-photo-modal';modal.className='todo-photo-modal';document.body.appendChild(modal)}
+    modal.innerHTML=`<div class="todo-photo-dialog"><div class="todo-photo-head"><b>Gambar Tugasan</b><button type="button" id="todo-photo-close">×</button></div><div class="todo-photo-grid">${imgs.map(x=>`<a href="${x.dataUrl}" target="_blank"><img src="${x.dataUrl}" alt="${x.name||'Gambar'}"></a>`).join('')}</div></div>`;
+    modal.classList.add('show'); document.getElementById('todo-photo-close').onclick=()=>modal.classList.remove('show'); modal.onclick=x=>{if(x.target===modal)modal.classList.remove('show')};
+  }catch(err){toast('Gagal buka gambar: '+err.message,true)}
+});
 
 function renderTodos() {
   const date = document.getElementById('todo-filter-date').value;
@@ -8335,3 +8394,16 @@ setTimeout(v81Init,900);
 
 /* V82 GLOBAL TAB POLISH */
 const V82I={dashboard:'layout-dashboard',blastcalendar:'calendar-days',ygrowhub:'trending-up',ygrowservice:'heart-handshake',pageanalytics:'chart-no-axes-combined',tiktokleads:'mouse-pointer-click',poster:'image',template:'layout-template',feedback:'message-circle',laporan:'file-chart-column',wabotlive:'radio',wabotcontrol:'sliders-horizontal',projection:'chart-spline',filter:'list-filter',survey:'clipboard-check'};function v82Polish(){document.querySelectorAll('.sidebar button[data-view]').forEach(b=>{if(b.dataset.v82)return;b.dataset.v82=1;let t=b.textContent.trim(),ic=V82I[b.dataset.view]||'circle';b.innerHTML=`<i data-lucide="${ic}" style="width:15px;height:15px;flex:none"></i><span>${t}</span>`;b.style.display='flex';b.style.alignItems='center';b.style.gap='10px'});try{if(window.lucide)lucide.createIcons()}catch(e){}}setTimeout(v82Polish,1200);
+
+/* V84 sidebar toggle */
+(function(){
+ const btn=document.getElementById('crm-sidebar-toggle');
+ if(!btn)return;
+ const key='crmSidebarHidden';
+ const apply=()=>document.body.classList.toggle('crm-sidebar-hidden',localStorage.getItem(key)==='1');
+ apply();
+ btn.addEventListener('click',()=>{
+   const hidden=!document.body.classList.contains('crm-sidebar-hidden');
+   localStorage.setItem(key,hidden?'1':'0'); apply();
+ });
+})();
