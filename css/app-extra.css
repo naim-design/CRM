@@ -13647,3 +13647,22 @@ body.crm-sidebar-layout.crm-sidebar-hidden{
   body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-preview,
   body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-preview{max-width:none!important}
 }
+
+/* ================= V90 SERVICING PRESENTATION DASHBOARD ================= */
+#view-ygrowservice .ys-main-kpis article{position:relative;overflow:hidden;border-top:0!important}
+#view-ygrowservice .ys-main-kpis article:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:16px 0 0 16px}
+#view-ygrowservice .ys-main-kpis article small{display:block;margin-top:5px;font-size:9px;color:#789093}
+#view-ygrowservice .ys-kpi-contact{background:linear-gradient(135deg,#eff8ff,#fff)!important}#view-ygrowservice .ys-kpi-contact:before{background:#3b82f6}
+#view-ygrowservice .ys-kpi-sent{background:linear-gradient(135deg,#f2f0ff,#fff)!important}#view-ygrowservice .ys-kpi-sent:before{background:#7c5ce5}
+#view-ygrowservice .ys-kpi-reply{background:linear-gradient(135deg,#eafaf4,#fff)!important}#view-ygrowservice .ys-kpi-reply:before{background:#10b981}
+#view-ygrowservice .ys-kpi-rate{background:linear-gradient(135deg,#edfbff,#fff)!important}#view-ygrowservice .ys-kpi-rate:before{background:#06a8c7}
+#view-ygrowservice .ys-kpi-cost{background:linear-gradient(135deg,#fff8e7,#fff)!important}#view-ygrowservice .ys-kpi-cost:before{background:#e8a317}
+#view-ygrowservice .ys-kpi-follow{background:linear-gradient(135deg,#fff0f1,#fff)!important}#view-ygrowservice .ys-kpi-follow:before{background:#ef5362}
+
+.ys-feedback-dashboard{margin:14px 0 16px;padding:18px!important;background:#fff!important;border:1px solid #e1e9e8!important;border-radius:17px!important;box-shadow:0 7px 24px rgba(18,54,61,.055)}
+.ys-feedback-title{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}.ys-feedback-title small{font-size:9px;font-weight:800;letter-spacing:1.3px;color:#a76019}.ys-feedback-title h3{font-size:18px;margin:4px 0}.ys-feedback-title p{font-size:10px;color:#71878a;margin:0}.ys-feedback-total{min-width:155px;padding:10px 13px;border-radius:12px;background:#f4f8f7;text-align:right}.ys-feedback-total span{display:block;font-size:8px;font-weight:800;color:#75898c}.ys-feedback-total strong{font-size:22px}
+.ys-feedback-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}.ys-feedback-kpis article{padding:13px 12px;border-radius:14px;border:1px solid transparent;min-width:0}.ys-feedback-kpis span{font-size:8px;font-weight:800;letter-spacing:.4px}.ys-feedback-kpis strong{display:block;font-size:22px;margin:5px 0}.ys-feedback-kpis small{font-size:8px;opacity:.75}
+.ys-fb-given{background:#e9f7ff;border-color:#bde7fb!important;color:#116783}.ys-fb-drink{background:#e9faf3;border-color:#bdebd8!important;color:#08775c}.ys-fb-notdrink{background:#fff6d9;border-color:#f4df91!important;color:#8b6710}.ys-fb-like{background:#eaf9ee;border-color:#bde8c7!important;color:#23733a}.ys-fb-normal{background:#f2f0ff;border-color:#d7cff8!important;color:#6149a8}.ys-fb-dislike{background:#fff0f1;border-color:#f4c4c9!important;color:#b53846}
+.ys-feedback-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#edf2f1;margin-top:15px}.ys-feedback-bar>div{height:100%;transition:width .25s}.ys-bar-like{background:#35b866}.ys-bar-normal{background:#846be0}.ys-bar-dislike{background:#ed5c69}.ys-bar-notdrink{background:#e6b93f}
+.ys-feedback-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:9px;color:#687d80}.ys-feedback-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}.ys-feedback-legend .like{background:#35b866}.ys-feedback-legend .normal{background:#846be0}.ys-feedback-legend .dislike{background:#ed5c69}.ys-feedback-legend .notdrink{background:#e6b93f}
+@media(max-width:1150px){.ys-feedback-kpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.ys-feedback-kpis{grid-template-columns:repeat(2,1fr)}.ys-feedback-title{display:block}.ys-feedback-total{text-align:left;margin-top:10px}}
