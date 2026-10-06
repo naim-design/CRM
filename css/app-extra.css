@@ -13573,3 +13573,77 @@ body.crm-sidebar-hidden .dashboard-shell{
  body.crm-sidebar-hidden #view-input .v81-preview,
  body.crm-sidebar-hidden #view-inputdata .v81-preview{max-width:none!important}
 }
+
+/* ================= V89 ROOT FIX: REMOVE ACTUAL 205PX SIDEBAR RESERVATION ================= */
+body.crm-sidebar-layout.crm-sidebar-hidden #app-shell,
+body.crm-sidebar-hidden #app-shell{
+  padding-left:0!important;
+  margin-left:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* Restore a normal small page gutter only — not the old 205px sidebar gutter */
+body.crm-sidebar-layout.crm-sidebar-hidden #app-shell > main,
+body.crm-sidebar-layout.crm-sidebar-hidden main{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  box-sizing:border-box!important;
+}
+
+body.crm-sidebar-layout.crm-sidebar-hidden .view,
+body.crm-sidebar-layout.crm-sidebar-hidden .view.active{
+  width:100%!important;
+  max-width:100%!important;
+  margin:0!important;
+  padding-left:26px!important;
+  padding-right:26px!important;
+  box-sizing:border-box!important;
+}
+
+/* Keep all page internals inside viewport */
+body.crm-sidebar-layout.crm-sidebar-hidden .v81-head,
+body.crm-sidebar-layout.crm-sidebar-hidden .v81-kpis,
+body.crm-sidebar-layout.crm-sidebar-hidden .v81-grid{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* Input: form uses available space, preview stays fully visible on right */
+body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-grid,
+body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-grid{
+  grid-template-columns:minmax(0,1fr) minmax(285px,310px)!important;
+  gap:16px!important;
+}
+body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-preview,
+body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-preview{
+  width:100%!important;
+  max-width:310px!important;
+  min-width:0!important;
+}
+
+/* No horizontal overflow caused by collapsed layout */
+body.crm-sidebar-layout.crm-sidebar-hidden{
+  overflow-x:hidden!important;
+}
+
+@media(max-width:1050px){
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-grid,
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-grid{
+    grid-template-columns:minmax(0,1fr) 270px!important;
+  }
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-preview,
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-preview{max-width:270px!important}
+}
+@media(max-width:850px){
+  body.crm-sidebar-layout.crm-sidebar-hidden .view,
+  body.crm-sidebar-layout.crm-sidebar-hidden .view.active{padding-left:14px!important;padding-right:14px!important}
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-grid,
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-grid{grid-template-columns:1fr!important}
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-preview,
+  body.crm-sidebar-layout.crm-sidebar-hidden #view-inputdata .v81-preview{max-width:none!important}
+}
