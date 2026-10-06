@@ -13669,3 +13669,13 @@ body.crm-sidebar-layout.crm-sidebar-hidden{
 
 /* V92 servicing actions */
 #view-ygrowservice .yg-act{white-space:nowrap}#view-ygrowservice .yg-act button{margin:2px;padding:5px 8px;border-radius:7px;border:1px solid #d6e2e0;background:#fff;cursor:pointer}#view-ygrowservice .yg-act [data-ysedit]{background:#eef7ff;color:#176b9b}#view-ygrowservice .yg-act [data-ysdel]{background:#fff0f1;color:#b53a47}
+
+/* V98 cumulative blast progress */
+.bc-progress{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:0 0 18px}
+.bc-progress article{background:#fff;border:1px solid #dce7e5;border-radius:16px;padding:15px 16px;min-height:105px}
+.bc-progress span{font-size:10px;letter-spacing:.08em;color:#607c79;font-weight:800}.bc-progress strong{display:block;font-size:22px;margin:8px 0 4px;color:#07383e}.bc-progress small{color:#78908e}
+#bc-cum-gap.is-behind{color:#d92d20}#bc-cum-gap.is-ahead{color:#079455}
+.bc-remark{display:inline-block;margin-top:6px;padding:4px 7px;border-radius:8px;font-size:10px;font-weight:800}.bc-remark.ahead{background:#d9fbe8;color:#067647}.bc-remark.behind{background:#fee4e2;color:#b42318}
+/* V98 ecommerce staff */
+.yg-ecom-breakdown{margin:14px 0 20px;background:#fff;border:1px solid #dce7e5;border-radius:18px;padding:18px}.yg-ecom-breakdown .yg-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.yg-ecom-hint{font-size:11px;color:#667085;background:#f2f4f7;padding:6px 10px;border-radius:999px}.yg-ecom-staff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.yg-ecom-person{border:1px solid #e4e7ec;border-radius:14px;padding:15px}.yg-ecom-person.overall{border-top:4px solid #1683e8}.yg-ecom-person>span{font-weight:800}.yg-ecom-person>strong{display:block;font-size:21px;margin:7px 0 12px}.yg-ecom-person>div{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.yg-ecom-person small{color:#667085}.yg-ecom-person small b{display:block;color:#07383e;margin-top:2px}.yg-ecom-person em{display:block;margin-top:12px;font-size:11px;font-style:normal;color:#667085}
+@media(max-width:1000px){.bc-progress{grid-template-columns:repeat(2,1fr)}.yg-ecom-staff-grid{grid-template-columns:1fr}}
