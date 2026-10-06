@@ -13666,3 +13666,6 @@ body.crm-sidebar-layout.crm-sidebar-hidden{
 .ys-feedback-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#edf2f1;margin-top:15px}.ys-feedback-bar>div{height:100%;transition:width .25s}.ys-bar-like{background:#35b866}.ys-bar-normal{background:#846be0}.ys-bar-dislike{background:#ed5c69}.ys-bar-notdrink{background:#e6b93f}
 .ys-feedback-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:9px;color:#687d80}.ys-feedback-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}.ys-feedback-legend .like{background:#35b866}.ys-feedback-legend .normal{background:#846be0}.ys-feedback-legend .dislike{background:#ed5c69}.ys-feedback-legend .notdrink{background:#e6b93f}
 @media(max-width:1150px){.ys-feedback-kpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.ys-feedback-kpis{grid-template-columns:repeat(2,1fr)}.ys-feedback-title{display:block}.ys-feedback-total{text-align:left;margin-top:10px}}
+
+/* V92 servicing actions */
+#view-ygrowservice .yg-act{white-space:nowrap}#view-ygrowservice .yg-act button{margin:2px;padding:5px 8px;border-radius:7px;border:1px solid #d6e2e0;background:#fff;cursor:pointer}#view-ygrowservice .yg-act [data-ysedit]{background:#eef7ff;color:#176b9b}#view-ygrowservice .yg-act [data-ysdel]{background:#fff0f1;color:#b53a47}
