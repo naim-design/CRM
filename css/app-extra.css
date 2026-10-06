@@ -13468,3 +13468,108 @@ body.crm-sidebar-hidden #view-input .v81-grid,body.crm-sidebar-hidden #view-inpu
 
 /* V87 YGROW servicing feedback screenshots */
 .ys-height-field{display:flex;align-items:center;gap:8px}.ys-height-field>input{flex:1}.ys-unknown{display:flex!important;align-items:center;gap:4px;white-space:nowrap;font-size:9px!important;color:#75878b!important}.ys-unknown input{width:auto!important}.ys-feedback-upload{padding:10px 12px;border:1px dashed #cbdcda;border-radius:12px;background:#f9fcfb}.ys-feedback-upload>label{display:block;margin-bottom:7px}.ys-feedback-upload>label span{font-weight:500;color:#91a0a2}.ys-feedback-upload>span{font-size:9px;color:#7a8d90;margin-left:8px}.ys-feedback-preview{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.ys-feedback-thumb{width:72px;height:72px;position:relative;border-radius:9px;overflow:hidden;border:1px solid #dbe6e4}.ys-feedback-thumb img{width:100%;height:100%;object-fit:cover}.ys-feedback-thumb button{position:absolute;right:3px;top:3px;border:0;border-radius:50%;width:20px;height:20px;background:#153338;color:white}.ys-photo-btn{border:0;border-radius:7px;background:#e7f7f3;color:#007b67;font-weight:800;font-size:9px;padding:5px 8px;cursor:pointer}.ys-feedback-modal{display:none;position:fixed;inset:0;background:#06181dcc;z-index:99999;align-items:center;justify-content:center;padding:24px}.ys-feedback-modal.show{display:flex}.ys-feedback-dialog{width:min(900px,95vw);max-height:88vh;overflow:auto;background:#fff;border-radius:17px;padding:16px}.ys-feedback-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.ys-feedback-head button{border:0;width:32px;height:32px;border-radius:8px;font-size:20px}.ys-feedback-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.ys-feedback-gallery img{width:100%;max-height:520px;object-fit:contain;border-radius:10px;background:#f5f7f7}
+
+/* ================= V88 CORRECT COLLAPSED SIDEBAR GEOMETRY ================= */
+/* V85/V86 made width 100% while the original shell was still horizontally positioned.
+   V88 moves the shell LEFT into the vacated sidebar area and caps it at viewport width. */
+body.crm-sidebar-hidden,
+body.crm-sidebar-layout.crm-sidebar-hidden{overflow-x:hidden!important}
+
+body.crm-sidebar-hidden .main,
+body.crm-sidebar-layout.crm-sidebar-hidden .main,
+body.crm-sidebar-hidden main{
+  position:relative!important;
+  left:0!important;
+  margin-left:0!important;
+  transform:none!important;
+  width:100vw!important;
+  max-width:100vw!important;
+  box-sizing:border-box!important;
+  padding-left:24px!important;
+  padding-right:24px!important;
+  overflow-x:hidden!important;
+}
+
+/* Main app in this CRM still carries the sidebar column in its grid/wrapper.
+   Pull the actual page content into that empty column, but never expand to the right. */
+body.crm-sidebar-hidden #app-shell,
+body.crm-sidebar-hidden #app-shell>.wrap,
+body.crm-sidebar-hidden .main-content,
+body.crm-sidebar-hidden .content,
+body.crm-sidebar-hidden .page-content{
+  position:relative!important;
+  left:0!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  transform:none!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+body.crm-sidebar-hidden .view,
+body.crm-sidebar-hidden .view.active{
+  width:100%!important;
+  max-width:100%!important;
+  margin-left:0!important;
+  margin-right:0!important;
+  box-sizing:border-box!important;
+  overflow:visible!important;
+}
+
+/* Critical fix: cancel the previous oversized Input grid. Preview must remain INSIDE viewport. */
+body.crm-sidebar-hidden #view-input .v81-grid,
+body.crm-sidebar-hidden #view-inputdata .v81-grid{
+  width:100%!important;
+  max-width:100%!important;
+  grid-template-columns:minmax(0,1fr) minmax(285px,308px)!important;
+  gap:16px!important;
+  box-sizing:border-box!important;
+}
+body.crm-sidebar-hidden #view-input .v81-preview,
+body.crm-sidebar-hidden #view-inputdata .v81-preview{
+  position:relative!important;
+  right:auto!important;
+  left:auto!important;
+  width:100%!important;
+  max-width:308px!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+body.crm-sidebar-hidden #view-input .v81-head,
+body.crm-sidebar-hidden #view-input .v81-kpis,
+body.crm-sidebar-hidden #view-inputdata .v81-head,
+body.crm-sidebar-hidden #view-inputdata .v81-kpis{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+
+/* The old page inner wrapper has a desktop max-width/auto margin. Remove only while collapsed. */
+body.crm-sidebar-hidden .v81-shell,
+body.crm-sidebar-hidden .v81-inner,
+body.crm-sidebar-hidden .page-shell,
+body.crm-sidebar-hidden .dashboard-shell{
+  width:100%!important;
+  max-width:none!important;
+  margin-left:0!important;
+  margin-right:0!important;
+}
+
+/* Laptop width: keep preview visible without horizontal clipping */
+@media(max-width:1250px){
+ body.crm-sidebar-hidden #view-input .v81-grid,
+ body.crm-sidebar-hidden #view-inputdata .v81-grid{
+   grid-template-columns:minmax(0,1fr) 280px!important;
+ }
+ body.crm-sidebar-hidden #view-input .v81-preview,
+ body.crm-sidebar-hidden #view-inputdata .v81-preview{max-width:280px!important}
+}
+@media(max-width:900px){
+ body.crm-sidebar-hidden .main,body.crm-sidebar-layout.crm-sidebar-hidden .main{padding-left:14px!important;padding-right:14px!important}
+ body.crm-sidebar-hidden #view-input .v81-grid,
+ body.crm-sidebar-hidden #view-inputdata .v81-grid{grid-template-columns:1fr!important}
+ body.crm-sidebar-hidden #view-input .v81-preview,
+ body.crm-sidebar-hidden #view-inputdata .v81-preview{max-width:none!important}
+}
