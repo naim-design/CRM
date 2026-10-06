@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v89-root-sidebar-fix">
+<link rel="stylesheet" href="css/app-extra.css?v=v90-servicing-dashboard">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -712,7 +712,20 @@
     <!-- ================= V80 YGROW SERVICING ================= -->
     <div id="view-ygrowservice" class="view v80-page">
       <div class="v80-title"><div><span>AFTER SALES · YGROW</span><h2>Servicing Customer YGROW</h2><p>Follow up pembeli YGROW: tinggi anak, pengalaman minum, masalah dan siapa yang perlu dihubungi semula.</p></div></div>
-      <section class="ys-kpis"><article><span>CONTACT BLAST</span><strong id="ys-contact">0</strong></article><article><span>MESSAGE SENT</span><strong id="ys-sent">0</strong></article><article><span>REPLY</span><strong id="ys-reply">0</strong></article><article><span>REPLY RATE</span><strong id="ys-rate">0.0%</strong></article><article><span>COST BLAST</span><strong id="ys-cost">RM 0</strong></article><article><span>PERLU FOLLOW UP</span><strong id="ys-follow">0</strong></article></section>
+      <section class="ys-kpis ys-main-kpis"><article class="ys-kpi-contact"><span>CONTACT BLAST</span><strong id="ys-contact">0</strong><small>Database servicing</small></article><article class="ys-kpi-sent"><span>MESSAGE SENT</span><strong id="ys-sent">0</strong><small>Mesej dihantar</small></article><article class="ys-kpi-reply"><span>REPLY</span><strong id="ys-reply">0</strong><small>Jumlah balasan</small></article><article class="ys-kpi-rate"><span>REPLY RATE</span><strong id="ys-rate">0.0%</strong><small>Reply ÷ Sent</small></article><article class="ys-kpi-cost"><span>COST BLAST</span><strong id="ys-cost">RM 0</strong><small>Jumlah kos</small></article><article class="ys-kpi-follow"><span>PERLU FOLLOW UP</span><strong id="ys-follow">0</strong><small>Perlu tindakan</small></article></section>
+      <section class="ys-feedback-dashboard">
+        <div class="ys-feedback-title"><div><small>FEEDBACK OVERVIEW</small><h3>Dashboard Feedback Customer</h3><p>Ringkasan pengalaman customer selepas beli YGROW untuk mudah review dan present.</p></div><div class="ys-feedback-total"><span>TOTAL CUSTOMER DIREKOD</span><strong id="ys-fb-total">0</strong></div></div>
+        <div class="ys-feedback-kpis">
+          <article class="ys-fb-given"><span>DAH BAGI FEEDBACK</span><strong id="ys-fb-given">0</strong><small id="ys-fb-given-pct">0% customer</small></article>
+          <article class="ys-fb-drink"><span>DAH MINUM</span><strong id="ys-fb-drink">0</strong><small id="ys-fb-drink-pct">0% customer</small></article>
+          <article class="ys-fb-notdrink"><span>BELUM MINUM</span><strong id="ys-fb-notdrink">0</strong><small id="ys-fb-notdrink-pct">0% customer</small></article>
+          <article class="ys-fb-like"><span>OKEY / SUKA</span><strong id="ys-fb-like">0</strong><small id="ys-fb-like-pct">0% customer</small></article>
+          <article class="ys-fb-normal"><span>BIASA</span><strong id="ys-fb-normal">0</strong><small id="ys-fb-normal-pct">0% customer</small></article>
+          <article class="ys-fb-dislike"><span>TAK SUKA</span><strong id="ys-fb-dislike">0</strong><small id="ys-fb-dislike-pct">0% customer</small></article>
+        </div>
+        <div class="ys-feedback-bar"><div id="ys-fb-likebar" class="ys-bar-like"></div><div id="ys-fb-normalbar" class="ys-bar-normal"></div><div id="ys-fb-dislikebar" class="ys-bar-dislike"></div><div id="ys-fb-notdrinkbar" class="ys-bar-notdrink"></div></div>
+        <div class="ys-feedback-legend"><span><i class="like"></i> Okey / Suka</span><span><i class="normal"></i> Biasa</span><span><i class="dislike"></i> Tak Suka</span><span><i class="notdrink"></i> Belum Minum</span></div>
+      </section>
       <div class="ys-two">
         <section class="yg-card"><div class="yg-head"><div><small>BLAST SESSION</small><h3>Rekod Blasting Servicing</h3></div></div><form id="ys-blast-form" class="yg-form"><label>Tarikh<input id="ysb-date" type="date" required></label><label>Contact<input id="ysb-contact" type="number" min="0"></label><label>Sent<input id="ysb-sent" type="number" min="0"></label><label>Failed<input id="ysb-failed" type="number" min="0"></label><label>Reply<input id="ysb-reply" type="number" min="0"></label><label>Kos (RM)<input id="ysb-cost" type="number" min="0" step=".01"></label><label class="wide">Skrip / Nota<input id="ysb-note" placeholder="Contoh: Follow up tinggi anak selepas 30 hari"></label><div class="wide"><button class="btn btn-primary">Simpan Blast</button></div></form></section>
         <section class="yg-card"><div class="yg-head"><div><small>CUSTOMER SERVICING</small><h3>Tambah Reply Customer</h3></div></div><form id="ys-cust-form" class="yg-form"><label>Nombor Telefon<input id="ysc-phone" required placeholder="60123456789"></label><label>Nama<input id="ysc-name" placeholder="Optional"></label><label>Tinggi Sebelum (cm)<div class="ys-height-field"><input id="ysc-before" type="number" step=".1" placeholder="Optional"><label class="ys-unknown"><input id="ysc-before-unknown" type="checkbox"> Tak diberitahu</label></div></label><label>Tinggi Sekarang (cm)<div class="ys-height-field"><input id="ysc-now" type="number" step=".1" placeholder="Optional"><label class="ys-unknown"><input id="ysc-now-unknown" type="checkbox"> Tak diberitahu</label></div></label><label>Rasa / Pengalaman<select id="ysc-feel"><option>Okey / Suka</option><option>Biasa</option><option>Tak Suka</option><option>Belum Cuba</option></select></label><label>Status<select id="ysc-status"><option value="done">Dah Reply</option><option value="follow">Perlu Follow Up</option><option value="problem">Ada Masalah</option><option value="noreply">Belum Reply</option></select></label><label class="wide">Masalah / Feedback<input id="ysc-feedback" placeholder="Apa customer bagitahu?"></label><label>Tarikh Follow Up<input id="ysc-followdate" type="date"></label><div class="wide ys-feedback-upload"><label>Screenshot Feedback Customer <span>(Optional)</span></label><input id="ysc-feedback-images" type="file" accept="image/*" multiple hidden><button id="ysc-feedback-upload-btn" type="button" class="btn btn-ghost">📷 Upload Screenshot Feedback</button><span id="ysc-feedback-count">Tiada screenshot</span><div id="ysc-feedback-preview" class="ys-feedback-preview"></div></div><div class="wide"><button class="btn btn-primary">Simpan Customer</button></div></form></section>
@@ -2890,7 +2903,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v87-servicing-feedback"></script>
+<script src="js/app.js?v=v90-servicing-dashboard"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
