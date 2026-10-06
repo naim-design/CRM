@@ -1477,7 +1477,7 @@ function startListeners() {
     // Render Senarai Entri FIRST so old data stays editable even if
     // another report/view has a UI error.
     renderEntriesList();
-    try{ bcRender(); }catch(e){ console.warn('[Blast Calendar render skipped]',e); }
+      try{bcRender()}catch(e){console.warn('[Blast Calendar]',e)}
       if(document.getElementById('view-packageanalysis')?.classList.contains('active')) renderPackageAnalysis();
     try{ renderReferenceDashboardWidgets(); }catch(e){ console.warn(e); }
 
@@ -8355,14 +8355,26 @@ const ygM=n=>'RM '+Number(n||0).toLocaleString('en-MY',{maximumFractionDigits:2}
 function ygRange(){const d=new Date(),a=new Date(d.getFullYear(),d.getMonth(),1),b=new Date(d.getFullYear(),d.getMonth()+1,0);Y('yg-from').value=a.toISOString().slice(0,10);Y('yg-to').value=b.toISOString().slice(0,10)}
 function ygRows(){let f=Y('yg-from')?.value||'',t=Y('yg-to')?.value||'';return ygData.filter(x=>(!f||x.date>=f)&&(!t||x.date<=t))}
 function ygCalc(r){return r.reduce((a,x)=>(a.sales+=+x.sales||0,a.cost+=+x.cost||0,a.units+=+x.units||0,a.orders+=+x.orders||0,a),{sales:0,cost:0,units:0,orders:0})}
-function ygRender(){if(!Y('yg-sales-total'))return;let rows=ygRows(),m=ygCalc(rows);Y('yg-sales-total').textContent=ygM(m.sales);Y('yg-units-total').textContent=m.units.toLocaleString();Y('yg-cost-total').textContent=ygM(m.cost);Y('yg-roas-total').textContent=(m.cost?m.sales/m.cost:0).toFixed(2)+'x';Y('yg-orders-total').textContent=m.orders.toLocaleString();let list=ygP.map(p=>({p,...ygCalc(rows.filter(x=>x.platform===p))}));let top=[...list].sort((a,b)=>b.sales-a.sales)[0];Y('yg-top').textContent=top?.sales?top.p:'—';Y('yg-top-note').textContent=top?.sales?ygM(top.sales):'Belum ada data';Y('yg-platform-cards').innerHTML=list.map(x=>`<article class="yg-platform ${x.p.toLowerCase()}"><header><span>${ygLabel(x.p)}</span><b>${(x.cost?x.sales/x.cost:0).toFixed(2)}x</b></header><div class="yg-platform-gridline"><div><small>SALES</small><strong>${ygM(x.sales)}</strong></div><div><small>UNIT</small><strong>${x.units}</strong></div><div><small>KOS</small><strong>${ygM(x.cost)}</strong></div></div></article>`).join('');let mx=Math.max(1,...list.map(x=>x.sales));Y('yg-bars').innerHTML=list.map(x=>`<div class="yg-bar"><b>${ygLabel(x.p)}</b><div class="yg-track"><i style="width:${x.sales/mx*100}%"></i></div><span>${ygM(x.sales)} · ${x.units} unit · ${(x.cost?x.sales/x.cost:0).toFixed(2)}x</span></div>`).join('');Y('yg-packages').innerHTML=ygP.map(p=>{let map={};rows.filter(x=>x.platform===p).forEach(x=>map[x.packageName]=(map[x.packageName]||0)+(+x.units||0));let e=Object.entries(map);return e.length?`<div class="yg-pkg"><b>${ygLabel(p)}</b>${e.map(([k,v])=>`<span class="yg-chip">${ygE(k)} · ${v} unit</span>`).join('')}</div>`:''}).join('')||'<div class="empty-state">Belum ada data pakej.</div>';ygTable(rows)}
+function ygRender(){if(!Y('yg-sales-total'))return;let rows=ygRows(),m=ygCalc(rows);Y('yg-sales-total').textContent=ygM(m.sales);Y('yg-units-total').textContent=m.units.toLocaleString();Y('yg-cost-total').textContent=ygM(m.cost);Y('yg-roas-total').textContent=(m.cost?m.sales/m.cost:0).toFixed(2)+'x';Y('yg-orders-total').textContent=m.orders.toLocaleString();let list=ygP.map(p=>({p,...ygCalc(rows.filter(x=>x.platform===p))}));let top=[...list].sort((a,b)=>b.sales-a.sales)[0];Y('yg-top').textContent=top?.sales?top.p:'—';Y('yg-top-note').textContent=top?.sales?ygM(top.sales):'Belum ada data';Y('yg-platform-cards').innerHTML=list.map(x=>`<article class="yg-platform ${x.p.toLowerCase()}"><header><span>${ygLabel(x.p)}</span><b>${(x.cost?x.sales/x.cost:0).toFixed(2)}x</b></header><div class="yg-platform-gridline"><div><small>SALES</small><strong>${ygM(x.sales)}</strong></div><div><small>UNIT</small><strong>${x.units}</strong></div><div><small>KOS</small><strong>${ygM(x.cost)}</strong></div></div></article>`).join('');let ecomRows=rows.filter(x=>x.platform==='Ecommerce'),ecomBox=Y('yg-ecom-breakdown'),ecomCards=Y('yg-ecom-staff-cards');
+if(ecomBox&&ecomCards){
+ ecomBox.style.display=ecomRows.length?'':'none';
+ if(ecomRows.length){
+  let team=ygCalc(ecomRows),staffNames=['Encik Azim','Encik Aiman'];
+  let cards=[{name:'Overall Team',...team},...staffNames.map(name=>({name,...ygCalc(ecomRows.filter(x=>x.ecommerceStaff===name))}))];
+  ecomCards.innerHTML=cards.map((x,i)=>`<article class="yg-ecom-person ${i===0?'overall':''}"><span>${x.name}</span><strong>${ygM(x.sales)}</strong><div><small>UNIT <b>${x.units}</b></small><small>ORDER <b>${x.orders}</b></small><small>KOS <b>${ygM(x.cost)}</b></small><small>ROAS <b>${(x.cost?x.sales/x.cost:0).toFixed(2)}x</b></small></div><em>${i===0?'100% team':(team.sales?x.sales/team.sales*100:0).toFixed(1)+'% contribution'}</em></article>`).join('');
+ }
+}
+let mx=Math.max(1,...list.map(x=>x.sales));Y('yg-bars').innerHTML=list.map(x=>`<div class="yg-bar"><b>${ygLabel(x.p)}</b><div class="yg-track"><i style="width:${x.sales/mx*100}%"></i></div><span>${ygM(x.sales)} · ${x.units} unit · ${(x.cost?x.sales/x.cost:0).toFixed(2)}x</span></div>`).join('');Y('yg-packages').innerHTML=ygP.map(p=>{let map={};rows.filter(x=>x.platform===p).forEach(x=>map[x.packageName]=(map[x.packageName]||0)+(+x.units||0));let e=Object.entries(map);return e.length?`<div class="yg-pkg"><b>${ygLabel(p)}</b>${e.map(([k,v])=>`<span class="yg-chip">${ygE(k)} · ${v} unit</span>`).join('')}</div>`:''}).join('')||'<div class="empty-state">Belum ada data pakej.</div>';ygTable(rows)}
 function ygTable(rows){let p=Y('yg-filter')?.value||'',q=(Y('yg-search')?.value||'').toLowerCase();rows=rows.filter(x=>(!p||x.platform===p)&&(!q||`${x.campaign||''} ${x.packageName||''}`.toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||''));Y('yg-body').innerHTML=rows.length?rows.map(x=>`<tr><td>${ygE(x.date)}</td><td><span class="yg-pill ${x.platform.toLowerCase()}">${ygLabel(x.platform)}</span></td><td>${ygE(x.campaign||'-')}</td><td>${ygE(x.packageName||'-')}</td><td>${+x.orders||0}</td><td><b>${+x.units||0}</b></td><td>${ygM(x.sales)}</td><td>${ygM(x.cost)}</td><td><b>${(+x.cost?(+x.sales)/(+x.cost):0).toFixed(2)}x</b></td><td class="yg-act"><button data-yge="${x.id}">Edit</button><button data-ygd="${x.id}">Padam</button></td></tr>`).join(''):'<tr><td colspan="10">Belum ada data.</td></tr>'}
-function ygReset(){Y('yg-form')?.reset();Y('yg-id').value='';Y('yg-date').value=new Date().toISOString().slice(0,10);Y('yg-custom-wrap').style.display='none'}
+function ygReset(){Y('yg-form')?.reset();Y('yg-id').value='';Y('yg-date').value=new Date().toISOString().slice(0,10);Y('yg-custom-wrap').style.display='none';if(Y('yg-ecom-staff-wrap'))Y('yg-ecom-staff-wrap').style.display='none'}
 function ygInit(){if(!Y('yg-date'))return;Y('yg-date').value=new Date().toISOString().slice(0,10);ygRange();db.collection('ygrowPlatformEntries').onSnapshot(s=>{ygData=s.docs.map(d=>({id:d.id,...d.data()}));ygRender()},e=>toast('Ralat data YGROW: '+e.message,true))}
+Y('yg-platform')?.addEventListener('change',e=>{
+  let w=Y('yg-ecom-staff-wrap');if(w)w.style.display=e.target.value==='Ecommerce'?'':'none';
+});
 Y('yg-package')?.addEventListener('change',e=>Y('yg-custom-wrap').style.display=e.target.value==='Custom'?'block':'none');
-Y('yg-form')?.addEventListener('submit',async e=>{e.preventDefault();let id=Y('yg-id').value,p=Y('yg-package').value,pkg=p==='Custom'?(Y('yg-custom').value.trim()||'Custom'):p,d={date:Y('yg-date').value,platform:Y('yg-platform').value,campaign:Y('yg-campaign').value.trim(),packageName:pkg,orders:+Y('yg-orders').value||0,units:+Y('yg-units').value||0,sales:+Y('yg-sales').value||0,cost:+Y('yg-cost').value||0,note:Y('yg-note').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{id?await db.collection('ygrowPlatformEntries').doc(id).update(d):(d.createdAt=firebase.firestore.FieldValue.serverTimestamp(),await db.collection('ygrowPlatformEntries').add(d));toast('Data YGROW disimpan ✓');ygReset()}catch(err){toast('Gagal simpan: '+err.message,true)}});
+Y('yg-form')?.addEventListener('submit',async e=>{e.preventDefault();let id=Y('yg-id').value,p=Y('yg-package').value,pkg=p==='Custom'?(Y('yg-custom').value.trim()||'Custom'):p,d={date:Y('yg-date').value,platform:Y('yg-platform').value,ecommerceStaff:(Y('yg-platform').value==='Ecommerce'?(Y('yg-ecom-staff')?.value||'') : ''),campaign:Y('yg-campaign').value.trim(),packageName:pkg,orders:+Y('yg-orders').value||0,units:+Y('yg-units').value||0,sales:+Y('yg-sales').value||0,cost:+Y('yg-cost').value||0,note:Y('yg-note').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{id?await db.collection('ygrowPlatformEntries').doc(id).update(d):(d.createdAt=firebase.firestore.FieldValue.serverTimestamp(),await db.collection('ygrowPlatformEntries').add(d));toast('Data YGROW disimpan ✓');ygReset()}catch(err){toast('Gagal simpan: '+err.message,true)}});
 Y('yg-reset')?.addEventListener('click',ygReset);Y('yg-month')?.addEventListener('click',()=>{ygRange();ygRender()});['yg-from','yg-to','yg-filter'].forEach(id=>Y(id)?.addEventListener('change',ygRender));Y('yg-search')?.addEventListener('input',ygRender);
-document.addEventListener('click',async e=>{let t=e.target;if(t.matches('[data-ygd]')&&confirm('Padam rekod ini?'))await db.collection('ygrowPlatformEntries').doc(t.dataset.ygd).delete();if(t.matches('[data-yge]')){let x=ygData.find(z=>z.id===t.dataset.yge);if(!x)return;Y('yg-id').value=x.id;Y('yg-date').value=x.date||'';Y('yg-platform').value=x.platform;Y('yg-campaign').value=x.campaign||'';let std=['1 Box RM59','2 Box RM99','4 Box RM199'];Y('yg-package').value=std.includes(x.packageName)?x.packageName:'Custom';Y('yg-custom-wrap').style.display=std.includes(x.packageName)?'none':'block';Y('yg-custom').value=std.includes(x.packageName)?'':x.packageName;Y('yg-orders').value=x.orders||0;Y('yg-units').value=x.units||0;Y('yg-sales').value=x.sales||0;Y('yg-cost').value=x.cost||0;Y('yg-note').value=x.note||'';Y('view-ygrowhub').scrollIntoView({behavior:'smooth'})}});
+document.addEventListener('click',async e=>{let t=e.target;if(t.matches('[data-ygd]')&&confirm('Padam rekod ini?'))await db.collection('ygrowPlatformEntries').doc(t.dataset.ygd).delete();if(t.matches('[data-yge]')){let x=ygData.find(z=>z.id===t.dataset.yge);if(!x)return;Y('yg-id').value=x.id;Y('yg-date').value=x.date||'';Y('yg-platform').value=x.platform;if(Y('yg-ecom-staff'))Y('yg-ecom-staff').value=x.ecommerceStaff||'';if(Y('yg-ecom-staff-wrap'))Y('yg-ecom-staff-wrap').style.display=x.platform==='Ecommerce'?'':'none';Y('yg-campaign').value=x.campaign||'';let std=['1 Box RM59','2 Box RM99','4 Box RM199'];Y('yg-package').value=std.includes(x.packageName)?x.packageName:'Custom';Y('yg-custom-wrap').style.display=std.includes(x.packageName)?'none':'block';Y('yg-custom').value=std.includes(x.packageName)?'':x.packageName;Y('yg-orders').value=x.orders||0;Y('yg-units').value=x.units||0;Y('yg-sales').value=x.sales||0;Y('yg-cost').value=x.cost||0;Y('yg-note').value=x.note||'';Y('view-ygrowhub').scrollIntoView({behavior:'smooth'})}});
 setTimeout(ygInit,1000);
 
 /* ================= V80 BLAST CALENDAR ================= */
@@ -8371,20 +8383,55 @@ const BC_RATE=0.0116,BC_TARGET=3000,BC_TOPUP=120;
 function bcKey(y,m){return `bcBalance:${y}-${String(m+1).padStart(2,'0')}`}
 function bcPromo(day,m,y){if(m!==9||y!==2026)return {n:'Promo Bulanan',c:1};if(day<=6)return{n:'Promo Gaji Awal Bulan',c:1};if(day<=14)return{n:'Promo Double Digit 10.10',c:2};if(day<=22)return{n:'Oktober Lebih Jimat',c:3};return{n:'Promo Payday Sales',c:4}}
 function bcEntryDate(x){
-  // Input Data CRM stores the blast date primarily in `tarikh`.
-  // Keep legacy aliases so older records remain compatible.
   let v=x?.tarikh||x?.date||x?.entryDate||x?.createdDate||'';
   if(v && typeof v.toDate==='function') v=v.toDate();
-  if(v instanceof Date && !isNaN(v)) {
-    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
-  }
+  if(v instanceof Date && !isNaN(v)) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
   v=String(v||'').trim();
-  // Also support DD/MM/YYYY records.
   let m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   return v.slice(0,10);
 }
-function bcRender(){const grid=document.getElementById('bc-grid');if(!grid)return;let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();document.getElementById('bc-month-label').textContent=new Intl.DateTimeFormat('ms-MY',{month:'long',year:'numeric'}).format(bcCursor);document.getElementById('bc-daily-eur').textContent='€'+(BC_TARGET*BC_RATE).toFixed(2);let bal=Number(localStorage.getItem(bcKey(y,m))||0);document.getElementById('bc-balance-show').textContent='€'+bal.toFixed(2);let today=new Date(),html='',nextTop='—',running=bal;for(let z=0;z<first;z++)html+='<div class="bc-day blank"></div>';for(let d=1;d<=days;d++){let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,sent=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0),date=new Date(y,m,d),future=date>new Date(today.getFullYear(),today.getMonth(),today.getDate()),p=bcPromo(d,m,y),cls=future?'future':sent>=BC_TARGET?'ok':'bad',top='';if(!future){running-=sent*BC_RATE}else{running-=BC_TARGET*BC_RATE;if(running<BC_TARGET*BC_RATE){running+=BC_TOPUP;if(nextTop==='—')nextTop=`${d}/${m+1}/${y}`;top='<span class="bc-topup">€ Topup +120</span>'}}html+=`<div class="bc-day promo${p.c}"><span class="num">${d}</span><span class="promo">${p.n}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${top}</div>`}grid.innerHTML=html;document.getElementById('bc-next-topup').textContent=nextTop;document.getElementById('bc-next-topup-note').textContent=nextTop==='—'?'Baki mencukupi untuk bulan ini':'Anggaran jika target 3,000/hari'}
+function bcRender(){
+ const grid=document.getElementById('bc-grid');if(!grid)return;
+ let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();
+ document.getElementById('bc-month-label').textContent=new Intl.DateTimeFormat('ms-MY',{month:'long',year:'numeric'}).format(bcCursor);
+ document.getElementById('bc-daily-eur').textContent='€'+(BC_TARGET*BC_RATE).toFixed(2);
+ let bal=Number(localStorage.getItem(bcKey(y,m))||0);document.getElementById('bc-balance-show').textContent='€'+bal.toFixed(2);
+ let today=new Date(),today0=new Date(today.getFullYear(),today.getMonth(),today.getDate()),html='',nextTop='—',running=bal,cumSent=0,lastElapsed=0;
+ for(let z=0;z<first;z++)html+='<div class="bc-day blank"></div>';
+ for(let d=1;d<=days;d++){
+   let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+   let sent=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0);
+   let date=new Date(y,m,d),future=date>today0,p=bcPromo(d,m,y),cls=future?'future':sent>=BC_TARGET?'ok':'bad',top='',remark='';
+   if(!future){
+     cumSent+=sent;lastElapsed=d;
+     let target=d*BC_TARGET,gap=cumSent-target;
+     remark=gap>=0?`<span class="bc-remark ahead">Ahead +${gap.toLocaleString()}</span>`:`<span class="bc-remark behind">Behind ${Math.abs(gap).toLocaleString()}</span>`;
+     running-=sent*BC_RATE;
+   }else{
+     running-=BC_TARGET*BC_RATE;
+     if(running<BC_TARGET*BC_RATE){running+=BC_TOPUP;if(nextTop==='—')nextTop=`${d}/${m+1}/${y}`;top='<span class="bc-topup">€ Topup +120</span>'}
+   }
+   html+=`<div class="bc-day promo${p.c}"><span class="num">${d}</span><span class="promo">${p.n}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${remark}${top}</div>`;
+ }
+ grid.innerHTML=html;
+ let viewingCurrent=(y===today.getFullYear()&&m===today.getMonth());
+ let elapsed=viewingCurrent?Math.min(today.getDate(),days):(new Date(y,m+1,0)<today0?days:0);
+ let target=elapsed*BC_TARGET;
+ // recalc total through elapsed so blank/future months stay sensible
+ let actual=0;
+ for(let d=1;d<=elapsed;d++){let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;actual+=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0)}
+ let gap=actual-target,pct=target?actual/target*100:0,backlog=Math.max(0,-gap);
+ document.getElementById('bc-cum-target').textContent=target.toLocaleString();
+ document.getElementById('bc-cum-target-note').textContent=elapsed?`3,000 × ${elapsed} hari`:'Belum masuk tempoh';
+ document.getElementById('bc-cum-sent').textContent=actual.toLocaleString();
+ let ge=document.getElementById('bc-cum-gap');ge.textContent=gap>=0?`Ahead +${gap.toLocaleString()}`:`Baki ${backlog.toLocaleString()}`;ge.className=gap>=0?'is-ahead':'is-behind';
+ document.getElementById('bc-cum-gap-note').textContent=gap>=0?'Melebihi target terkumpul':'Perlu blast untuk kejar target';
+ document.getElementById('bc-cum-pct').textContent=pct.toFixed(1)+'%';
+ document.getElementById('bc-catchup').textContent=(BC_TARGET+backlog).toLocaleString();
+ document.getElementById('bc-catchup-note').textContent=backlog?`3,000 harian + ${backlog.toLocaleString()} backlog`:'Target harian biasa';
+ document.getElementById('bc-next-topup').textContent=nextTop;document.getElementById('bc-next-topup-note').textContent=nextTop==='—'?'Baki mencukupi untuk bulan ini':'Anggaran jika target 3,000/hari';
+}
 document.getElementById('bc-prev')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()-1,1);bcRender()});document.getElementById('bc-next')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()+1,1);bcRender()});document.getElementById('bc-edit-balance')?.addEventListener('click',()=>{let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),v=prompt('Baki Euro semasa',localStorage.getItem(bcKey(y,m))||'100');if(v!==null&&!isNaN(+v)){localStorage.setItem(bcKey(y,m),+v);bcRender()}});
 setInterval(()=>{if(document.getElementById('view-blastcalendar')?.classList.contains('active'))bcRender()},1500);setTimeout(bcRender,1200);
 
