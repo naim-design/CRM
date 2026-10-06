@@ -13443,3 +13443,15 @@ body.crm-sidebar-layout.crm-sidebar-hidden .team-workspace-switcher{top:101px!im
 .crm-reference-topbar{transition:left .24s ease!important}
 #app-shell>.wrap{transition:margin-left .24s ease!important}
 @media(max-width:760px){.team-workspace-switcher{right:12px!important;top:101px!important}.team-workspace-switcher .team-workspace-btn{min-width:auto!important;padding:7px 9px!important}.crm-reference-title span{display:none}}
+
+/* V85 full width collapsed sidebar */
+body.crm-sidebar-layout.crm-sidebar-hidden #app-shell>.wrap{margin-left:0!important;width:100%!important;max-width:none!important;padding-left:28px!important;padding-right:28px!important}
+body.crm-sidebar-layout.crm-sidebar-hidden .view{width:100%!important;max-width:none!important}
+body.crm-sidebar-layout.crm-sidebar-hidden .v81-head,body.crm-sidebar-layout.crm-sidebar-hidden .v81-kpis,body.crm-sidebar-layout.crm-sidebar-hidden .v81-grid,body.crm-sidebar-layout.crm-sidebar-hidden .section-head,body.crm-sidebar-layout.crm-sidebar-hidden .form-card,body.crm-sidebar-layout.crm-sidebar-hidden .yg-hero,body.crm-sidebar-layout.crm-sidebar-hidden .yg-kpis,body.crm-sidebar-layout.crm-sidebar-hidden .yg-platform-grid,body.crm-sidebar-layout.crm-sidebar-hidden .yg-two,body.crm-sidebar-layout.crm-sidebar-hidden .yg-card,body.crm-sidebar-layout.crm-sidebar-hidden .bc-kpis,body.crm-sidebar-layout.crm-sidebar-hidden .bc-calendar-card,body.crm-sidebar-layout.crm-sidebar-hidden .ys-kpis,body.crm-sidebar-layout.crm-sidebar-hidden .ys-two{max-width:none!important;width:100%!important}
+body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-grid{grid-template-columns:minmax(0,3.2fr) minmax(310px,.85fr)!important;gap:18px!important}
+body.crm-sidebar-layout.crm-sidebar-hidden #view-input .form-grid{width:100%!important}
+body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-preview{width:100%!important}
+body.crm-sidebar-layout.crm-sidebar-hidden .v81-kpis{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+body.crm-sidebar-layout.crm-sidebar-hidden .crm-reference-topbar{width:100%!important;padding-left:26px!important;padding-right:26px!important}
+@media(min-width:1500px){body.crm-sidebar-layout.crm-sidebar-hidden #app-shell>.wrap{padding-left:42px!important;padding-right:42px!important}body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-grid{grid-template-columns:minmax(0,3.6fr) minmax(330px,.8fr)!important}}
+@media(max-width:900px){body.crm-sidebar-layout.crm-sidebar-hidden #app-shell>.wrap{padding-left:14px!important;padding-right:14px!important}body.crm-sidebar-layout.crm-sidebar-hidden #view-input .v81-grid{grid-template-columns:1fr!important}}
