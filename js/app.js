@@ -1477,6 +1477,7 @@ function startListeners() {
     // Render Senarai Entri FIRST so old data stays editable even if
     // another report/view has a UI error.
     renderEntriesList();
+    try{ bcRender(); }catch(e){ console.warn('[Blast Calendar render skipped]',e); }
       if(document.getElementById('view-packageanalysis')?.classList.contains('active')) renderPackageAnalysis();
     try{ renderReferenceDashboardWidgets(); }catch(e){ console.warn(e); }
 
@@ -8369,8 +8370,21 @@ let bcCursor=new Date(2026,9,1);
 const BC_RATE=0.0116,BC_TARGET=3000,BC_TOPUP=120;
 function bcKey(y,m){return `bcBalance:${y}-${String(m+1).padStart(2,'0')}`}
 function bcPromo(day,m,y){if(m!==9||y!==2026)return {n:'Promo Bulanan',c:1};if(day<=6)return{n:'Promo Gaji Awal Bulan',c:1};if(day<=14)return{n:'Promo Double Digit 10.10',c:2};if(day<=22)return{n:'Oktober Lebih Jimat',c:3};return{n:'Promo Payday Sales',c:4}}
-function bcEntryDate(x){return x.date||x.entryDate||x.createdDate||''}
-function bcRender(){const grid=document.getElementById('bc-grid');if(!grid)return;let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();document.getElementById('bc-month-label').textContent=new Intl.DateTimeFormat('ms-MY',{month:'long',year:'numeric'}).format(bcCursor);document.getElementById('bc-daily-eur').textContent='€'+(BC_TARGET*BC_RATE).toFixed(2);let bal=Number(localStorage.getItem(bcKey(y,m))||0);document.getElementById('bc-balance-show').textContent='€'+bal.toFixed(2);let today=new Date(),html='',nextTop='—',running=bal;for(let z=0;z<first;z++)html+='<div class="bc-day blank"></div>';for(let d=1;d<=days;d++){let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,sent=(window.entries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(+x.sent||0),0),date=new Date(y,m,d),future=date>new Date(today.getFullYear(),today.getMonth(),today.getDate()),p=bcPromo(d,m,y),cls=future?'future':sent>=BC_TARGET?'ok':'bad',top='';if(!future){running-=sent*BC_RATE}else{running-=BC_TARGET*BC_RATE;if(running<BC_TARGET*BC_RATE){running+=BC_TOPUP;if(nextTop==='—')nextTop=`${d}/${m+1}/${y}`;top='<span class="bc-topup">€ Topup +120</span>'}}html+=`<div class="bc-day promo${p.c}"><span class="num">${d}</span><span class="promo">${p.n}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${top}</div>`}grid.innerHTML=html;document.getElementById('bc-next-topup').textContent=nextTop;document.getElementById('bc-next-topup-note').textContent=nextTop==='—'?'Baki mencukupi untuk bulan ini':'Anggaran jika target 3,000/hari'}
+function bcEntryDate(x){
+  // Input Data CRM stores the blast date primarily in `tarikh`.
+  // Keep legacy aliases so older records remain compatible.
+  let v=x?.tarikh||x?.date||x?.entryDate||x?.createdDate||'';
+  if(v && typeof v.toDate==='function') v=v.toDate();
+  if(v instanceof Date && !isNaN(v)) {
+    return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+  }
+  v=String(v||'').trim();
+  // Also support DD/MM/YYYY records.
+  let m=v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return v.slice(0,10);
+}
+function bcRender(){const grid=document.getElementById('bc-grid');if(!grid)return;let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();document.getElementById('bc-month-label').textContent=new Intl.DateTimeFormat('ms-MY',{month:'long',year:'numeric'}).format(bcCursor);document.getElementById('bc-daily-eur').textContent='€'+(BC_TARGET*BC_RATE).toFixed(2);let bal=Number(localStorage.getItem(bcKey(y,m))||0);document.getElementById('bc-balance-show').textContent='€'+bal.toFixed(2);let today=new Date(),html='',nextTop='—',running=bal;for(let z=0;z<first;z++)html+='<div class="bc-day blank"></div>';for(let d=1;d<=days;d++){let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,sent=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0),date=new Date(y,m,d),future=date>new Date(today.getFullYear(),today.getMonth(),today.getDate()),p=bcPromo(d,m,y),cls=future?'future':sent>=BC_TARGET?'ok':'bad',top='';if(!future){running-=sent*BC_RATE}else{running-=BC_TARGET*BC_RATE;if(running<BC_TARGET*BC_RATE){running+=BC_TOPUP;if(nextTop==='—')nextTop=`${d}/${m+1}/${y}`;top='<span class="bc-topup">€ Topup +120</span>'}}html+=`<div class="bc-day promo${p.c}"><span class="num">${d}</span><span class="promo">${p.n}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${top}</div>`}grid.innerHTML=html;document.getElementById('bc-next-topup').textContent=nextTop;document.getElementById('bc-next-topup-note').textContent=nextTop==='—'?'Baki mencukupi untuk bulan ini':'Anggaran jika target 3,000/hari'}
 document.getElementById('bc-prev')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()-1,1);bcRender()});document.getElementById('bc-next')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()+1,1);bcRender()});document.getElementById('bc-edit-balance')?.addEventListener('click',()=>{let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),v=prompt('Baki Euro semasa',localStorage.getItem(bcKey(y,m))||'100');if(v!==null&&!isNaN(+v)){localStorage.setItem(bcKey(y,m),+v);bcRender()}});
 setInterval(()=>{if(document.getElementById('view-blastcalendar')?.classList.contains('active'))bcRender()},1500);setTimeout(bcRender,1200);
 
