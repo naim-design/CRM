@@ -8391,26 +8391,40 @@ function bcEntryDate(x){
   if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   return v.slice(0,10);
 }
+
+function bcTopupKey(y,m){return `bc_topups_${y}_${String(m+1).padStart(2,'0')}`}
+function bcTopups(y,m){try{return JSON.parse(localStorage.getItem(bcTopupKey(y,m))||'[]')}catch(e){return []}}
+function bcSaveTopups(y,m,a){localStorage.setItem(bcTopupKey(y,m),JSON.stringify(a))}
+function bcTopupRender(y,m){
+ let rows=bcTopups(y,m).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+ let box=document.getElementById('bc-topup-history');if(!box)return;
+ box.innerHTML=rows.length?rows.map((x,i)=>`<span><b>${x.date.split('-').reverse().join('/')}</b> +€${Number(x.amount).toFixed(2)} <button data-bctdel="${i}" title="Padam">×</button></span>`).join(''):'<small>Belum ada rekod topup bulan ini.</small>';
+}
 function bcRender(){
  const grid=document.getElementById('bc-grid');if(!grid)return;
  let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),days=new Date(y,m+1,0).getDate(),first=new Date(y,m,1).getDay();
  document.getElementById('bc-month-label').textContent=new Intl.DateTimeFormat('ms-MY',{month:'long',year:'numeric'}).format(bcCursor);
  document.getElementById('bc-daily-eur').textContent='€'+(BC_TARGET*BC_RATE).toFixed(2);
- let bal=Number(localStorage.getItem(bcKey(y,m))||0);document.getElementById('bc-balance-show').textContent='€'+bal.toFixed(2);
- let today=new Date(),today0=new Date(today.getFullYear(),today.getMonth(),today.getDate()),html='',nextTop='—',running=bal,cumSent=0,lastElapsed=0;
+ let opening=Number(localStorage.getItem(bcKey(y,m))||0),topups=bcTopups(y,m);
+ let bal=opening+topups.reduce((a,x)=>a+(Number(x.amount)||0),0);
+ document.getElementById('bc-balance-show').textContent='€'+bal.toFixed(2);bcTopupRender(y,m);
+ let today=new Date(),today0=new Date(today.getFullYear(),today.getMonth(),today.getDate()),html='',nextTop='—',running=opening,cumSent=0,lastElapsed=0;
  for(let z=0;z<first;z++)html+='<div class="bc-day blank"></div>';
  for(let d=1;d<=days;d++){
    let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
    let sent=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0);
    let date=new Date(y,m,d),future=date>today0,p=bcPromo(d,m,y),cls=future?'future':sent>=BC_TARGET?'ok':'bad',top='',remark='';
+   let dayTopups=topups.filter(x=>x.date===ds).reduce((a,x)=>a+(Number(x.amount)||0),0);
+   if(dayTopups){running+=dayTopups;top=`<span class="bc-topup">€ Topup +${dayTopups.toFixed(2)}</span>`}
    if(!future){
      cumSent+=sent;lastElapsed=d;
      let target=d*BC_TARGET,gap=cumSent-target;
      remark=gap>=0?`<span class="bc-remark ahead">Ahead +${gap.toLocaleString()}</span>`:`<span class="bc-remark behind">Behind ${Math.abs(gap).toLocaleString()}</span>`;
      running-=sent*BC_RATE;
-   }else{
-     running-=BC_TARGET*BC_RATE;
-     if(running<BC_TARGET*BC_RATE){running+=BC_TOPUP;if(nextTop==='—')nextTop=`${d}/${m+1}/${y}`;top='<span class="bc-topup">€ Topup +120</span>'}
+   }else if(nextTop==='—'){
+     let projected=running-BC_TARGET*BC_RATE;
+     if(projected<0) nextTop=`${d}/${m+1}/${y}`;
+     else running=projected;
    }
    html+=`<div class="bc-day promo${p.c}"><span class="num">${d}</span><span class="promo">${p.n}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${remark}${top}</div>`;
  }
@@ -8430,9 +8444,28 @@ function bcRender(){
  document.getElementById('bc-cum-pct').textContent=pct.toFixed(1)+'%';
  document.getElementById('bc-catchup').textContent=(BC_TARGET+backlog).toLocaleString();
  document.getElementById('bc-catchup-note').textContent=backlog?`3,000 harian + ${backlog.toLocaleString()} backlog`:'Target harian biasa';
+ let actualWallet=opening;
+ for(let d=1;d<=Math.min(today.getDate(),days);d++){
+   let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+   actualWallet+=topups.filter(x=>x.date===ds).reduce((a,x)=>a+(Number(x.amount)||0),0);
+   actualWallet-=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0)*BC_RATE;
+ }
+ let wl=document.getElementById('bc-wallet-live');if(wl){wl.textContent='€'+actualWallet.toFixed(2);wl.className=actualWallet<0?'negative':'positive'}
  document.getElementById('bc-next-topup').textContent=nextTop;document.getElementById('bc-next-topup-note').textContent=nextTop==='—'?'Baki mencukupi untuk bulan ini':'Anggaran jika target 3,000/hari';
 }
-document.getElementById('bc-prev')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()-1,1);bcRender()});document.getElementById('bc-next')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()+1,1);bcRender()});document.getElementById('bc-edit-balance')?.addEventListener('click',()=>{let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),v=prompt('Baki Euro semasa',localStorage.getItem(bcKey(y,m))||'100');if(v!==null&&!isNaN(+v)){localStorage.setItem(bcKey(y,m),+v);bcRender()}});
+document.getElementById('bc-prev')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()-1,1);bcRender()});document.getElementById('bc-next')?.addEventListener('click',()=>{bcCursor=new Date(bcCursor.getFullYear(),bcCursor.getMonth()+1,1);bcRender()});document.getElementById('bc-edit-balance')?.addEventListener('click',()=>{let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),v=prompt('Baki pembukaan sebelum topup bulan ini',localStorage.getItem(bcKey(y,m))||'100');if(v!==null&&!isNaN(+v)){localStorage.setItem(bcKey(y,m),+v);bcRender()}});
+
+document.getElementById('bc-save-topup')?.addEventListener('click',()=>{
+ let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),date=document.getElementById('bc-topup-date')?.value,amount=Number(document.getElementById('bc-topup-amount')?.value||0);
+ if(!date||amount<=0)return toast('Isi tarikh dan jumlah topup Euro.',true);
+ let a=bcTopups(y,m);a.push({date,amount});bcSaveTopups(y,m,a);toast('Topup Euro disimpan ✓');bcRender();
+});
+document.addEventListener('click',e=>{
+ let b=e.target.closest('[data-bctdel]');if(!b)return;
+ let y=bcCursor.getFullYear(),m=bcCursor.getMonth(),a=bcTopups(y,m),i=Number(b.dataset.bctdel);
+ if(confirm('Padam rekod topup ini?')){a.splice(i,1);bcSaveTopups(y,m,a);bcRender()}
+});
+setTimeout(()=>{let d=document.getElementById('bc-topup-date');if(d&&!d.value)d.value=new Date().toISOString().slice(0,10)},300);
 setInterval(()=>{if(document.getElementById('view-blastcalendar')?.classList.contains('active'))bcRender()},1500);setTimeout(bcRender,1200);
 
 /* ================= V80 YGROW SERVICING ================= */
