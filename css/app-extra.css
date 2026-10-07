@@ -13689,47 +13689,24 @@ body.crm-sidebar-layout.crm-sidebar-hidden{
 #topup-section { display: none !important; }
 
 
-/* V102 — YGROW platform cards: stronger platform colour identity */
-#ygrow .ygrow-platform-card:nth-child(1),
-#ygrowView .ygrow-platform-card:nth-child(1),
-.ygrow-platform-grid .ygrow-platform-card:nth-child(1) {
-  background: linear-gradient(135deg,#f4f5f6 0%,#ffffff 100%) !important;
-  border-color:#c7ccd1 !important; border-top:4px solid #202326 !important;
+/* V103 — SAFE YGROW platform colours. Scoped strictly to YGROW hub only. */
+#view-ygrowhub #yg-platform-cards .yg-platform.tiktok{
+  background:linear-gradient(135deg,#f0f2f3 0%,#ffffff 100%)!important;
+  border:1px solid #cbd1d5!important;border-top:4px solid #17191b!important;
 }
-#ygrow .ygrow-platform-card:nth-child(2),
-#ygrowView .ygrow-platform-card:nth-child(2),
-.ygrow-platform-grid .ygrow-platform-card:nth-child(2) {
-  background: linear-gradient(135deg,#eafbf3 0%,#f8fffb 100%) !important;
-  border-color:#a8e8c9 !important; border-top:4px solid #12c978 !important;
+#view-ygrowhub #yg-platform-cards .yg-platform.whatsapp{
+  background:linear-gradient(135deg,#e8fbf1 0%,#f9fffc 100%)!important;
+  border:1px solid #a8e8c8!important;border-top:4px solid #25d366!important;
 }
-#ygrow .ygrow-platform-card:nth-child(3),
-#ygrowView .ygrow-platform-card:nth-child(3),
-.ygrow-platform-grid .ygrow-platform-card:nth-child(3) {
-  background: linear-gradient(135deg,#eaf5ff 0%,#f8fcff 100%) !important;
-  border-color:#abd6fb !important; border-top:4px solid #1688e8 !important;
+#view-ygrowhub #yg-platform-cards .yg-platform.ecommerce{
+  background:linear-gradient(135deg,#e8f4ff 0%,#f9fcff 100%)!important;
+  border:1px solid #acd6fa!important;border-top:4px solid #2878e8!important;
 }
-#ygrow .ygrow-platform-card:nth-child(4),
-#ygrowView .ygrow-platform-card:nth-child(4),
-.ygrow-platform-grid .ygrow-platform-card:nth-child(4) {
-  background: linear-gradient(135deg,#f3edff 0%,#fcfaff 100%) !important;
-  border-color:#d2bdf8 !important; border-top:4px solid #8657df !important;
+#view-ygrowhub #yg-platform-cards .yg-platform.leads{
+  background:linear-gradient(135deg,#f1ebff 0%,#fcfaff 100%)!important;
+  border:1px solid #d2bdf8!important;border-top:4px solid #7559d9!important;
 }
-
-/* Fallback targeting current YGROW cards by data/platform classes where present */
-.ygrow-platform-card.tiktok,.platform-card.tiktok {background:linear-gradient(135deg,#f2f3f4,#fff)!important;border-color:#c8cdd2!important;border-top:4px solid #202326!important}
-.ygrow-platform-card.crm,.platform-card.crm {background:linear-gradient(135deg,#e9fbf2,#f9fffc)!important;border-color:#a8e8c9!important;border-top:4px solid #12c978!important}
-.ygrow-platform-card.ecommerce,.platform-card.ecommerce {background:linear-gradient(135deg,#e9f5ff,#f9fcff)!important;border-color:#acd7fb!important;border-top:4px solid #1688e8!important}
-.ygrow-platform-card.leads,.platform-card.leads {background:linear-gradient(135deg,#f2ecff,#fcfaff)!important;border-color:#d2bdf8!important;border-top:4px solid #8657df!important}
-
-/* Ecommerce staff breakdown */
-.ygrow-ecom-team .ecom-overall,.ecommerce-breakdown .overall-team {background:linear-gradient(135deg,#e8f4ff,#f8fcff)!important;border:1px solid #abd6fb!important;border-top:4px solid #1688e8!important}
-.ygrow-ecom-team .ecom-azim,.ecommerce-breakdown .azim {background:linear-gradient(135deg,#eefaf5,#fbfffd)!important;border:1px solid #bce9d2!important;border-top:4px solid #22b573!important}
-.ygrow-ecom-team .ecom-aiman,.ecommerce-breakdown .aiman {background:linear-gradient(135deg,#fff5e8,#fffdf9)!important;border:1px solid #f2d2a8!important;border-top:4px solid #e79a32!important}
-
-.ygrow-platform-card.tiktok{background:linear-gradient(135deg,#f1f3f4,#fff)!important;border:1px solid #c8cdd2!important;border-top:4px solid #202326!important}
-.ygrow-platform-card.crm{background:linear-gradient(135deg,#e8fbf2,#f9fffc)!important;border:1px solid #a8e8c9!important;border-top:4px solid #12c978!important}
-.ygrow-platform-card.ecommerce{background:linear-gradient(135deg,#e8f4ff,#f9fcff)!important;border:1px solid #abd6fb!important;border-top:4px solid #1688e8!important}
-.ygrow-platform-card.leads{background:linear-gradient(135deg,#f2ecff,#fcfaff)!important;border:1px solid #d2bdf8!important;border-top:4px solid #8657df!important}
-.ecom-overall{background:linear-gradient(135deg,#e8f4ff,#f8fcff)!important;border-top:4px solid #1688e8!important}
-.ecom-azim{background:linear-gradient(135deg,#eafaf2,#fbfffd)!important;border-top:4px solid #22b573!important}
-.ecom-aiman{background:linear-gradient(135deg,#fff4e5,#fffdf9)!important;border-top:4px solid #e79a32!important}
+#view-ygrowhub #yg-platform-cards .yg-platform header b{background:rgba(255,255,255,.72)!important}
+#view-ygrowhub #yg-ecom-breakdown .yg-ecom-person:nth-child(1){background:linear-gradient(135deg,#e8f4ff,#f9fcff)!important;border-color:#acd6fa!important;border-top:4px solid #2878e8!important}
+#view-ygrowhub #yg-ecom-breakdown .yg-ecom-person:nth-child(2){background:linear-gradient(135deg,#e9faf2,#fbfffd)!important;border-color:#b8e7cf!important;border-top:4px solid #22b573!important}
+#view-ygrowhub #yg-ecom-breakdown .yg-ecom-person:nth-child(3){background:linear-gradient(135deg,#fff3e4,#fffdf9)!important;border-color:#f0d0a5!important;border-top:4px solid #e79a32!important}
