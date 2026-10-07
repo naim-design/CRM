@@ -8542,28 +8542,3 @@ const V82I={dashboard:'layout-dashboard',blastcalendar:'calendar-days',ygrowhub:
    localStorage.setItem(key,hidden?'1':'0'); apply();
  });
 })();
-
-
-// V102: apply visible platform tint to YGROW cards after render
-function applyYgrowPlatformCardColors(){
-  try{
-    const roots=[document.getElementById('ygrow'),document.getElementById('ygrowView'),
-      document.querySelector('[data-view="ygrow"]'),document.querySelector('.ygrow-view')].filter(Boolean);
-    const scope=roots[0]||document;
-    scope.querySelectorAll('.card, .platform-card, [class*="platform"]').forEach(el=>{
-      const t=(el.textContent||'').trim().toLowerCase();
-      if(t.startsWith('tiktok') || /^tiktok\b/.test(t)) el.classList.add('ygrow-platform-card','tiktok');
-      else if(t.startsWith('crm') || /^crm\b/.test(t)) el.classList.add('ygrow-platform-card','crm');
-      else if(t.startsWith('ecommerce') || /^ecommerce\b/.test(t)) el.classList.add('ygrow-platform-card','ecommerce');
-      else if(t.startsWith('leads whatsapp') || /^leads whatsapp\b/.test(t)) el.classList.add('ygrow-platform-card','leads');
-    });
-    scope.querySelectorAll('.card').forEach(el=>{
-      const t=(el.textContent||'').toLowerCase();
-      if(t.includes('overall team')) el.classList.add('ecom-overall');
-      if(t.includes('encik azim')) el.classList.add('ecom-azim');
-      if(t.includes('encik aiman')) el.classList.add('ecom-aiman');
-    });
-  }catch(e){}
-}
-document.addEventListener('DOMContentLoaded',()=>setTimeout(applyYgrowPlatformCardColors,700));
-setInterval(applyYgrowPlatformCardColors,2500);
