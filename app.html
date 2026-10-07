@@ -550,6 +550,27 @@
         <div id="project-trend-grid" class="project-trend-grid"></div>
       </section>
 
+      <section id="topup-section" style="display:none;">
+        <div class="section-head"><h2><span class="idx">•</span>Topup Wabot <small style="font-weight:400; color:var(--muted); font-size:11px;">(sentiasa tersedia)</small></h2></div>
+        <div class="stat-row">
+          <div class="stat-card"><div class="label">Jumlah Topup (€)</div><div class="value" id="topup-total-eur">€0.00</div></div>
+          <div class="stat-card accent-mint"><div class="label">Kos Topup (RM)</div><div class="value" id="topup-total-rm">RM 0.00</div></div>
+        </div>
+        <div class="form-card" style="margin-top:16px;">
+          <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="field" style="margin:0; flex:1; min-width:150px;"><label>Tarikh Topup</label><input type="date" id="topup-date" required></div>
+            <div class="field" style="margin:0; flex:2; min-width:250px;"><label>Nombor Official</label><select id="topup-phone" required></select></div>
+            <div class="field" style="margin:0; flex:1; min-width:140px;"><label>Amaun Topup (€)</label><input type="number" id="topup-amount" min="0" step="0.01" placeholder="cth: 90" required></div>
+            <div class="field" style="margin:0; flex:2; min-width:190px;"><label>Nota (pilihan)</label><input type="text" id="topup-note" placeholder="cth: Topup minggu ini"></div>
+            <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah Topup</button>
+          </form>
+        </div>
+        <table class="tbl sortable-table" style="margin-top:14px;">
+          <thead><tr><th>Tarikh</th><th>Nombor Official</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
+          <tbody id="topup-history-body"></tbody>
+        </table>
+      </section>
+
       <section>
         <div class="section-head"><h2><span class="idx">02</span>Funnel</h2></div>
         <div class="funnel-card"><div id="funnel"></div></div>
