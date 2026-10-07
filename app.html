@@ -38,6 +38,7 @@
         <button data-view="dashboard" data-team-area="crm">Dashboard</button>
         <button data-view="blastcalendar" data-team-area="crm">Kalendar Blast</button>
         <button data-view="ygrowhub" data-team-area="crm">YGROW</button>
+        <button data-view="ygrowposting" data-team-area="crm">Posting YGROW</button>
         <button data-view="ygrowservice" data-team-area="crm">Servicing YGROW</button>
         <button data-view="pageanalytics" data-team-area="crm">Page Analytics</button>
         <button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button>
@@ -732,6 +733,59 @@
 </section>
 <section class="bc-calendar-card"><div class="bc-week"><b>Ahad</b><b>Isnin</b><b>Selasa</b><b>Rabu</b><b>Khamis</b><b>Jumaat</b><b>Sabtu</b></div><div id="bc-grid" class="bc-grid"></div></section>
       <section class="bc-help"><b>Warna Sent:</b> <span class="ok">Hijau = 3,000 atau lebih</span><span class="bad">Merah = bawah 3,000</span><span class="future">Kelabu = tarikh akan datang</span><b>Topup:</b> simbol € menunjukkan hari sistem anggar baki perlu ditambah €120.</section>
+    </div>
+
+
+    <!-- ================= V105 POSTING YGROW ================= -->
+    <div id="view-ygrowposting" class="view ygp-page">
+      <section class="ygp-hero">
+        <div><span>CONTENT DISTRIBUTION · YGROW</span><h2>Posting YGROW</h2>
+        <p>Satu gambar + satu copywriting asas. Sistem tambah CTA ikut platform secara automatik apabila staf tekan Copy.</p></div>
+        <div class="ygp-legend"><b>5 Platform</b><small>TikTok · Facebook · Instagram · Telegram · Threads</small></div>
+      </section>
+
+      <section class="ygp-kpis">
+        <article><span>KONTEN DIJADUALKAN</span><strong id="ygp-kpi-content">0</strong><small>Dalam tarikh dipilih</small></article>
+        <article><span>DONE POST</span><strong id="ygp-kpi-done">0</strong><small>Jumlah platform selesai</small></article>
+        <article><span>BELUM POST</span><strong id="ygp-kpi-pending">0</strong><small>Masih perlu tindakan</small></article>
+        <article><span>PROGRESS</span><strong id="ygp-kpi-progress">0%</strong><small>Keseluruhan posting</small></article>
+      </section>
+
+      <div class="ygp-layout">
+        <section class="ygp-card">
+          <div class="ygp-head"><div><span>MASTER CONTENT</span><h3>Tambah Posting</h3></div><button type="button" class="btn" id="ygp-reset">Reset</button></div>
+          <form id="ygp-form" class="ygp-form">
+            <input type="hidden" id="ygp-id">
+            <label>Tarikh Posting<input type="date" id="ygp-date" required></label>
+            <label>Nama / Tajuk Content<input id="ygp-title" placeholder="Contoh: YGF-251 bantu sokong tumbesaran" required></label>
+            <label class="wide">Copywriting Asas <small>(jangan masukkan CTA)</small><textarea id="ygp-copy" rows="9" placeholder="Masukkan body copywriting yang sama untuk semua platform..." required></textarea></label>
+            <label class="wide">Gambar / Poster<input type="file" id="ygp-images" accept="image/*" multiple></label>
+            <div class="wide ygp-preview" id="ygp-preview"></div>
+            <label class="wide">Nota untuk staf<input id="ygp-note" placeholder="Optional"></label>
+            <button class="btn btn-primary wide" type="submit" id="ygp-save">Simpan Posting YGROW</button>
+          </form>
+        </section>
+
+        <section class="ygp-card">
+          <div class="ygp-head"><div><span>AUTO CTA</span><h3>CTA Setiap Platform</h3></div><small>Set sekali, sistem guna automatik</small></div>
+          <div id="ygp-cta-settings" class="ygp-cta-settings">
+            <label class="tiktok"><b>TikTok</b><textarea data-ygp-cta="TikTok" rows="2"></textarea></label>
+            <label class="facebook"><b>Facebook</b><textarea data-ygp-cta="Facebook" rows="2"></textarea></label>
+            <label class="instagram"><b>Instagram</b><textarea data-ygp-cta="Instagram" rows="2"></textarea></label>
+            <label class="telegram"><b>Telegram</b><textarea data-ygp-cta="Telegram" rows="2"></textarea></label>
+            <label class="threads"><b>Threads</b><textarea data-ygp-cta="Threads" rows="2"></textarea></label>
+          </div>
+          <button class="btn btn-primary" id="ygp-save-cta" type="button">Simpan Tetapan CTA</button>
+          <div class="ygp-tip"><b>Cara guna:</b> staf tak perlu edit copywriting. Tekan <b>Copy Ayat + CTA</b> pada platform masing-masing dan CTA platform itu terus dicantum di bahagian bawah.</div>
+        </section>
+      </div>
+
+      <section class="ygp-card ygp-board">
+        <div class="ygp-head"><div><span>POSTING BOARD</span><h3>Jadual & Status Posting</h3></div>
+          <div class="ygp-filters"><input type="date" id="ygp-from"><input type="date" id="ygp-to"><button class="btn" id="ygp-thismonth" type="button">Bulan Ini</button></div>
+        </div>
+        <div id="ygp-list" class="ygp-list"><div class="ygp-empty">Belum ada posting YGROW.</div></div>
+      </section>
     </div>
 
     <!-- ================= V80 YGROW SERVICING ================= -->
