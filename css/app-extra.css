@@ -13710,3 +13710,12 @@ body.crm-sidebar-layout.crm-sidebar-hidden{
 #view-ygrowhub #yg-ecom-breakdown .yg-ecom-person:nth-child(1){background:linear-gradient(135deg,#e8f4ff,#f9fcff)!important;border-color:#acd6fa!important;border-top:4px solid #2878e8!important}
 #view-ygrowhub #yg-ecom-breakdown .yg-ecom-person:nth-child(2){background:linear-gradient(135deg,#e9faf2,#fbfffd)!important;border-color:#b8e7cf!important;border-top:4px solid #22b573!important}
 #view-ygrowhub #yg-ecom-breakdown .yg-ecom-person:nth-child(3){background:linear-gradient(135deg,#fff3e4,#fffdf9)!important;border-color:#f0d0a5!important;border-top:4px solid #e79a32!important}
+
+/* V104 Leads WhatsApp metrics */
+#view-ygrowhub .yg-leads-fields{grid-template-columns:1fr 1fr;gap:12px;padding:14px;border:1px solid #d9c8f7;background:#f8f4ff;border-radius:14px}
+#view-ygrowhub .yg-leads-field small{display:block;margin-top:5px;color:#786b8e;font-size:11px}
+#view-ygrowhub .yg-platform.leads .yg-leads-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #dcccf7}
+#view-ygrowhub .yg-platform.leads .yg-leads-kpis>div{background:rgba(255,255,255,.65);border:1px solid rgba(134,87,223,.14);border-radius:10px;padding:9px}
+#view-ygrowhub .yg-platform.leads .yg-leads-kpis small{display:block;font-size:9px;color:#765d9d;margin-bottom:3px}
+#view-ygrowhub .yg-platform.leads .yg-leads-kpis strong{font-size:14px}
+@media(max-width:700px){#view-ygrowhub .yg-leads-fields{grid-template-columns:1fr}}
