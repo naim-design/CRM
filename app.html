@@ -706,7 +706,17 @@
         <article><span>TOPUP STANDARD</span><strong>€120</strong><small>setiap kali topup</small></article>
         <article><span>ANGGARAN TOPUP SETERUSNYA</span><strong id="bc-next-topup">—</strong><small id="bc-next-topup-note">Ikut target 3,000/hari</small></article>
       </section>
-      <section class="bc-promo-legend">
+      <section class="bc-wallet-panel">
+  <div class="bc-wallet-head"><div><span>WALLET WABOT</span><h3>Topup & Baki Euro</h3><small>Baki dikira terus ikut Sent sebenar × €0.0116.</small></div>
+  <div class="bc-wallet-live"><small>BAKI SEMASA</small><strong id="bc-wallet-live">€0.00</strong></div></div>
+  <div class="bc-wallet-form">
+    <label>Tarikh Topup<input type="date" id="bc-topup-date"></label>
+    <label>Jumlah Topup (€)<input type="number" id="bc-topup-amount" min="0" step=".01" value="120"></label>
+    <button type="button" id="bc-save-topup">+ Simpan Topup</button>
+  </div>
+  <div id="bc-topup-history" class="bc-topup-history"></div>
+</section>
+<section class="bc-promo-legend">
         <span><i class="p1"></i>1–6 · Promo Gaji Awal Bulan</span><span><i class="p2"></i>7–14 · Promo Double Digit 10.10</span><span><i class="p3"></i>15–22 · Oktober Lebih Jimat</span><span><i class="p4"></i>23–31 · Promo Payday Sales</span>
       </section>
       <section class="bc-progress">
@@ -2914,7 +2924,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v98-calendar-ecom-staff"></script>
+<script src="js/app.js?v=v99-wallet-ledger"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 </body>
 </html>
