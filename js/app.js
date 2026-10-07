@@ -8543,3 +8543,77 @@ const V82I={dashboard:'layout-dashboard',blastcalendar:'calendar-days',ygrowhub:
    localStorage.setItem(key,hidden?'1':'0'); apply();
  });
 })();
+
+
+/* ================= V105 POSTING YGROW ================= */
+const YGP_PLATFORMS=['TikTok','Facebook','Instagram','Telegram','Threads'];
+const YGP_DEFAULT_CTA={
+  TikTok:'Nak tahu lebih lanjut? Klik link di bio / TikTok Shop sekarang.',
+  Facebook:'Nak tahu lebih lanjut? Klik Learn More atau WhatsApp kami sekarang.',
+  Instagram:'Nak tahu lebih lanjut? Klik link di bio atau DM kami sekarang.',
+  Telegram:'Nak tahu lebih lanjut? Tekan link yang disediakan di bawah.',
+  Threads:'Nak tahu lebih lanjut? Reply atau klik link di bio.'
+};
+let ygpRows=[],ygpMedia=[],ygpPending=[];
+const ygp=id=>document.getElementById(id);
+function ygpEsc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function ygpDateRange(){let d=new Date(),a=new Date(d.getFullYear(),d.getMonth(),1),b=new Date(d.getFullYear(),d.getMonth()+1,0);if(ygp('ygp-from'))ygp('ygp-from').value=a.toISOString().slice(0,10);if(ygp('ygp-to'))ygp('ygp-to').value=b.toISOString().slice(0,10)}
+function ygpCTA(){try{return {...YGP_DEFAULT_CTA,...JSON.parse(localStorage.getItem('ygrowPostingCTA')||'{}')}}catch(e){return {...YGP_DEFAULT_CTA}}}
+function ygpLoadCTA(){let c=ygpCTA();document.querySelectorAll('[data-ygp-cta]').forEach(x=>x.value=c[x.dataset.ygpCta]||'')}
+function ygpFinalCopy(row,p){let c=ygpCTA()[p]||'';return [row.copy||'',c].filter(Boolean).join('\n\n')}
+function ygpStatus(row,p){return row.statuses?.[p]||'Belum Post'}
+function ygpRenderPending(){let b=ygp('ygp-preview');if(!b)return;b.innerHTML=ygpPending.map((x,i)=>`<div class="ygp-thumb"><img src="${x.dataUrl}"><button type="button" data-ygp-rm="${i}">×</button><small>${ygpEsc(x.name)}</small></div>`).join('')}
+ygp('ygp-images')?.addEventListener('change',async e=>{try{for(const f of [...(e.target.files||[])]){let dataUrl=await compressImageToBase64(f,1200,.72);if(dataUrl.length>850000)throw new Error('Gambar terlalu besar selepas compress');ygpPending.push({name:f.name,dataUrl})}ygpRenderPending()}catch(err){toast('Gagal proses gambar: '+err.message,true)}});
+ygp('ygp-preview')?.addEventListener('click',e=>{let b=e.target.closest('[data-ygp-rm]');if(!b)return;ygpPending.splice(+b.dataset.ygpRm,1);ygpRenderPending()});
+
+ygp('ygp-save-cta')?.addEventListener('click',()=>{let c={};document.querySelectorAll('[data-ygp-cta]').forEach(x=>c[x.dataset.ygpCta]=x.value.trim());localStorage.setItem('ygrowPostingCTA',JSON.stringify(c));toast('CTA setiap platform disimpan ✓');ygpRender()});
+
+function ygpReset(){ygp('ygp-form')?.reset();if(ygp('ygp-id'))ygp('ygp-id').value='';if(ygp('ygp-date'))ygp('ygp-date').value=new Date().toISOString().slice(0,10);ygpPending=[];ygpRenderPending()}
+ygp('ygp-reset')?.addEventListener('click',ygpReset);
+
+ygp('ygp-form')?.addEventListener('submit',async e=>{
+ e.preventDefault();let btn=ygp('ygp-save');if(btn)btn.disabled=true;
+ try{
+  let id=ygp('ygp-id').value, old=ygpRows.find(x=>x.id===id);
+  let payload={docType:'ygrowPosting',date:ygp('ygp-date').value,title:ygp('ygp-title').value.trim(),copy:ygp('ygp-copy').value.trim(),note:ygp('ygp-note').value.trim(),statuses:old?.statuses||Object.fromEntries(YGP_PLATFORMS.map(p=>[p,'Belum Post'])),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  let ref;
+  if(id){ref=db.collection('posters').doc(id);await ref.update(payload)}
+  else{payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref=await db.collection('posters').add(payload);id=ref.id}
+  for(const m of ygpPending){await db.collection('posters').add({docType:'ygrowPostingMedia',postingId:id,name:m.name,dataUrl:m.dataUrl,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}
+  toast('Posting YGROW disimpan ✓');ygpReset()
+ }catch(err){toast('Gagal simpan Posting YGROW: '+err.message,true)}
+ finally{if(btn)btn.disabled=false}
+});
+
+function ygpFiltered(){let f=ygp('ygp-from')?.value||'',t=ygp('ygp-to')?.value||'';return ygpRows.filter(x=>(!f||x.date>=f)&&(!t||x.date<=t)).sort((a,b)=>(b.date||'').localeCompare(a.date||''))}
+function ygpRender(){
+ if(!ygp('ygp-list'))return;let rows=ygpFiltered(),total=rows.length*YGP_PLATFORMS.length,done=rows.reduce((n,r)=>n+YGP_PLATFORMS.filter(p=>ygpStatus(r,p)==='Done Post').length,0);
+ ygp('ygp-kpi-content').textContent=rows.length;ygp('ygp-kpi-done').textContent=done;ygp('ygp-kpi-pending').textContent=Math.max(0,total-done);ygp('ygp-kpi-progress').textContent=(total?done/total*100:0).toFixed(0)+'%';
+ ygp('ygp-list').innerHTML=rows.length?rows.map(row=>{
+  let media=ygpMedia.filter(m=>m.postingId===row.id);
+  let imgs=media.length?`<div class="ygp-images">${media.map(m=>`<div><img src="${m.dataUrl}" alt=""><button type="button" data-ygp-download="${m.id}">Download</button></div>`).join('')}</div>`:'<div class="ygp-noimg">Tiada gambar</div>';
+  let platforms=YGP_PLATFORMS.map(p=>`<article class="ygp-platform-card ${p.toLowerCase()}">
+   <div class="ygp-platform-title"><b>${p}</b><span class="${ygpStatus(row,p)==='Done Post'?'done':'pending'}">${ygpStatus(row,p)}</span></div>
+   <div class="ygp-copy-preview">${ygpEsc(ygpFinalCopy(row,p)).replace(/\n/g,'<br>')}</div>
+   <div class="ygp-platform-actions"><button type="button" data-ygp-copy="${row.id}" data-platform="${p}">Copy Ayat + CTA</button>
+   <select data-ygp-status="${row.id}" data-platform="${p}"><option ${ygpStatus(row,p)==='Belum Post'?'selected':''}>Belum Post</option><option ${ygpStatus(row,p)==='Done Post'?'selected':''}>Done Post</option></select></div>
+  </article>`).join('');
+  return `<article class="ygp-post"><header><div><small>${ygpEsc(row.date||'')}</small><h3>${ygpEsc(row.title||'Untitled')}</h3><p>${ygpEsc(row.note||'')}</p></div><div class="ygp-master-actions"><button data-ygp-edit="${row.id}">Edit</button><button class="danger" data-ygp-delete="${row.id}">Padam</button></div></header>
+   <div class="ygp-post-body"><div>${imgs}</div><div class="ygp-platforms">${platforms}</div></div></article>`
+ }).join(''):'<div class="ygp-empty">Belum ada posting YGROW untuk tarikh ini.</div>'
+}
+['ygp-from','ygp-to'].forEach(id=>ygp(id)?.addEventListener('change',ygpRender));ygp('ygp-thismonth')?.addEventListener('click',()=>{ygpDateRange();ygpRender()});
+
+document.addEventListener('change',async e=>{let s=e.target.closest('[data-ygp-status]');if(!s)return;let row=ygpRows.find(x=>x.id===s.dataset.ygpStatus);if(!row)return;let statuses={...(row.statuses||{}),[s.dataset.platform]:s.value};try{await db.collection('posters').doc(row.id).update({statuses,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast(`${s.dataset.platform}: ${s.value} ✓`)}catch(err){toast('Gagal update status: '+err.message,true)}});
+document.addEventListener('click',async e=>{
+ let c=e.target.closest('[data-ygp-copy]');if(c){let row=ygpRows.find(x=>x.id===c.dataset.ygpCopy);if(!row)return;let txt=ygpFinalCopy(row,c.dataset.platform);try{await navigator.clipboard.writeText(txt);toast(`Copy ${c.dataset.platform} + CTA ✓`)}catch(err){toast('Tak dapat copy clipboard',true)}return}
+ let d=e.target.closest('[data-ygp-download]');if(d){let m=ygpMedia.find(x=>x.id===d.dataset.ygpDownload);if(!m)return;let a=document.createElement('a');a.href=m.dataUrl;a.download=m.name||'YGROW-poster.jpg';document.body.appendChild(a);a.click();a.remove();return}
+ let ed=e.target.closest('[data-ygp-edit]');if(ed){let row=ygpRows.find(x=>x.id===ed.dataset.ygpEdit);if(!row)return;ygp('ygp-id').value=row.id;ygp('ygp-date').value=row.date||'';ygp('ygp-title').value=row.title||'';ygp('ygp-copy').value=row.copy||'';ygp('ygp-note').value=row.note||'';ygpPending=[];ygpRenderPending();ygp('view-ygrowposting').scrollIntoView({behavior:'smooth'});return}
+ let del=e.target.closest('[data-ygp-delete]');if(del&&confirm('Padam posting YGROW ini dan semua gambarnya?')){try{let batch=db.batch();ygpMedia.filter(m=>m.postingId===del.dataset.ygpDelete).forEach(m=>batch.delete(db.collection('posters').doc(m.id)));batch.delete(db.collection('posters').doc(del.dataset.ygpDelete));await batch.commit();toast('Posting dipadam ✓')}catch(err){toast('Gagal padam: '+err.message,true)}}
+});
+
+function ygpInit(){
+ if(!ygp('ygp-date'))return;ygpReset();ygpDateRange();ygpLoadCTA();
+ db.collection('posters').onSnapshot(s=>{let all=s.docs.map(d=>({id:d.id,...d.data()}));ygpRows=all.filter(x=>x.docType==='ygrowPosting');ygpMedia=all.filter(x=>x.docType==='ygrowPostingMedia');ygpRender()},err=>toast('Ralat Posting YGROW: '+err.message,true))
+}
+setTimeout(ygpInit,1200);
