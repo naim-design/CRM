@@ -8588,6 +8588,9 @@ ygp('ygp-form')?.addEventListener('submit',async e=>{
 function ygpFiltered(){let f=ygp('ygp-from')?.value||'',t=ygp('ygp-to')?.value||'';return ygpRows.filter(x=>(!f||x.date>=f)&&(!t||x.date<=t)).sort((a,b)=>(b.date||'').localeCompare(a.date||''))}
 function ygpRender(){
  if(!ygp('ygp-list'))return;let rows=ygpFiltered(),total=rows.length*YGP_PLATFORMS.length,done=rows.reduce((n,r)=>n+YGP_PLATFORMS.filter(p=>ygpStatus(r,p)==='Done Post').length,0);
+ let from=ygp('ygp-from')?.value,to=ygp('ygp-to')?.value,dayTarget=0;if(from&&to){let a=new Date(from+'T00:00:00'),b=new Date(to+'T00:00:00');dayTarget=Math.max(0,Math.floor((b-a)/86400000)+1)}
+ let sg=ygp('ygp-platform-summary-grid');if(sg)sg.innerHTML=YGP_PLATFORMS.map(p=>{let posted=rows.filter(r=>ygpStatus(r,p)==='Done Post').length,remain=Math.max(0,dayTarget-posted),pct=dayTarget?Math.min(100,posted/dayTarget*100):0;return `<article class="ygp-summary-card ${p.toLowerCase()}"><div class="ygp-summary-platform"><b>${p}</b><span>${pct.toFixed(0)}%</span></div><div class="ygp-summary-numbers"><div><strong>${posted}</strong><small>Dah Posting</small></div><div><strong>${remain}</strong><small>Baki Belum Post</small></div><div><strong>${dayTarget}</strong><small>Target</small></div></div><div class="ygp-progressbar"><i style="width:${pct}%"></i></div><p>${remain?`Perlu lagi <b>${remain}</b> posting untuk cukup 1 post/hari.`:'Target tempoh ini sudah cukup ✓'}</p></article>`}).join('');
+
  ygp('ygp-kpi-content').textContent=rows.length;ygp('ygp-kpi-done').textContent=done;ygp('ygp-kpi-pending').textContent=Math.max(0,total-done);ygp('ygp-kpi-progress').textContent=(total?done/total*100:0).toFixed(0)+'%';
  ygp('ygp-list').innerHTML=rows.length?rows.map(row=>{
   let media=ygpMedia.filter(m=>m.postingId===row.id);
