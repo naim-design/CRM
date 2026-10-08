@@ -3393,7 +3393,8 @@ document.getElementById('feedback-filter-kategori').addEventListener('change', r
 
 function renderFeedback() {
   const kategori = document.getElementById('feedback-filter-kategori').value;
-  const rows = kategori ? allFeedback.filter(f => f.kategori === kategori) : allFeedback;
+  const rows = (kategori ? allFeedback.filter(f => f.kategori === kategori) : allFeedback).filter(f=>!f.fb108Type);
+  if(typeof fb108Render==='function')fb108Render();
   document.getElementById('feedback-count').textContent = fmt(rows.length) + ' feedback';
   const grid = document.getElementById('feedback-grid');
   grid.innerHTML = '';
@@ -8630,3 +8631,21 @@ function ygpInit(){
  db.collection('posters').onSnapshot(s=>{let all=s.docs.map(d=>({id:d.id,...d.data()}));ygpRows=all.filter(x=>x.docType==='ygrowPosting');ygpMedia=all.filter(x=>x.docType==='ygrowPostingMedia');ygpRender()},err=>toast('Ralat Posting YGROW: '+err.message,true))
 }
 setTimeout(ygpInit,1200);
+
+
+// V108 Feedback analytics - reuse existing feedback collection and permissions.
+function fb108Safe(v){return String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));}
+function fb108Render(){
+ const campaigns=allFeedback.filter(x=>x.fb108Type==='blast'),answers=allFeedback.filter(x=>x.fb108Type==='answer');
+ const contacts=campaigns.reduce((s,x)=>s+(Number(x.contacts)||0),0),responded=campaigns.reduce((s,x)=>s+(Number(x.responded)||0),0);
+ const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v};
+ set('fb108-contact',contacts.toLocaleString());set('fb108-reply',responded.toLocaleString());set('fb108-rate',contacts?(responded/contacts*100).toFixed(1)+'%':'0%');set('fb108-records',answers.length);
+ const names={sebab_beli:'Sebab Beli',repeat:'Repeat Stok',perubahan:'Perubahan Selepas Amalkan',lain:'Lain-lain'};
+ const root=document.getElementById('fb108-insights');if(!root)return;
+ const counts={};answers.forEach(x=>counts[x.angle]=(counts[x.angle]||0)+1);
+ const order=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+ root.innerHTML=order.length?'<div class="fb108-angles">'+order.map(k=>`<div><b>${fb108Safe(names[k]||k)}</b><strong>${counts[k]} feedback</strong><p>${k==='repeat'?'Angle: Kenapa pelanggan memilih untuk repeat stok':k==='sebab_beli'?'Angle: Masalah atau motivasi awal sebelum membeli':k==='perubahan'?'Angle: Pengalaman sebenar selepas penggunaan (elakkan janji hasil perubatan)':'Angle: Keperluan dan persoalan pelanggan'}</p></div>`).join('')+'</div><h4>Jawapan Sebenar Customer</h4>'+answers.slice(0,40).map(x=>`<div class="fb108-answer"><b>${fb108Safe(x.person)} • ${fb108Safe(names[x.angle]||x.angle)}</b><p>${fb108Safe(x.text)}</p>${x.imageData?`<img src="${x.imageData}" alt="Bukti feedback">`:''}<button type="button" data-fb108-delete="${fb108Safe(x.id)}">Padam</button></div>`).join(''):'Belum ada feedback untuk dianalisis.';
+ root.querySelectorAll('[data-fb108-delete]').forEach(b=>b.onclick=async()=>{if(confirm('Padam rekod ini?'))await db.collection('feedback').doc(b.dataset.fb108Delete).delete()});
+}
+document.getElementById('fb108-saveblast')?.addEventListener('click',async()=>{const name=document.getElementById('fb108-campaign').value.trim(),contacts=Number(document.getElementById('fb108-sent').value),responded=Number(document.getElementById('fb108-responded').value);if(!name||contacts<=0||responded<0||responded>contacts)return toast('Isi kempen dan jumlah contact/reply yang sah.',true);try{await db.collection('feedback').add({fb108Type:'blast',name,contacts,responded,createdBy:currentProfile.name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast('Rekod blast disimpan ✓')}catch(e){toast('Gagal simpan: '+e.message,true)}});
+document.getElementById('fb108-saveanswer')?.addEventListener('click',async()=>{const person=document.getElementById('fb108-person').value.trim(),angle=document.getElementById('fb108-angle').value,text=document.getElementById('fb108-answer').value.trim(),file=document.getElementById('fb108-image').files[0];if(!text)return toast('Masukkan jawapan customer.',true);try{const imageData=file?await compressImageToBase64(file):'';if(imageData.length>900000)throw Error('Screenshot terlalu besar');await db.collection('feedback').add({fb108Type:'answer',person,angle,text,imageData,kategori:'Jus Mamariam',createdBy:currentProfile.name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById('fb108-answer').value='';document.getElementById('fb108-image').value='';toast('Jawapan customer disimpan ✓')}catch(e){toast('Gagal simpan: '+e.message,true)}});
