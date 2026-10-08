@@ -8586,8 +8586,18 @@ ygp('ygp-form')?.addEventListener('submit',async e=>{
 });
 
 function ygpFiltered(){let f=ygp('ygp-from')?.value||'',t=ygp('ygp-to')?.value||'';return ygpRows.filter(x=>(!f||x.date>=f)&&(!t||x.date<=t)).sort((a,b)=>(b.date||'').localeCompare(a.date||''))}
+let ygpWeekOffset=0;
+function ygpWeekRender(){
+ const grid=ygp('ygp-week-grid');if(!grid)return;
+ const today=new Date(),base=new Date(today.getFullYear(),today.getMonth(),today.getDate());base.setDate(base.getDate()-((base.getDay()+6)%7)+ygpWeekOffset*7);
+ const end=new Date(base);end.setDate(end.getDate()+6);
+ const fmt=d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+ if(ygp('ygp-week-label'))ygp('ygp-week-label').textContent=`${fmt(base)} – ${fmt(end)} ${end.getFullYear()}`;
+ grid.innerHTML=Array.from({length:7},(_,i)=>{const d=new Date(base);d.setDate(d.getDate()+i);const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const dayRows=ygpRows.filter(r=>r.date===iso);const dayNames=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];const doneCount=YGP_PLATFORMS.filter(platform=>dayRows.some(r=>ygpStatus(r,platform)==='Done Post')).length;return `<article class="ygp-week-day ${iso===`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`?'today':''}"><div class="ygp-week-date"><b>${dayNames[d.getDay()]}</b><strong>${d.getDate()}</strong></div><small>${dayRows.length} content · ${doneCount}/5 platform</small><div class="ygp-week-platforms">${YGP_PLATFORMS.map(platform=>{let state=dayRows.length?(dayRows.some(r=>ygpStatus(r,platform)==='Done Post')?'done':'pending'):'empty';return `<div class="ygp-week-status ${state}"><b class="ygp-platform-name ${platform.toLowerCase()}">${platform}</b><span>${state==='done'?'✓':state==='pending'?'✕':'—'}</span></div>`}).join('')}</div></article>`}).join('');
+}
+['prev','next','today'].forEach(k=>ygp('ygp-week-'+k)?.addEventListener('click',()=>{ygpWeekOffset=k==='today'?0:ygpWeekOffset+(k==='prev'?-1:1);ygpWeekRender()}));
 function ygpRender(){
- if(!ygp('ygp-list'))return;let rows=ygpFiltered(),total=rows.length*YGP_PLATFORMS.length,done=rows.reduce((n,r)=>n+YGP_PLATFORMS.filter(p=>ygpStatus(r,p)==='Done Post').length,0);
+ if(!ygp('ygp-list'))return;ygpWeekRender();let rows=ygpFiltered(),total=rows.length*YGP_PLATFORMS.length,done=rows.reduce((n,r)=>n+YGP_PLATFORMS.filter(p=>ygpStatus(r,p)==='Done Post').length,0);
  let from=ygp('ygp-from')?.value,to=ygp('ygp-to')?.value,dayTarget=0;if(from&&to){let a=new Date(from+'T00:00:00'),b=new Date(to+'T00:00:00');dayTarget=Math.max(0,Math.floor((b-a)/86400000)+1)}
  let sg=ygp('ygp-platform-summary-grid');if(sg)sg.innerHTML=YGP_PLATFORMS.map(p=>{let posted=rows.filter(r=>ygpStatus(r,p)==='Done Post').length,remain=Math.max(0,dayTarget-posted),pct=dayTarget?Math.min(100,posted/dayTarget*100):0;return `<article class="ygp-summary-card ${p.toLowerCase()}"><div class="ygp-summary-platform"><b>${p}</b><span>${pct.toFixed(0)}%</span></div><div class="ygp-summary-numbers"><div><strong>${posted}</strong><small>Dah Posting</small></div><div><strong>${remain}</strong><small>Baki Belum Post</small></div><div><strong>${dayTarget}</strong><small>Target</small></div></div><div class="ygp-progressbar"><i style="width:${pct}%"></i></div><p>${remain?`Perlu lagi <b>${remain}</b> posting untuk cukup 1 post/hari.`:'Target tempoh ini sudah cukup ✓'}</p></article>`}).join('');
 
@@ -8595,8 +8605,8 @@ function ygpRender(){
  ygp('ygp-list').innerHTML=rows.length?rows.map(row=>{
   let media=ygpMedia.filter(m=>m.postingId===row.id);
   let imgs=media.length?`<div class="ygp-images">${media.map(m=>`<div><img src="${m.dataUrl}" alt=""><button type="button" data-ygp-download="${m.id}">Download</button></div>`).join('')}</div>`:'<div class="ygp-noimg">Tiada gambar</div>';
-  let platforms=YGP_PLATFORMS.map(p=>`<article class="ygp-platform-card ${p.toLowerCase()}">
-   <div class="ygp-platform-title"><b>${p}</b><span class="${ygpStatus(row,p)==='Done Post'?'done':'pending'}">${ygpStatus(row,p)}</span></div>
+  let platforms=YGP_PLATFORMS.map(p=>`<article class="ygp-platform-card ${ygpStatus(row,p)==='Done Post'?'ygp-done':'ygp-pending'}">
+   <div class="ygp-platform-title"><b class="ygp-platform-name ${p.toLowerCase()}">${p}</b><span class="${ygpStatus(row,p)==='Done Post'?'done':'pending'}">${ygpStatus(row,p)}</span></div>
    <div class="ygp-copy-preview">${ygpEsc(ygpFinalCopy(row,p)).replace(/\n/g,'<br>')}</div>
    <div class="ygp-platform-actions"><button type="button" data-ygp-copy="${row.id}" data-platform="${p}">Copy Ayat + CTA</button>
    <select data-ygp-status="${row.id}" data-platform="${p}"><option ${ygpStatus(row,p)==='Belum Post'?'selected':''}>Belum Post</option><option ${ygpStatus(row,p)==='Done Post'?'selected':''}>Done Post</option></select></div>
