@@ -1470,7 +1470,7 @@
 <div class="fb108-kpis"><div><span>Contact Diblast</span><strong id="fb108-contact">0</strong></div><div><span>Customer Respon</span><strong id="fb108-reply">0</strong></div><div><span>Reply Rate</span><strong id="fb108-rate">0%</strong></div><div><span>Feedback Direkod</span><strong id="fb108-records">0</strong></div></div>
 <div class="fb108-panels"><div class="fb108-panel"><h3>Rekod Kempen Feedback</h3><label>Nama Kempen</label><input id="fb108-campaign" placeholder="Contoh: Feedback Jus Oktober"><label>Jumlah Contact Diblast</label><input id="fb108-sent" type="number" min="0" placeholder="Contoh: 3000"><label>Customer Respon (unik)</label><input id="fb108-responded" type="number" min="0" placeholder="Contoh: 120"><button id="fb108-saveblast" type="button">Simpan Rekod Blast</button></div>
 <div class="fb108-panel"><h3>Rekod Jawapan Customer</h3><label>Kempen / Nama Customer</label><input id="fb108-person" placeholder="Contoh: Feedback Jus Oktober - Customer A"><label>Jenis Jawapan</label><select id="fb108-angle"><option value="sebab_beli">Kenapa beli Jus Mamariam</option><option value="repeat">Kenapa repeat stok</option><option value="perubahan">Perubahan selepas amalkan</option><option value="lain">Lain-lain feedback</option></select><label>Apa customer jawab?</label><textarea id="fb108-answer" rows="3" placeholder="Salin jawapan sebenar customer"></textarea><label>Screenshot bukti (optional)</label><input id="fb108-image" type="file" accept="image/*"><button id="fb108-saveanswer" type="button">Simpan Jawapan + Bukti</button></div></div>
-<div class="fb108-panel"><h3>Angle Iklan Berdasarkan Feedback</h3><div id="fb108-insights">Belum ada feedback untuk dianalisis.</div></div></section>
+<div class="fb108-panel"><h3>Angle Iklan Berdasarkan Feedback</h3><p>Cadangan dijana secara automatik daripada kata kunci jawapan yang direkodkan. Semak kesesuaian dan claim sebelum guna untuk iklan.</p><div id="fb112-proposals"></div><h3>Ringkasan Kategori & Bukti Customer</h3><div id="fb108-insights">Belum ada feedback untuk dianalisis.</div></div></section>
       <div class="section-head" style="padding-top:36px;"><h2>Feedback Pelanggan</h2></div>
       <div class="form-card" style="margin-bottom:24px;">
         <form id="feedback-form">
@@ -2975,5 +2975,5 @@ Ahmad	60112223344"></textarea>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js?v=v99-wallet-ledger"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
-</body>
+<div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div></body>
 </html>
