@@ -33,37 +33,17 @@
         <button type="button" class="team-workspace-btn" data-team-workspace="creative">Team Creative</button>
       </div>
 <nav class="app-nav team-nav" id="team-crm-nav" data-workspace-nav="crm">
+<div class="crm-nav-search"><input id="crm-nav-filter" placeholder="Cari menu (Ctrl+K)" aria-label="Cari menu"></div>
+<button data-view="input" class="active" data-team-area="crm">Input Data</button>
+<button data-view="blastcalendar" data-team-area="crm">Kalendar Blast</button>
+<details class="crm-nav-fold" open><summary>Dashboard</summary><div class="crm-nav-children"><button data-view="dashboard" data-team-area="crm">Dashboard</button><button data-view="feedback" data-team-area="crm">Feedback</button><button data-view="poster" data-team-area="crm">Poster</button><button data-view="survey" data-team-area="crm">Survey</button><button data-view="template" data-team-area="crm">Template</button><button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button><button data-view="laporan" data-team-area="crm">Laporan</button></div></details>
+<details class="crm-nav-fold"><summary>Database</summary><div class="crm-nav-children"><button data-view="contacts" data-team-area="crm">Database</button><button data-view="filter" data-team-area="crm">Filter</button></div></details>
+<details class="crm-nav-fold" open><summary>YGROW</summary><div class="crm-nav-children"><button data-view="ygrowhub" data-team-area="crm">YGROW</button><button data-view="ygrowposting" data-team-area="crm">Posting YGROW</button><button data-view="ygrowservice" data-team-area="crm">Servicing YGROW</button></div></details>
+<details class="crm-nav-fold" ><summary>Campaign Manager</summary><div class="crm-nav-children"><button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button><button data-view="wabotlive" data-team-area="crm">Wabot Live</button><button data-view="wabotcontrol" data-team-area="crm">Wabot Control</button><button data-view="aiinsight" data-team-area="crm">AI Insight</button></div></details>
+<details class="crm-nav-fold" ><summary>Planning & To Do</summary><div class="crm-nav-children"><button data-view="planning" data-team-area="crm">Planning</button><button data-view="todo" data-team-area="crm">To-Do</button><button data-view="recap" data-team-area="crm">Recap Julai</button><button data-view="salespages" data-team-area="crm">Sales Pages</button></div></details>
+<details class="crm-nav-fold"><summary>Analytics</summary><div class="crm-nav-children"><button data-view="pageanalytics" data-team-area="crm">Page Analytics</button><button data-view="projection" data-team-area="crm">Projection</button><button data-view="packageanalysis" data-team-area="crm">Pakej Analisis</button><button data-view="pricingcalculator" data-team-area="crm">Pricing Calculator</button><button data-view="analyticspro" data-team-area="crm">Analytics Pro</button></div></details>
 
-        <button data-view="input" class="active" data-team-area="crm">Input Data</button>
-        <button data-view="dashboard" data-team-area="crm">Dashboard</button>
-        <button data-view="blastcalendar" data-team-area="crm">Kalendar Blast</button>
-        <button data-view="ygrowhub" data-team-area="crm">YGROW</button>
-        <button data-view="ygrowposting" data-team-area="crm">Posting YGROW</button>
-        <button data-view="ygrowservice" data-team-area="crm">Servicing YGROW</button>
-        <button data-view="pageanalytics" data-team-area="crm">Page Analytics</button>
-        <button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button>
-        <button data-view="packageanalysis" data-team-area="crm">Pakej Analisis</button>
-        <button data-view="poster" data-team-area="crm">Poster</button>
-        <button data-view="template" data-team-area="crm">Template</button>
-        <button data-view="feedback" data-team-area="crm">Feedback</button>
-        <button data-view="laporan" data-team-area="crm">Laporan</button>
-        <button data-view="wabotlive" data-team-area="crm">Wabot Live</button>
-        <button data-view="wabotcontrol" data-team-area="crm">Wabot Control</button>
-        <button data-view="projection" data-team-area="crm">Projection</button>
-        <button data-view="planning" data-team-area="crm">Planning</button>
-        <button data-view="analyticspro" data-team-area="crm">Analytics Pro</button>
-        <button data-view="pricingcalculator" data-team-area="crm">Pricing Calculator</button>
-        <button data-view="survey" data-team-area="crm">Survey</button>
-        <div class="nav-group-label">UTILITI</div>
-        <button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button>
-        <button data-view="aiinsight" data-team-area="crm">AI Insight</button>
-        <button data-view="contacts" data-team-area="crm">Database</button>
-        <button data-view="filter" data-team-area="crm">Filter</button>
-        <button data-view="todo" data-team-area="crm">To-Do</button>
-        <button data-view="recap" data-team-area="crm">Recap Julai</button>
-        <button data-view="salespages" data-team-area="crm">Sales Pages</button>
-      
-      </nav>
+</nav>
       <nav class="app-nav team-nav" id="team-creative-nav" data-workspace-nav="creative" hidden>
         <button data-view="creative" data-team-area="creative">Creative</button>
         <div class="creative-sidebar-subnav">
@@ -121,7 +101,7 @@
       <datalist id="entry-template-list"></datalist>
     </div>
           </div>
-          <div class="form-grid" style="margin-top:16px;">
+          <div class="form-grid" class="crm-mt16">
             <div class="field"><label>Kategori Laporan</label>
               <select id="entry-kategori">
                 <option>Projek Susu</option><option>Projek Susu YGROW</option><option>Projek Sachet Mamariam</option>
@@ -144,20 +124,20 @@
               <select id="entry-poster"><option value="">- Tiada / Tak Berkaitan -</option></select>
             </div>
           </div>
-          <div class="form-grid" style="margin-top:16px;">
-            <div class="field"><label>Sent</label><input type="number" id="entry-sent" min="0" value="0" required>
+          <div class="crm-funnel-title">FUNNEL BLASTING <small>Sent → Delivered → Read → Reply → Buyer → Sales</small></div><div class="form-grid crm-funnel-grid" class="crm-mt16">
+            <div class="field"><label>① Sent</label><input type="number" id="entry-sent" min="0" value="0" required>
               <div id="entry-cost-preview" style="font-size:12px; color:var(--mint); margin-top:6px; font-family:'IBM Plex Mono';">Kos: RM 0.00 (€0.00)</div>
             </div>
-            <div class="field"><label>Delivered</label><input type="number" id="entry-delivered" min="0" value="0"></div>
-            <div class="field"><label>Read</label><input type="number" id="entry-read" min="0" value="0"></div>
+            <div class="field"><label>② Delivered</label><input type="number" id="entry-delivered" min="0" value="0"></div>
+            <div class="field"><label>③ Read</label><input type="number" id="entry-read" min="0" value="0"></div>
           </div>
-          <div class="form-grid" style="margin-top:16px;">
-            <div class="field"><label>Reply</label><input type="number" id="entry-reply" min="0" value="0"></div>
+          <div class="form-grid" class="crm-mt16">
+            <div class="field"><label>④ Reply</label><input type="number" id="entry-reply" min="0" value="0"></div>
             <div class="field"><label>Failed</label><input type="number" id="entry-failed" min="0" value="0"></div>
-            <div class="field"><label>Jadi Buyer</label><input type="number" id="entry-buyer" min="0" value="0"></div>
+            <div class="field"><label>⑤ Jadi Buyer</label><input type="number" id="entry-buyer" min="0" value="0"></div>
           </div>
-          <div class="form-grid two" style="margin-top:16px;">
-            <div class="field"><label>Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
+          <div class="crm-funnel-live" id="crm-funnel-live" aria-live="polite"></div><div class="form-grid two" class="crm-mt16">
+            <div class="field"><label>⑥ Total Sales (RM)</label><input type="number" id="entry-sales" min="0" step="0.01" value="0"></div>
             <div class="field">
               <label>Promo / Pakej Digunakan</label>
               <select id="entry-promo">
@@ -557,7 +537,7 @@
           <div class="stat-card"><div class="label">Jumlah Topup (€)</div><div class="value" id="topup-total-eur">€0.00</div></div>
           <div class="stat-card accent-mint"><div class="label">Kos Topup (RM)</div><div class="value" id="topup-total-rm">RM 0.00</div></div>
         </div>
-        <div class="form-card" style="margin-top:16px;">
+        <div class="form-card" class="crm-mt16">
           <form id="topup-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
             <div class="field" style="margin:0; flex:1; min-width:150px;"><label>Tarikh Topup</label><input type="date" id="topup-date" required></div>
             <div class="field" style="margin:0; flex:2; min-width:250px;"><label>Nombor Official</label><select id="topup-phone" required></select></div>
@@ -566,7 +546,7 @@
             <button type="submit" class="btn btn-primary" style="width:auto; padding:11px 22px;">+ Tambah Topup</button>
           </form>
         </div>
-        <table class="tbl sortable-table" style="margin-top:14px;">
+        <table class="tbl sortable-table" class="crm-mt14">
           <thead><tr><th>Tarikh</th><th>Nombor Official</th><th>Nota</th><th>Amaun (€)</th><th>Amaun (RM)</th><th>Oleh</th></tr></thead>
           <tbody id="topup-history-body"></tbody>
         </table>
@@ -1506,7 +1486,7 @@
             </div>
             <div class="field"><label>Gambar Feedback</label><input type="file" id="feedback-file" accept="image/*" required></div>
           </div>
-          <div class="field" style="margin-top:16px;"><label>Ayat Feedback</label><textarea id="feedback-text" rows="3" placeholder="Taip feedback pelanggan di sini..." required></textarea></div>
+          <div class="field" class="crm-mt16"><label>Ayat Feedback</label><textarea id="feedback-text" rows="3" placeholder="Taip feedback pelanggan di sini..." required></textarea></div>
           <div class="form-actions" style="margin-top:12px;"><button type="submit" class="btn btn-primary" id="feedback-submit-btn">Simpan Feedback</button></div>
         </form>
       </div>
@@ -1522,7 +1502,7 @@
         </select>
         <span class="hint-chip" id="feedback-count">0 feedback</span>
       </div>
-      <div id="feedback-grid" class="feedback-grid" style="margin-top:14px;"></div>
+      <div id="feedback-grid" class="feedback-grid" class="crm-mt14"></div>
     </div>
 
     <!-- ================= LAPORAN ================= -->
@@ -1646,11 +1626,11 @@
           <div class="field"><label>Dah Blast</label><input type="number" id="cstat-input-blasted" min="0"></div>
           <div class="field"><label>Belum Blast</label><input type="number" id="cstat-input-pending" min="0"></div>
         </div>
-        <div class="form-grid two" style="margin-top:16px;">
+        <div class="form-grid two" class="crm-mt16">
           <div class="field"><label>Dah Reply</label><input type="number" id="cstat-input-replied" min="0"></div>
           <div class="field"><label>Jadi Buyer</label><input type="number" id="cstat-input-buyer" min="0"></div>
         </div>
-        <div class="field" style="margin-top:16px;"><label>Nota (contoh: pecahan database TikTok, dll)</label><textarea id="cstat-input-note" rows="2" placeholder="cth: Database TikTok — 20,000 rekod, import Ogos 2026"></textarea></div>
+        <div class="field" class="crm-mt16"><label>Nota (contoh: pecahan database TikTok, dll)</label><textarea id="cstat-input-note" rows="2" placeholder="cth: Database TikTok — 20,000 rekod, import Ogos 2026"></textarea></div>
         <div class="form-actions" style="margin-top:12px;"><button class="btn btn-primary" id="cstat-save-btn" style="width:auto; padding:10px 22px;">Simpan</button></div>
         <p style="font-size:11px; color:var(--muted-2); margin-top:10px;">💡 Nombor ni dikemaskini manual (bukan auto-kira) — sebab isu extract/quota. "Total Database" akan dikira automatik dari Dah Blast + Belum Blast.</p>
       </div>
