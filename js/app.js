@@ -1712,16 +1712,18 @@ function displayStaffName(value){
   return raw || '-';
 }
 
+let crmEntriesPage=1;
 function renderEntriesList() {
   const sorted = [...allEntries].sort((a, b) => (b.tarikh || '').localeCompare(a.tarikh || ''));
   const body = document.getElementById('entries-list-body');
   if (!body) return;
   body.innerHTML = '';
-  const LIMIT = 100;
-  sorted.slice(0, LIMIT).forEach(en => {
+  const LIMIT = 25;
+  const pages=Math.max(1,Math.ceil(sorted.length/LIMIT));crmEntriesPage=Math.min(Math.max(1,crmEntriesPage),pages);
+  sorted.slice((crmEntriesPage-1)*LIMIT,crmEntriesPage*LIMIT).forEach(en => {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td class="tname">${en.tarikh || '-'}</td>
-      <td style="font-size:12px;">${en.kategori || '-'}</td>
+      <td><span class="crm-cat-pill ${/YGROW|Susu/i.test(en.kategori||'')?'milk':/TikTok/i.test(en.kategori||'')?'tiktok':/Leads/i.test(en.kategori||'')?'leads':'other'}">${en.kategori || '-'}</span></td>
       <td style="font-size:12px; color:var(--muted);">${displayStaffName(en.staffName)}</td>
       <td style="font-size:12px;">${en.source || '-'}</td>
       <td style="font-size:12px;">${en.template || '-'}</td>
@@ -1742,6 +1744,9 @@ function renderEntriesList() {
   document.querySelectorAll('.entry-edit-btn').forEach(b => b.onclick = () => startEditEntry(b.dataset.id));
   document.querySelectorAll('.entry-del-btn').forEach(b => b.onclick = () => deleteEntry(b.dataset.id));
   if (!sorted.length) body.innerHTML = '<tr><td colspan="9" class="empty-state">Tiada entri lagi.</td></tr>';
+  let pager=document.getElementById('crm-entry-pagination');if(!pager){pager=document.createElement('div');pager.id='crm-entry-pagination';pager.className='crm-entry-pagination';body.closest('table')?.insertAdjacentElement('afterend',pager)}
+  pager.innerHTML=`<button type="button" data-crm-page="prev" ${crmEntriesPage<=1?'disabled':''}>← Sebelum</button><span>Halaman ${crmEntriesPage} / ${pages} · ${sorted.length} entri</span><button type="button" data-crm-page="next" ${crmEntriesPage>=pages?'disabled':''}>Seterusnya →</button>`;
+  pager.querySelectorAll('button').forEach(b=>b.onclick=()=>{crmEntriesPage+=b.dataset.crmPage==='next'?1:-1;renderEntriesList()});
 }
 
 // ============================================================
@@ -2183,6 +2188,17 @@ function renderDashboard() {
   renderMonthlyContactDashboard();
   const rows = filteredEntries();
   const m = dashMetrics(rows);
+  try{
+    const f=document.getElementById('filter-from')?.value,t=document.getElementById('filter-to')?.value;
+    if(f&&t){let days=Math.round((new Date(t+'T00:00:00')-new Date(f+'T00:00:00'))/86400000)+1;
+      let pf=dashDateShift(f,-days),pt=dashDateShift(f,-1);
+      let staff=document.getElementById('filter-staff')?.value,cat=document.getElementById('filter-kategori')?.value;
+      let prev=allEntries.filter(x=>x.tarikh>=pf&&x.tarikh<=pt&&(!staff||staff==='all'||x.staffName===staff)&&(!cat||cat==='all'||x.kategori===cat));
+      let pm=dashMetrics(prev);
+      let b=document.getElementById('crm-period-compare');if(!b){b=document.createElement('div');b.id='crm-period-compare';b.className='crm-period-compare';document.getElementById('stat-sales')?.closest('.card, .stat-card, .kpi-card')?.parentElement?.insertAdjacentElement('beforebegin',b)}
+      if(b)b.innerHTML=[['Sales',m.sales,pm.sales,'RM'],['ROI',m.roi,pm.roi,'x'],['ROAS',m.roas,pm.roas,'x'],['Conversion',m.conversion,pm.conversion,'%']].map(([n,v,p,u])=>{let d=p?(v-p)/Math.abs(p)*100:null;return `<div><small>${n} vs tempoh sebelumnya</small><strong>${u==='RM'?'RM ':''}${Number(v).toFixed(2)}${u==='RM'?'':u}</strong><span class="${d===null?'neutral':d>=0?'up':'down'}">${d===null?'Tiada baseline':(d>=0?'▲ ':'▼ ')+Math.abs(d).toFixed(1)+'%'}</span></div>`}).join('');
+    }
+  }catch(e){console.warn('KPI comparison',e)}
 
   document.getElementById('stat-sent').textContent = fmt(m.sent);
   document.getElementById('stat-buyer').textContent = fmt(m.buyer);
@@ -8649,3 +8665,11 @@ function fb108Render(){
 }
 document.getElementById('fb108-saveblast')?.addEventListener('click',async()=>{const name=document.getElementById('fb108-campaign').value.trim(),contacts=Number(document.getElementById('fb108-sent').value),responded=Number(document.getElementById('fb108-responded').value);if(!name||contacts<=0||responded<0||responded>contacts)return toast('Isi kempen dan jumlah contact/reply yang sah.',true);try{await db.collection('feedback').add({fb108Type:'blast',name,contacts,responded,createdBy:currentProfile.name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});toast('Rekod blast disimpan ✓')}catch(e){toast('Gagal simpan: '+e.message,true)}});
 document.getElementById('fb108-saveanswer')?.addEventListener('click',async()=>{const person=document.getElementById('fb108-person').value.trim(),angle=document.getElementById('fb108-angle').value,text=document.getElementById('fb108-answer').value.trim(),file=document.getElementById('fb108-image').files[0];if(!text)return toast('Masukkan jawapan customer.',true);try{const imageData=file?await compressImageToBase64(file):'';if(imageData.length>900000)throw Error('Screenshot terlalu besar');await db.collection('feedback').add({fb108Type:'answer',person,angle,text,imageData,kategori:'Jus Mamariam',createdBy:currentProfile.name,createdAt:firebase.firestore.FieldValue.serverTimestamp()});document.getElementById('fb108-answer').value='';document.getElementById('fb108-image').value='';toast('Jawapan customer disimpan ✓')}catch(e){toast('Gagal simpan: '+e.message,true)}});
+
+/* V109 sidebar search and dropdown state */
+(function(){function init(){const nav=document.getElementById('team-crm-nav'),search=document.getElementById('crm-nav-filter');if(!nav||!search)return;const btns=[...nav.querySelectorAll('button[data-view]')];function apply(){const q=search.value.trim().toLowerCase();btns.forEach(b=>b.hidden=!!q&&!b.textContent.toLowerCase().includes(q));nav.querySelectorAll('details').forEach(d=>{d.hidden=!!q&&!d.querySelector('button[data-view]:not([hidden])');if(q)d.open=true;});}search.addEventListener('input',apply);document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();search.focus();search.select();}});btns.forEach(b=>b.addEventListener('click',()=>{const d=b.closest('details');if(d)d.open=true;}));}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();
+
+/* V111 non-destructive UI enhancements */
+(function(){function init(){const out=document.getElementById('crm-funnel-live');if(out){let ids=['sent','delivered','read','reply','buyer','sales'].map(x=>document.getElementById('entry-'+x));let update=()=>{let [s,d,r,reply,b,sales]=ids.map(x=>Number(x?.value)||0);let pct=(a,n)=>n?(100*a/n).toFixed(1)+'%':'—';out.innerHTML=[['Delivery Rate',pct(d,s)],['Read Rate',pct(r,d)],['Reply Rate',pct(reply,s)],['Buyer / Reply',pct(b,reply)],['Sales','RM '+sales.toFixed(2)]].map(([a,v])=>'<div><small>'+a+'</small><strong>'+v+'</strong></div>').join('')};ids.forEach(x=>x?.addEventListener('input',update));update()}
+ document.querySelectorAll('iframe').forEach(f=>{f.loading='lazy';const w=document.createElement('div');w.className='crm-iframe-shell';f.parentNode.insertBefore(w,f);w.appendChild(f);const l=document.createElement('div');l.className='crm-iframe-loader';l.textContent='Memuatkan laporan…';w.appendChild(l);f.addEventListener('load',()=>l.remove());});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();
