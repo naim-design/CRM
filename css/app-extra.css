@@ -13749,3 +13749,35 @@ body.crm-sidebar-layout.crm-sidebar-hidden{
 /* V113 compact feedback browser */
 .fb113-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:15px 0}.fb113-toolbar input{flex:1;min-width:180px}.fb113-toolbar input,.fb113-toolbar select{padding:11px;border:1px solid #c8d9dc;border-radius:9px;background:#fff;color:#123b43}.fb113-toolbar span{font-size:12px;color:#47626b;font-weight:700}
 .fb113-list{display:grid;gap:8px}.fb113-item{border:1px solid #d8e7e9;border-radius:12px;background:#fff;overflow:hidden}.fb113-item[open]{border-color:#009c8d;box-shadow:0 3px 12px #003f3910}.fb113-item summary{list-style:none;display:flex;gap:12px;align-items:center;padding:13px;cursor:pointer}.fb113-item summary::-webkit-details-marker{display:none}.fb113-index{background:#e6f4f1;color:#006b5e;border-radius:8px;padding:8px;font-size:12px;font-weight:900}.fb113-summary{flex:1;min-width:0;display:grid;gap:4px}.fb113-summary b{font-size:13px;color:#073a43}.fb113-summary small{color:#64777c;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}.fb113-tag{border-radius:999px;background:#e7f3ff;color:#12558b;padding:6px 9px;font-size:11px;font-weight:800;white-space:nowrap}.fb113-hasproof{font-size:11px;color:#006b5e;white-space:nowrap}.fb113-chevron{font-size:11px;color:#61777c;white-space:nowrap}.fb113-body{border-top:1px solid #e4ecec;padding:16px;background:#f8fcfc}.fb113-body p{white-space:pre-wrap;line-height:1.6}.fb113-pages{display:flex;align-items:center;justify-content:center;gap:15px;margin:18px 0}.fb113-pages button{background:#007e70;color:white;border:0;border-radius:8px;padding:10px 15px;cursor:pointer}.fb113-pages button:disabled{opacity:.4;cursor:default}@media(max-width:680px){.fb113-hasproof,.fb113-chevron{display:none}.fb113-item summary{gap:6px}.fb113-tag{max-width:110px;white-space:normal}}
+
+
+/* ===== V116: Premium UI polish (theme-aware) ===== */
+.form-card,.dash-kpi-card,.monthly-contact-section,.ref-dash-panel,.survey-card,.pkg-panel{
+ border:1px solid var(--line,rgba(130,150,160,.2));border-radius:14px;
+ box-shadow:0 5px 20px rgba(0,0,0,.08);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+@supports(backdrop-filter:blur(8px)){
+ .form-card,.dash-kpi-card,.monthly-contact-section,.ref-dash-panel,.survey-card,.pkg-panel{backdrop-filter:blur(8px)}
+}
+.dash-kpi-card:hover,.input-quick-card:hover,.stat-card:hover{
+ border-color:var(--mint,#10b981);transform:translateY(-2px);box-shadow:0 9px 25px rgba(0,0,0,.13)
+}
+.field input[type=text],.field input[type=number],.field input[type=date],.field input[type=time],.field select,.field textarea{
+ background:var(--surface-raised,var(--surface));color:var(--text);border:1px solid var(--line);
+ border-radius:10px;padding:11px 14px;transition:border-color .2s ease,box-shadow .2s ease,background-color .2s ease;
+}
+.field input:focus-visible,.field select:focus-visible,.field textarea:focus-visible{
+ outline:none;border-color:var(--mint,#10b981);box-shadow:0 0 0 3px rgba(16,185,129,.18)
+}
+.tbl{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:10px}
+.tbl th{background:var(--surface-raised);color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:12px 14px;position:sticky;top:0;z-index:2}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--line);font-size:13px}
+.tbl tbody tr:nth-child(even){background:rgba(125,145,150,.045)}
+.tbl tbody tr:hover{background:rgba(16,185,129,.075)}
+.view.active{animation:crmViewAppear .24s ease-out both}
+@keyframes crmViewAppear{from{opacity:.6;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.crm-status-chip{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:750}
+.crm-status-chip.is-done{background:#d1fae5;color:#065f46}
+.crm-status-chip.is-pending{background:#fef3c7;color:#92400e}
+.crm-save-icon{width:16px;height:16px;vertical-align:middle;flex:none}
+@media(prefers-reduced-motion:reduce){.view.active{animation:none}.dash-kpi-card,.input-quick-card,.stat-card{transition:none!important;transform:none!important}}
