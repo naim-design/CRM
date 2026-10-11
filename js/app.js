@@ -8591,10 +8591,13 @@ const YGP_DEFAULT_CTA={
   Threads:'Nak tahu lebih lanjut? Reply atau klik link di bio.'
 };
 let ygpRows=[],ygpMedia=[],ygpPending=[];
+// V119: shared CTA is stored in the existing Firestore posters collection.
+let ygpSharedCTA=null,ygpCTALoaded=false,ygpCTADirty=false;
+const YGP_CTA_DOC='ygrow_posting_shared_cta_v119';
 const ygp=id=>document.getElementById(id);
 function ygpEsc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function ygpDateRange(){let d=new Date(),a=new Date(d.getFullYear(),d.getMonth(),1),b=new Date(d.getFullYear(),d.getMonth()+1,0);if(ygp('ygp-from'))ygp('ygp-from').value=a.toISOString().slice(0,10);if(ygp('ygp-to'))ygp('ygp-to').value=b.toISOString().slice(0,10)}
-function ygpCTA(){try{return {...YGP_DEFAULT_CTA,...JSON.parse(localStorage.getItem('ygrowPostingCTA')||'{}')}}catch(e){return {...YGP_DEFAULT_CTA}}}
+function ygpCTA(){return {...YGP_DEFAULT_CTA,...(ygpSharedCTA||{})}}
 function ygpLoadCTA(){let c=ygpCTA();document.querySelectorAll('[data-ygp-cta]').forEach(x=>x.value=c[x.dataset.ygpCta]||'')}
 function ygpFinalCopy(row,p){let c=ygpCTA()[p]||'';return [row.copy||'',c].filter(Boolean).join('\n\n')}
 function ygpStatus(row,p){return row.statuses?.[p]||'Belum Post'}
@@ -8602,7 +8605,15 @@ function ygpRenderPending(){let b=ygp('ygp-preview');if(!b)return;b.innerHTML=yg
 ygp('ygp-images')?.addEventListener('change',async e=>{try{for(const f of [...(e.target.files||[])]){let dataUrl=await compressImageToBase64(f,1200,.72);if(dataUrl.length>850000)throw new Error('Gambar terlalu besar selepas compress');ygpPending.push({name:f.name,dataUrl})}ygpRenderPending()}catch(err){toast('Gagal proses gambar: '+err.message,true)}});
 ygp('ygp-preview')?.addEventListener('click',e=>{let b=e.target.closest('[data-ygp-rm]');if(!b)return;ygpPending.splice(+b.dataset.ygpRm,1);ygpRenderPending()});
 
-ygp('ygp-save-cta')?.addEventListener('click',()=>{let c={};document.querySelectorAll('[data-ygp-cta]').forEach(x=>c[x.dataset.ygpCta]=x.value.trim());localStorage.setItem('ygrowPostingCTA',JSON.stringify(c));toast('CTA setiap platform disimpan ✓');ygpRender()});
+// Do not silently overwrite a teammate's changes. Saving is explicit and shared.
+ygp('ygp-save-cta')?.addEventListener('click',async()=>{
+ if(!ygpCTALoaded)return toast('Tetapan CTA sedang dimuatkan dari Firebase. Cuba sebentar lagi.',true);
+ const btn=ygp('ygp-save-cta');let c={};document.querySelectorAll('[data-ygp-cta]').forEach(x=>c[x.dataset.ygpCta]=x.value.trim());
+ btn.disabled=true;
+ try{await db.collection('posters').doc(YGP_CTA_DOC).set({docType:'ygrowPostingCTA',platforms:c,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:auth.currentUser?.uid||''},{merge:true});ygpSharedCTA=c;ygpCTADirty=false;toast('CTA dikongsi ke Firebase — semua staf akan nampak ✓');ygpRender()}
+ catch(err){toast('Gagal simpan CTA ke Firebase: '+err.message,true)}finally{btn.disabled=false}
+});
+document.querySelectorAll('[data-ygp-cta]').forEach(x=>x.addEventListener('input',()=>{ygpCTADirty=true}));
 
 function ygpReset(){ygp('ygp-form')?.reset();if(ygp('ygp-id'))ygp('ygp-id').value='';if(ygp('ygp-date'))ygp('ygp-date').value=new Date().toISOString().slice(0,10);ygpPending=[];ygpRenderPending()}
 ygp('ygp-reset')?.addEventListener('click',ygpReset);
@@ -8662,8 +8673,18 @@ document.addEventListener('click',async e=>{
 });
 
 function ygpInit(){
- if(!ygp('ygp-date'))return;ygpReset();ygpDateRange();ygpLoadCTA();
- db.collection('posters').onSnapshot(s=>{let all=s.docs.map(d=>({id:d.id,...d.data()}));ygpRows=all.filter(x=>x.docType==='ygrowPosting');ygpMedia=all.filter(x=>x.docType==='ygrowPostingMedia');ygpRender()},err=>toast('Ralat Posting YGROW: '+err.message,true))
+ if(!ygp('ygp-date'))return;ygpReset();ygpDateRange();
+ db.collection('posters').onSnapshot(s=>{
+ let all=s.docs.map(d=>({id:d.id,...d.data()}));
+ const shared=all.find(x=>x.id===YGP_CTA_DOC&&x.docType==='ygrowPostingCTA');
+ const firstLoad=!ygpCTALoaded;
+ ygpSharedCTA=shared?.platforms||null;ygpCTALoaded=true;
+ // On first visit, show the user's legacy local settings only as an editable draft
+ // when no shared record exists. Never automatically push local data to Firebase.
+ if(firstLoad&&!shared){try{const legacy=JSON.parse(localStorage.getItem('ygrowPostingCTA')||'null');if(legacy&&typeof legacy==='object'){document.querySelectorAll('[data-ygp-cta]').forEach(x=>x.value=legacy[x.dataset.ygpCta]??YGP_DEFAULT_CTA[x.dataset.ygpCta]??'');ygpCTADirty=true;toast('CTA lama dijumpai dalam browser ini. Klik Simpan Tetapan CTA untuk kongsi kepada staf.') }else ygpLoadCTA()}catch(e){ygpLoadCTA()}}
+ else if(!ygpCTADirty)ygpLoadCTA();
+ ygpRows=all.filter(x=>x.docType==='ygrowPosting');ygpMedia=all.filter(x=>x.docType==='ygrowPostingMedia');ygpRender()
+},err=>toast('Ralat Posting YGROW / CTA Firebase: '+err.message,true))
 }
 setTimeout(ygpInit,1200);
 
