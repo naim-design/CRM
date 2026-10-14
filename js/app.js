@@ -8429,6 +8429,32 @@ document.addEventListener('click',e=>{if(e.target.closest('#yg-import-oct')){ygI
 document.addEventListener('click',async e=>{if(!e.target.closest('#yg-import-preview'))return;const file=ygImportEl('yg-import-file')?.files?.[0];if(!file)return toast('Pilih fail Excel atau CSV dahulu.',true);try{let grid=file.name.toLowerCase().endsWith('.csv')?ygImportCSV(await file.text()):null;ygImportRows=grid?(ygImportFromFlat(grid).length?ygImportFromFlat(grid):ygImportFromGrid(grid)):await ygImportLoadXlsx(file);if(!ygImportRows.length)throw new Error('Tiada data 9–13 Oktober ditemui. Cuba butang Muat data 9–13 Okt.');ygImportRender()}catch(err){ygImportRows=[];ygImportRender();toast(err.message,true)}});
 document.addEventListener('click',async e=>{if(!e.target.closest('#yg-import-save'))return;if(!auth.currentUser)return toast('Sila login dahulu.',true);const rows=ygImportRows.filter(r=>!ygImportExists(r));if(!rows.length)return toast('Tiada rekod baharu untuk import.',true);if(!confirm(`Import ${rows.length} rekod Ecommerce ke Firestore? Rekod sedia ada akan dilangkau.`))return;const btn=ygImportEl('yg-import-save');btn.disabled=true;let done=0,skipped=0;try{for(const r of rows){const snap=await db.collection('ygrowPlatformEntries').where('date','==',r.date).where('platform','==','Ecommerce').get();if(snap.docs.some(d=>ygImportNormStaff(d.data().ecommerceStaff||d.data().campaign)===r.ecommerceStaff)){skipped++;continue}const id='ecom_'+r.date.replace(/-/g,'')+'_'+(r.ecommerceStaff==='Encik Azim'?'azim':'aiman');const ref=db.collection('ygrowPlatformEntries').doc(id);const existing=await ref.get();if(existing.exists){skipped++;continue}await ref.set({...r,platform:'Ecommerce',packageName:'Campuran / Tidak Dinyatakan',units:0,leadsHandler:'',leadsRunner:'',leadsResult:0,whatsappNumbers:0,note:'Import laporan WEBSITES · Kos SST · Unit tidak dinyatakan',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});done++}toast(`${done} rekod berjaya diimport, ${skipped} dilangkau ✓`);ygImportRender()}catch(err){toast(`Import terhenti selepas ${done} rekod: ${err.message}`,true)}finally{ygImportRender()}});
 
+/* V129: Safe, preset-only Leads WhatsApp import (7-13 Oct 2026). */
+const ygLeadsPreset=[
+// BOT NADIA - FADZLI (7-13 October)
+['2026-10-07','Nadia','Fadzli','BOT Nadia - Fadzli',12,14,0,0,64.80],
+['2026-10-08','Nadia','Fadzli','BOT Nadia - Fadzli',15,7,0,0,32.40],
+['2026-10-11','Nadia','Fadzli','BOT Nadia - Fadzli',12,5,0,0,32.36],
+['2026-10-12','Nadia','Fadzli','BOT Nadia - Fadzli',7,7,0,0,51.76],
+['2026-10-13','Nadia','Fadzli','BOT Nadia - Fadzli',11,7,0,0,48.45],
+// BOT NADIA - AIMAN
+['2026-10-07','Nadia','Aiman','Iklan BOFU Nadia',69,59,3,217,86.27],
+['2026-10-08','Nadia','Aiman','Iklan BOFU Nadia',43,32,1,59,60.96],
+['2026-10-10','Nadia','Aiman','Iklan BOFU Nadia',0,0,1,99,0],
+['2026-10-11','Nadia','Aiman','Iklan BOFU Nadia',77,62,0,0,107.38],
+['2026-10-12','Nadia','Aiman','Iklan BOFU Nadia',24,25,1,59,54.62],
+['2026-10-13','Nadia','Aiman','Iklan BOFU Nadia',27,27,0,0,48.88],
+// BOT FANI - AZIM
+['2026-10-11','Fani','Azim','Iklan Leads BOFU Fani',63,64,0,0,108.00],
+['2026-10-12','Fani','Azim','Iklan Leads BOFU Fani',69,67,2,158,107.99],
+['2026-10-13','Fani','Azim','Iklan Leads BOFU Fani',78,78,0,0,108.01]
+].map(([date,leadsHandler,leadsRunner,campaign,leadsResult,whatsappNumbers,orders,sales,cost])=>({date,leadsHandler,leadsRunner,campaign,leadsResult,whatsappNumbers,orders,sales,cost}));
+let ygLeadsPreview=[];
+function ygLeadsSame(x,r){return x.platform==='Leads'&&x.date===r.date&&String(x.campaign||'').trim().toLowerCase()===r.campaign.toLowerCase()}
+function ygLeadsDraw(){const b=document.getElementById('yg-leads-import-body'),status=document.getElementById('yg-leads-import-status'),save=document.getElementById('yg-leads-import-save');if(!b)return;let fresh=0;b.innerHTML=ygLeadsPreview.length?ygLeadsPreview.map(r=>{const exists=ygData.some(x=>ygLeadsSame(x,r));if(!exists)fresh++;return `<tr><td>${ygE(r.date)}</td><td>${ygE(r.leadsHandler)}</td><td>${ygE(r.leadsRunner)}</td><td>${ygE(r.campaign)}</td><td>${r.leadsResult}</td><td>${r.whatsappNumbers}</td><td>${r.orders}</td><td>${ygM(r.sales)}</td><td>${ygM(r.cost)}</td><td>${exists?'Sudah ada — langkau':'Baharu'}</td></tr>`}).join(''):'<tr><td colspan="10">Belum ada pratonton.</td></tr>';save.disabled=!fresh;status.textContent=`${ygLeadsPreview.length} rekod aktif · ${fresh} baharu · ${ygLeadsPreview.length-fresh} sudah ada (langkau). Hari tanpa aktiviti tidak dimasukkan.`}
+document.addEventListener('click',e=>{if(!e.target.closest('#yg-leads-import-preview'))return;ygLeadsPreview=ygLeadsPreset.map(r=>({...r}));ygLeadsDraw()});
+document.addEventListener('click',async e=>{if(!e.target.closest('#yg-leads-import-save'))return;if(!auth.currentUser)return toast('Sila login dahulu.',true);const fresh=ygLeadsPreview.filter(r=>!ygData.some(x=>ygLeadsSame(x,r)));if(!fresh.length)return toast('Tiada rekod baharu.',true);if(!confirm(`Import maksimum ${fresh.length} rekod Leads WhatsApp ke Firebase? Rekod sedia ada akan dilangkau, tiada rekod dipadam.`))return;const btn=document.getElementById('yg-leads-import-save');btn.disabled=true;let done=0,skip=0;try{for(const r of fresh){const ref=db.collection('ygrowPlatformEntries').doc('leads_'+r.date.replace(/-/g,'')+'_'+r.leadsHandler.toLowerCase()+'_'+r.leadsRunner.toLowerCase());const [snap,existing]=await Promise.all([db.collection('ygrowPlatformEntries').where('date','==',r.date).where('platform','==','Leads').get(),ref.get()]);if(existing.exists||snap.docs.some(d=>ygLeadsSame(d.data(),r))){skip++;continue}await ref.set({...r,platform:'Leads',ecommerceStaff:'',packageName:'Campuran / Tidak Dinyatakan',units:0,note:'Import WABOT & CRM 7–13 Okt 2026 · Kos SST · Result=Clicks · Masuk WS=Jum No · Order=Jum Cus',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});done++}toast(`${done} rekod Leads berjaya diimport · ${skip} dilangkau ✓`)}catch(err){toast(`Import terhenti selepas ${done} rekod: ${err.message}`,true)}finally{ygLeadsDraw()}});
+
 /* ================= V80 BLAST CALENDAR ================= */
 let bcCursor=new Date(2026,9,1);
 const BC_RATE=0.0116,BC_TARGET=3000,BC_TOPUP=120;
