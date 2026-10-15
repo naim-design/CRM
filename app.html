@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base-extracted.css">
-<link rel="stylesheet" href="css/app-extra.css?v=v116-premium-ui">
+<link rel="stylesheet" href="css/app-extra.css?v=v130-murpati-menu">
 <script>
   (function() {
     const saved = localStorage.getItem('theme') || 'dark';
@@ -39,6 +39,7 @@
 <details class="crm-nav-fold" open><summary>Dashboard</summary><div class="crm-nav-children"><button data-view="dashboard" data-team-area="crm">Dashboard</button><button data-view="feedback" data-team-area="crm">Feedback</button><button data-view="poster" data-team-area="crm">Poster</button><button data-view="survey" data-team-area="crm">Survey</button><button data-view="template" data-team-area="crm">Template</button><button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button><button data-view="laporan" data-team-area="crm">Laporan</button></div></details>
 <details class="crm-nav-fold"><summary>Database</summary><div class="crm-nav-children"><button data-view="contacts" data-team-area="crm">Database</button><button data-view="filter" data-team-area="crm">Filter</button></div></details>
 <details class="crm-nav-fold" open><summary>YGROW</summary><div class="crm-nav-children"><button data-view="ygrowhub" data-team-area="crm">YGROW</button><button data-view="ygrowposting" data-team-area="crm">Posting YGROW</button><button data-view="ygrowservice" data-team-area="crm">Servicing YGROW</button></div></details>
+<details class="crm-nav-fold" id="murpati-menu"><summary>◉ MURPATI</summary><div class="crm-nav-children"><button data-view="murpati" data-murpati-tab="dashboard" data-team-area="crm">Dashboard</button><button data-view="murpati" data-murpati-tab="leads" data-team-area="crm">Leads Database</button><button data-view="murpati" data-murpati-tab="sales" data-team-area="crm">Sales Tracking</button><button data-view="murpati" data-murpati-tab="campaign" data-team-area="crm">Campaign Performance</button><button data-view="murpati" data-murpati-tab="conversation" data-team-area="crm">Conversation Analytics</button><button data-view="murpati" data-murpati-tab="staff" data-team-area="crm">Staff &amp; AI Performance</button><button data-view="murpati" data-murpati-tab="sync" data-team-area="crm">Sync &amp; Settings</button></div></details>
 <details class="crm-nav-fold" ><summary>Campaign Manager</summary><div class="crm-nav-children"><button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button><button data-view="wabotlive" data-team-area="crm">Wabot Live</button><button data-view="wabotcontrol" data-team-area="crm">Wabot Control</button><button data-view="aiinsight" data-team-area="crm">AI Insight</button></div></details>
 <details class="crm-nav-fold" ><summary>Planning & To Do</summary><div class="crm-nav-children"><button data-view="planning" data-team-area="crm">Planning</button><button data-view="todo" data-team-area="crm">To-Do</button><button data-view="recap" data-team-area="crm">Recap Julai</button><button data-view="salespages" data-team-area="crm">Sales Pages</button></div></details>
 <details class="crm-nav-fold"><summary>Analytics</summary><div class="crm-nav-children"><button data-view="pageanalytics" data-team-area="crm">Page Analytics</button><button data-view="projection" data-team-area="crm">Projection</button><button data-view="packageanalysis" data-team-area="crm">Pakej Analisis</button><button data-view="pricingcalculator" data-team-area="crm">Pricing Calculator</button><button data-view="analyticspro" data-team-area="crm">Analytics Pro</button></div></details>
@@ -667,6 +668,14 @@
         </div>
       </section>
     </div>
+
+    <!-- Murpati workspace V130: separate Firestore collection; no automatic import or duplication -->
+<div id="view-murpati" class="view murpati-workspace">
+ <div class="section-head"><div><h2>◉ MURPATI <span style="font-size:14px;font-weight:500">— YGrow Formula HQ</span></h2><p>WhatsApp Official · Dashboard &amp; Sales Tracking</p></div></div>
+ <div class="mp-toolbar"><label>Dari <input id="mp-from" type="date"></label><label>Hingga <input id="mp-to" type="date"></label><button type="button" class="btn btn-ghost" id="mp-refresh">↻ Refresh</button><span id="mp-state" class="hint-chip">Menunggu data</span></div>
+ <div class="mp-tabs" id="mp-tabs"><button data-mp-tab="dashboard" class="active">Dashboard</button><button data-mp-tab="leads">Leads Database</button><button data-mp-tab="sales">Sales Tracking</button><button data-mp-tab="campaign">Campaign Performance</button><button data-mp-tab="conversation">Conversation Analytics</button><button data-mp-tab="staff">Staff &amp; AI</button><button data-mp-tab="sync">Sync &amp; Settings</button></div>
+ <div id="mp-content" aria-live="polite"></div>
+</div>
 
     <div id="view-ygrowhub" class="view yg-hub">
       <section class="yg-hero"><div><div class="yg-eyebrow">YGROW · OMNICHANNEL PERFORMANCE</div><h2>Dashboard YGROW Semua Platform</h2><p>Compile TikTok, WhatsApp, Ecommerce dan Leads untuk pantau unit terjual, sales, kos, ROAS dan pakej setiap platform.</p><div class="yg-filters"><label>Dari<input type="date" id="yg-from"></label><label>Hingga<input type="date" id="yg-to"></label><button class="btn" id="yg-month" type="button">Bulan Ini</button></div></div><img src="assets/ygrow-dashboard-banner.png" alt="YGROW Formula"></section>
@@ -3009,7 +3018,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v129-leads-import"></script>
+<script src="js/app.js?v=v130-murpati-menu"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 <div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div></body>
 </html>
