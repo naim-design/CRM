@@ -8803,3 +8803,43 @@ document.getElementById('fb108-saveanswer')?.addEventListener('click',async()=>{
 (function(){function init(){const out=document.getElementById('crm-funnel-live');if(out){let ids=['sent','delivered','read','reply','buyer','sales'].map(x=>document.getElementById('entry-'+x));let update=()=>{let [s,d,r,reply,b,sales]=ids.map(x=>Number(x?.value)||0);let pct=(a,n)=>n?(100*a/n).toFixed(1)+'%':'—';out.innerHTML=[['Delivery Rate',pct(d,s)],['Read Rate',pct(r,d)],['Reply Rate',pct(reply,s)],['Buyer / Reply',pct(b,reply)],['Sales','RM '+sales.toFixed(2)]].map(([a,v])=>'<div><small>'+a+'</small><strong>'+v+'</strong></div>').join('')};ids.forEach(x=>x?.addEventListener('input',update));update()}
  document.querySelectorAll('iframe').forEach(f=>{f.loading='lazy';const w=document.createElement('div');w.className='crm-iframe-shell';f.parentNode.insertBefore(w,f);w.appendChild(f);const l=document.createElement('div');l.className='crm-iframe-loader';l.textContent='Memuatkan laporan…';w.appendChild(l);f.addEventListener('load',()=>l.remove());});}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();
+
+// ============================================================
+// V130 — MURPATI workspace. Reads a SEPARATE Firestore collection.
+// No data is imported or synced merely by opening this menu.
+// ============================================================
+(function(){
+  let tab='dashboard',rows=[],unsubscribe=null,started=false,loadError='';
+  const $=id=>document.getElementById(id);
+  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const money=n=>'RM '+Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const num=n=>Number(n||0).toLocaleString('en-MY');
+  const dateOf=r=>String(r.lastMessageAt||r.last_message_at||r.createdAt||r.firstMessageAt||'').slice(0,10);
+  const isBuyer=r=>r.buyer===true||['buyer','paid','purchased'].includes(String(r.status||r.stage||'').toLowerCase());
+  const val=(r,...keys)=>{for(const k of keys)if(r[k]!==undefined&&r[k]!==null&&r[k]!=='')return r[k];return '';};
+  const leadName=r=>val(r,'name','pushName','contactName')||'Tanpa nama';
+  const campaign=r=>val(r,'campaign','adHeadline','adSource','ad_id')||'Tidak diketahui';
+  const staff=r=>val(r,'handledBy','staff','assignedTo')||'Belum dipetakan';
+  const sales=r=>Number(val(r,'buyerValue','salesValue','saleValue')||0);
+  function filtered(){const f=$('mp-from')?.value||'',t=$('mp-to')?.value||'';return rows.filter(r=>{const d=dateOf(r);return (!f||!d||d>=f)&&(!t||!d||d<=t);});}
+  function table(headers,body){return `<div class="mp-panel mp-table-wrap"><table class="mp-table"><thead><tr>${headers.map(h=>`<th>${escape(h)}</th>`).join('')}</tr></thead><tbody>${body||`<tr><td colspan="${headers.length}" class="mp-empty">Tiada rekod untuk dipaparkan.</td></tr>`}</tbody></table></div>`;}
+  function cards(data){return `<div class="mp-cards">${data.map(([k,v])=>`<div class="mp-card"><small>${escape(k)}</small><strong>${escape(v)}</strong></div>`).join('')}</div>`;}
+  function grouped(list,key){const m=new Map();list.forEach(r=>{const k=key(r),v=m.get(k)||{name:k,leads:0,buyers:0,sales:0,reply:0};v.leads++;v.buyers+=+isBuyer(r);v.sales+=sales(r);v.reply+=+(!!val(r,'lastInboundAt','lastReplyAt','customerReplied'));m.set(k,v)});return [...m.values()].sort((a,b)=>b.sales-a.sales||b.leads-a.leads);}
+  function groupTable(list){return table(['Nama','Leads','Buyer','Sales','Replied'],list.map(x=>`<tr><td>${escape(x.name)}</td><td>${num(x.leads)}</td><td>${num(x.buyers)}</td><td>${money(x.sales)}</td><td>${num(x.reply)}</td></tr>`).join(''));}
+  function render(){if(!$('mp-content'))return;const a=filtered(),b=a.filter(isBuyer),total=a.reduce((n,r)=>n+sales(r),0);$('mp-state').textContent=loadError?'Ralat membaca data':`${a.length} rekod dipaparkan`;document.querySelectorAll('[data-mp-tab]').forEach(x=>x.classList.toggle('active',x.dataset.mpTab===tab));
+    if(loadError){$('mp-content').innerHTML=`<div class="mp-panel">Ralat akses Firestore: ${escape(loadError)}</div>`;return;}
+    let html='';
+    if(tab==='dashboard')html=cards([['Total Leads',num(a.length)],['Customer Reply',num(a.filter(r=>!!val(r,'lastInboundAt','lastReplyAt','customerReplied')).length)],['Buyer',num(b.length)],['Sales Disahkan',money(total)]])+`<div class="mp-panel"><h3>Sales mengikut Kempen</h3></div>`+groupTable(grouped(a,campaign));
+    if(tab==='leads')html=table(['Customer','WhatsApp','Status','Kempen','Staff','Last Activity'],a.map(r=>`<tr><td>${escape(leadName(r))}</td><td>${escape(val(r,'phone','phoneNumber','phone_number'))}</td><td>${escape(val(r,'status','stage','stageName')||'New')}</td><td>${escape(campaign(r))}</td><td>${escape(staff(r))}</td><td>${escape(dateOf(r))}</td></tr>`).join(''));
+    if(tab==='sales')html=cards([['Buyer',num(b.length)],['Jumlah Sales',money(total)]])+table(['Customer','Kempen','Handle By','Sales','Tarikh'],b.map(r=>`<tr><td>${escape(leadName(r))}</td><td>${escape(campaign(r))}</td><td>${escape(staff(r))}</td><td>${money(sales(r))}</td><td>${escape(dateOf(r))}</td></tr>`).join(''))+`<p class="mp-note">Sales hanya dikira daripada rekod buyer dalam koleksi Murpati. Tidak dicampur dengan jualan manual YGROW.</p>`;
+    if(tab==='campaign')html=groupTable(grouped(a,campaign))+`<p class="mp-note">Kempen hanya dikenal pasti apabila Murpati membekalkan metadata iklan atau kempen telah dipetakan.</p>`;
+    if(tab==='conversation')html=cards([['Perbualan Unik',num(a.length)],['Customer Replied',num(a.filter(r=>!!val(r,'lastInboundAt','lastReplyAt','customerReplied')).length)],['Mesej Masuk',num(a.reduce((n,r)=>n+Number(r.inboundCount||0),0))],['Mesej Keluar',num(a.reduce((n,r)=>n+Number(r.outboundCount||0),0))]])+table(['Customer','Last Message','Tarikh'],a.map(r=>`<tr><td>${escape(leadName(r))}</td><td>${escape(String(val(r,'lastMessage','last_message')).slice(0,110))}</td><td>${escape(dateOf(r))}</td></tr>`).join(''));
+    if(tab==='staff')html=groupTable(grouped(a,staff))+`<p class="mp-note">Staf dan AI hanya dikira apabila atribusi direkodkan. Mesej bot tidak semestinya bermaksud staf tertentu telah closing.</p>`;
+    if(tab==='sync')html=`<div class="mp-panel"><h3>Status Integrasi</h3><p><strong>Sumber:</strong> Firestore / murpatiLeads</p><p><strong>Rekod tersedia:</strong> ${num(rows.length)}</p><p><strong>Mod:</strong> Baca sahaja. Webhook belum dikonfigurasi oleh menu ini.</p><p class="mp-note">MURPATI connected dalam ChatGPT tidak bermaksud data telah disalin ke Firebase. Untuk sync automatik, perlukan webhook Murpati yang disahkan, endpoint Vercel, environment secret dan ujian event sebenar. Jangan letakkan API key atau webhook secret dalam kod frontend.</p></div>`;
+    $('mp-content').innerHTML=html||'<div class="mp-empty">Tiada data.</div>';
+  }
+  function start(){if(started)return;started=true;try{unsubscribe=db.collection('murpatiLeads').limit(2000).onSnapshot(s=>{rows=s.docs.map(d=>({id:d.id,...d.data()}));loadError='';render()},e=>{loadError=e.message;render()})}catch(e){loadError=e.message;render()}}
+  document.querySelectorAll('[data-view="murpati"]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.murpatiTab||'dashboard';start();render()}));
+  document.querySelectorAll('[data-mp-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.mpTab;render()}));
+  ['mp-from','mp-to'].forEach(id=>$(id)?.addEventListener('change',render));$('mp-refresh')?.addEventListener('click',render);
+})();
