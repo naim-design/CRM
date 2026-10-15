@@ -8835,8 +8835,32 @@ document.getElementById('fb108-saveanswer')?.addEventListener('click',async()=>{
     if(tab==='campaign')html=groupTable(grouped(a,campaign))+`<p class="mp-note">Kempen hanya dikenal pasti apabila Murpati membekalkan metadata iklan atau kempen telah dipetakan.</p>`;
     if(tab==='conversation')html=cards([['Perbualan Unik',num(a.length)],['Customer Replied',num(a.filter(r=>!!val(r,'lastInboundAt','lastReplyAt','customerReplied')).length)],['Mesej Masuk',num(a.reduce((n,r)=>n+Number(r.inboundCount||0),0))],['Mesej Keluar',num(a.reduce((n,r)=>n+Number(r.outboundCount||0),0))]])+table(['Customer','Last Message','Tarikh'],a.map(r=>`<tr><td>${escape(leadName(r))}</td><td>${escape(String(val(r,'lastMessage','last_message')).slice(0,110))}</td><td>${escape(dateOf(r))}</td></tr>`).join(''));
     if(tab==='staff')html=groupTable(grouped(a,staff))+`<p class="mp-note">Staf dan AI hanya dikira apabila atribusi direkodkan. Mesej bot tidak semestinya bermaksud staf tertentu telah closing.</p>`;
-    if(tab==='sync')html=`<div class="mp-panel"><h3>Status Integrasi</h3><p><strong>Sumber:</strong> Firestore / murpatiLeads</p><p><strong>Rekod tersedia:</strong> ${num(rows.length)}</p><p><strong>Mod:</strong> Firestore realtime. Webhook V131 tersedia di /api/murpati/webhook (aktif selepas secret ditetapkan dan URL didaftarkan di Murpati).</p><p class="mp-note">MURPATI connected dalam ChatGPT tidak bermaksud data telah disalin ke Firebase. Untuk sync automatik, tetapkan MURPATI_WEBHOOK_SECRET dalam Vercel, daftar URL webhook di Murpati dan jalankan Send Test. Jangan letakkan API key atau webhook secret dalam kod frontend.</p></div>`;
-    $('mp-content').innerHTML=html||'<div class="mp-empty">Tiada data.</div>';
+    if(tab==='sync')html=`<div class="mp-panel"><h3>Import Sejarah Murpati (V132)</h3><p>Import fail JSON yang mengandungi array <code>conversations</code> atau <code>records</code>. Semak dahulu sebelum import. Maksimum 300 rekod setiap batch. Data buyer/sales sedia ada tidak diubah.</p><input type="file" id="mp-history-file" accept=".json,application/json"><button type="button" id="mp-history-preview">Semak Import</button><button type="button" id="mp-history-import" disabled>Import Rekod Disemak</button><p id="mp-history-status" role="status">Belum pilih fail.</p><p class="mp-note">Import sejarah penuh memerlukan eksport JSON sebenar. Sambungan ChatGPT tidak secara automatik menyediakan fail eksport kepada laman CRM.</p></div><div class="mp-panel"><h3>Status Integrasi</h3><p><strong>Sumber:</strong> Firestore / murpatiLeads</p><p><strong>Rekod tersedia:</strong> ${num(rows.length)}</p><p><strong>Mod:</strong> Firestore realtime. Webhook V131 tersedia di /api/murpati/webhook (aktif selepas secret ditetapkan dan URL didaftarkan di Murpati).</p><p class="mp-note">MURPATI connected dalam ChatGPT tidak bermaksud data telah disalin ke Firebase. Untuk sync automatik, tetapkan MURPATI_WEBHOOK_SECRET dalam Vercel, daftar URL webhook di Murpati dan jalankan Send Test. Jangan letakkan API key atau webhook secret dalam kod frontend.</p></div>`;
+    $('mp-content').innerHTML=html||'<div class="mp-empty">Tiada data.</div>';if(tab==='sync')attachHistory();
+  }
+  let historyRows=null;
+  async function historyCall(preview){
+    const user=window.firebase?.auth?.().currentUser;
+    if(!user)throw Error('Sila login menggunakan Firebase Authentication dahulu.');
+    const token=await user.getIdToken();
+    const r=await fetch('/api/murpati/backfill',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({records:historyRows,preview,confirm:preview?'':'IMPORT_MURPATI_HISTORY'})});
+    const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'Import gagal');return d;
+  }
+  function attachHistory(){
+    const file=$('mp-history-file'),preview=$('mp-history-preview'),importBtn=$('mp-history-import'),status=$('mp-history-status');
+    if(!file||!preview||!importBtn)return;
+    preview.onclick=async()=>{importBtn.disabled=true;try{
+      const f=file.files?.[0];if(!f)throw Error('Pilih fail JSON dahulu');
+      if(f.size>2e6)throw Error('Fail terlalu besar (maksimum 2MB)');
+      const parsed=JSON.parse(await f.text());historyRows=Array.isArray(parsed)?parsed:(parsed.conversations||parsed.records);
+      if(!Array.isArray(historyRows)||!historyRows.length)throw Error('JSON mesti mengandungi array conversations / records');
+      status.textContent='Sedang semak '+historyRows.length+' rekod...';const d=await historyCall(true);
+      status.textContent=`Pratonton: ${d.valid} unik, ${d.create} baharu, ${d.update} sedia ada, ${d.invalid} tidak sah, ${d.duplicateInFile} duplicate dalam fail.`;
+      importBtn.disabled=!d.valid;
+    }catch(e){status.textContent='Ralat: '+e.message;}};
+    importBtn.onclick=async()=>{if(!historyRows||!confirm('Sahkan import sejarah Murpati ke Firebase? Rekod sedia ada tidak dipadam.'))return;importBtn.disabled=true;try{
+      status.textContent='Mengimport...';const d=await historyCall(false);status.textContent=`Selesai: ${d.created} baharu, ${d.updated} dikemas kini, ${d.invalid} tidak sah.`;
+    }catch(e){status.textContent='Ralat: '+e.message;importBtn.disabled=false;}};
   }
   function start(){if(started)return;started=true;try{unsubscribe=db.collection('murpatiLeads').limit(2000).onSnapshot(s=>{rows=s.docs.map(d=>({id:d.id,...d.data()}));loadError='';render()},e=>{loadError=e.message;render()})}catch(e){loadError=e.message;render()}}
   document.querySelectorAll('[data-view="murpati"]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.murpatiTab||'dashboard';start();render()}));
