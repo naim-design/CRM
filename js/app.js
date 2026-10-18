@@ -8458,6 +8458,9 @@ document.addEventListener('click',async e=>{if(!e.target.closest('#yg-leads-impo
 /* ================= V80 BLAST CALENDAR ================= */
 let bcCursor=new Date(2026,9,1);
 const BC_RATE=0.0116,BC_TARGET=3000,BC_TOPUP=120;
+function bcWorkingDay(y,m,d){const wd=new Date(y,m,d).getDay();return wd!==5&&wd!==6}
+function bcWorkdaysThrough(y,m,end){let n=0;for(let d=1;d<=end;d++)if(bcWorkingDay(y,m,d))n++;return n}
+function bcNextWorkday(y,m,from){let dt=new Date(y,m,from);for(let i=0;i<8;i++,dt.setDate(dt.getDate()+1)){if(bcWorkingDay(dt.getFullYear(),dt.getMonth(),dt.getDate()))return dt}return dt}
 function bcKey(y,m){return `bcBalance:${y}-${String(m+1).padStart(2,'0')}`}
 function bcPromo(day,m,y){if(m!==9||y!==2026)return {n:'Promo Bulanan',c:1};if(day<=6)return{n:'Promo Gaji Awal Bulan',c:1};if(day<=14)return{n:'Promo Double Digit 10.10',c:2};if(day<=22)return{n:'Oktober Lebih Jimat',c:3};return{n:'Promo Payday Sales',c:4}}
 function bcEntryDate(x){
@@ -8491,37 +8494,38 @@ function bcRender(){
  for(let d=1;d<=days;d++){
    let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
    let sent=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0);
-   let date=new Date(y,m,d),future=date>today0,p=bcPromo(d,m,y),cls=future?'future':sent>=BC_TARGET?'ok':'bad',top='',remark='';
+   let date=new Date(y,m,d),future=date>today0,working=bcWorkingDay(y,m,d),p=bcPromo(d,m,y),cls=!working?'off':future?'future':sent>=BC_TARGET?'ok':'bad',top='',remark='';
    let dayTopups=topups.filter(x=>x.date===ds).reduce((a,x)=>a+(Number(x.amount)||0),0);
    if(dayTopups){running+=dayTopups;top=`<span class="bc-topup">€ Topup +${dayTopups.toFixed(2)}</span>`}
    if(!future){
      cumSent+=sent;lastElapsed=d;
-     let target=d*BC_TARGET,gap=cumSent-target;
+     let target=bcWorkdaysThrough(y,m,d)*BC_TARGET,gap=cumSent-target;
      remark=gap>=0?`<span class="bc-remark ahead">Ahead +${gap.toLocaleString()}</span>`:`<span class="bc-remark behind">Behind ${Math.abs(gap).toLocaleString()}</span>`;
      running-=sent*BC_RATE;
-   }else if(nextTop==='—'){
+   }else if(nextTop==='—'&&working){
      let projected=running-BC_TARGET*BC_RATE;
      if(projected<0) nextTop=`${d}/${m+1}/${y}`;
      else running=projected;
    }
-   html+=`<div class="bc-day promo${p.c}"><span class="num">${d}</span><span class="promo">${p.n}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${remark}${top}</div>`;
+   html+=`<div class="bc-day promo${p.c} ${working?'':'bc-offday'}"><span class="num">${d}</span><span class="promo">${working?p.n:'CUTI · Tiada target blast'}</span><span class="bc-sent ${cls}">Sent ${Number(sent).toLocaleString()}</span>${remark}${top}</div>`;
  }
  grid.innerHTML=html;
  let viewingCurrent=(y===today.getFullYear()&&m===today.getMonth());
  let elapsed=viewingCurrent?Math.min(today.getDate(),days):(new Date(y,m+1,0)<today0?days:0);
- let target=elapsed*BC_TARGET;
+ let workdays=bcWorkdaysThrough(y,m,elapsed),target=workdays*BC_TARGET;
  // recalc total through elapsed so blank/future months stay sensible
  let actual=0;
  for(let d=1;d<=elapsed;d++){let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;actual+=(allEntries||[]).filter(x=>bcEntryDate(x)===ds).reduce((a,x)=>a+(Number(x.sent)||0),0)}
  let gap=actual-target,pct=target?actual/target*100:0,backlog=Math.max(0,-gap);
  document.getElementById('bc-cum-target').textContent=target.toLocaleString();
- document.getElementById('bc-cum-target-note').textContent=elapsed?`3,000 × ${elapsed} hari`:'Belum masuk tempoh';
+ document.getElementById('bc-cum-target-note').textContent=elapsed?`3,000 × ${workdays} hari bekerja (Ahad–Khamis)`:'Belum masuk tempoh';
  document.getElementById('bc-cum-sent').textContent=actual.toLocaleString();
  let ge=document.getElementById('bc-cum-gap');ge.textContent=gap>=0?`Ahead +${gap.toLocaleString()}`:`Baki ${backlog.toLocaleString()}`;ge.className=gap>=0?'is-ahead':'is-behind';
  document.getElementById('bc-cum-gap-note').textContent=gap>=0?'Melebihi target terkumpul':'Perlu blast untuk kejar target';
  document.getElementById('bc-cum-pct').textContent=pct.toFixed(1)+'%';
+ let nextWork=bcNextWorkday(y,m,Math.max(1,elapsed+1));
  document.getElementById('bc-catchup').textContent=(BC_TARGET+backlog).toLocaleString();
- document.getElementById('bc-catchup-note').textContent=backlog?`3,000 harian + ${backlog.toLocaleString()} backlog`:'Target harian biasa';
+ document.getElementById('bc-catchup-note').textContent=backlog?`Untuk ${nextWork.toLocaleDateString('ms-MY',{day:'numeric',month:'short'})} (hari bekerja): 3,000 + ${backlog.toLocaleString()} backlog`:`Untuk ${nextWork.toLocaleDateString('ms-MY',{day:'numeric',month:'short'})} (hari bekerja)`;
  let actualWallet=opening;
  for(let d=1;d<=Math.min(today.getDate(),days);d++){
    let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
