@@ -710,13 +710,13 @@
 
     <!-- ================= V80 BLAST CALENDAR ================= -->
     <div id="view-blastcalendar" class="view v80-page">
-      <div class="v80-title"><div><span>BLASTING CONTROL</span><h2>Kalendar Blast & Topup</h2><p>Nampak terus hari yang capai target 3,000 mesej, promo aktif dan jangkaan bila baki Euro perlu ditopup.</p></div><div class="v80-month-nav"><button id="bc-prev">‹</button><strong id="bc-month-label">—</strong><button id="bc-next">›</button></div></div>
+      <div class="v80-title"><div><span>BLASTING CONTROL</span><h2>Kalendar Blast & Topup</h2><p>Nampak terus hari yang capai target 3,000 mesej pada Ahad–Khamis, promo aktif dan jangkaan bila baki Euro perlu ditopup.</p></div><div class="v80-month-nav"><button id="bc-prev">‹</button><strong id="bc-month-label">—</strong><button id="bc-next">›</button></div></div>
       <section class="bc-kpis">
-        <article><span>TARGET HARIAN</span><strong>3,000</strong><small>mesej / hari</small></article>
+        <article><span>TARGET HARIAN</span><strong>3,000</strong><small>mesej / hari bekerja (Ahad–Khamis)</small></article>
         <article><span>KOS / 3,000</span><strong id="bc-daily-eur">€34.80</strong><small>€0.0116 / mesej</small></article>
         <article><span>BAKI EURO</span><strong id="bc-balance-show">€0.00</strong><button id="bc-edit-balance">Tetapkan Baki</button></article>
         <article><span>TOPUP STANDARD</span><strong>€120</strong><small>setiap kali topup</small></article>
-        <article><span>ANGGARAN TOPUP SETERUSNYA</span><strong id="bc-next-topup">—</strong><small id="bc-next-topup-note">Ikut target 3,000/hari</small></article>
+        <article><span>ANGGARAN TOPUP SETERUSNYA</span><strong id="bc-next-topup">—</strong><small id="bc-next-topup-note">Ikut target hari bekerja sahaja</small></article>
       </section>
       <section class="bc-wallet-panel">
   <div class="bc-wallet-head"><div><span>WALLET WABOT</span><h3>Topup & Baki Euro</h3><small>Baki dikira terus ikut Sent sebenar × €0.0116.</small></div>
@@ -732,14 +732,14 @@
         <span><i class="p1"></i>1–6 · Promo Gaji Awal Bulan</span><span><i class="p2"></i>7–14 · Promo Double Digit 10.10</span><span><i class="p3"></i>15–22 · Oktober Lebih Jimat</span><span><i class="p4"></i>23–31 · Promo Payday Sales</span>
       </section>
       <section class="bc-progress">
-  <article><span>TARGET TERKUMPUL</span><strong id="bc-cum-target">0</strong><small id="bc-cum-target-note">3,000 × hari semasa</small></article>
+  <article><span>TARGET TERKUMPUL</span><strong id="bc-cum-target">0</strong><small id="bc-cum-target-note">3,000 × hari bekerja</small></article>
   <article><span>SUDAH BLAST</span><strong id="bc-cum-sent">0</strong><small>Jumlah Sent bulan ini</small></article>
   <article class="bc-progress-gap"><span>BAKI / STATUS</span><strong id="bc-cum-gap">0</strong><small id="bc-cum-gap-note">Mengikut target terkumpul</small></article>
   <article><span>PENCAPAIAN</span><strong id="bc-cum-pct">0%</strong><small>Sent ÷ target terkumpul</small></article>
-  <article><span>TARGET HARI SETERUSNYA</span><strong id="bc-catchup">3,000</strong><small id="bc-catchup-note">Termasuk backlog</small></article>
+  <article><span>TARGET HARI SETERUSNYA</span><strong id="bc-catchup">3,000</strong><small id="bc-catchup-note">Untuk hari bekerja seterusnya</small></article>
 </section>
 <section class="bc-calendar-card"><div class="bc-week"><b>Ahad</b><b>Isnin</b><b>Selasa</b><b>Rabu</b><b>Khamis</b><b>Jumaat</b><b>Sabtu</b></div><div id="bc-grid" class="bc-grid"></div></section>
-      <section class="bc-help"><b>Warna Sent:</b> <span class="ok">Hijau = 3,000 atau lebih</span><span class="bad">Merah = bawah 3,000</span><span class="future">Kelabu = tarikh akan datang</span><b>Topup:</b> simbol € menunjukkan hari sistem anggar baki perlu ditambah €120.</section>
+      <section class="bc-help"><b>Warna Sent:</b> <span class="ok">Hijau = 3,000 atau lebih</span><span class="bad">Merah = bawah 3,000</span><span class="future">Kelabu = tarikh akan datang</span><span>Jumaat & Sabtu = CUTI (target 0; sent sebenar tetap dikira)</span><b>Topup:</b> simbol € menunjukkan hari sistem anggar baki perlu ditambah €120.</section>
     </div>
 
 
