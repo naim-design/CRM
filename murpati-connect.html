@@ -7,6 +7,10 @@
   <title>Sambung laporan CRM</title>
 
   <style>
+    [hidden] {
+      display: none !important;
+    }
+
     body {
       font: 16px system-ui;
       background: #f1f7f5;
@@ -130,92 +134,129 @@
   <script src="/js/firebase-config.js"></script>
 
   <script>
-    const $ = id => document.getElementById(id);
-    const query = new URLSearchParams(location.search);
-    const params = Object.fromEntries(query);
+    (function () {
+      const $ = id => document.getElementById(id);
+      const query = new URLSearchParams(location.search);
+      const params = Object.fromEntries(query);
 
-    $('scope').textContent =
-      params.scope || 'reports.read reports.write';
+      $('scope').textContent =
+        params.scope || 'reports.read reports.write';
 
-    $('destination').textContent =
-      params.redirect_uri || 'Tiada';
+      $('destination').textContent =
+        params.redirect_uri || 'Tiada';
 
-    const auth = firebase.auth();
+      const required = [
+        'client_id',
+        'redirect_uri',
+        'response_type',
+        'code_challenge',
+        'code_challenge_method',
+        'state'
+      ];
 
-    auth.onAuthStateChanged(user => {
-      $('login').hidden = !!user;
-      $('approve').hidden = !user;
-      $('switch').hidden = !user;
-      $('account').textContent =
-        user ? 'Akaun: ' + user.email : '';
-    });
+      if (required.some(key => !params[key])) {
+        $('login').hidden = true;
+        $('approve').hidden = true;
+        $('switch').hidden = true;
 
-    $('login').onsubmit = async event => {
-      event.preventDefault();
-
-      $('signin').disabled = true;
-      $('status').textContent = 'Sedang login...';
-
-      try {
-        await auth.signInWithEmailAndPassword(
-          $('email').value,
-          $('password').value
-        );
-
-        $('password').value = '';
         $('status').textContent =
-          'Semak skop dan alamat kembali sebelum benarkan.';
-      } catch {
-        $('status').textContent =
-          'Login gagal. Semak akaun CRM atau cuba semula.';
-      } finally {
-        $('signin').disabled = false;
+          'Pautan sambungan tidak lengkap atau sesi telah hilang. ' +
+          'Tutup tab ini dan mulakan Sambung semula dari ChatGPT. ' +
+          'Jangan buka halaman ini secara terus.';
+
+        return;
       }
-    };
 
-    $('switch').onclick = () => auth.signOut();
+      if (!window.firebase || !firebase.apps.length) {
+        $('login').hidden = true;
 
-    $('approve').onclick = async () => {
-      $('approve').disabled = true;
-      $('status').textContent = 'Menyambungkan...';
+        $('status').textContent =
+          'Firebase belum dimuatkan. Semak sambungan internet ' +
+          'dan refresh halaman. Jika berterusan, semak ' +
+          'js/firebase-config.js.';
 
-      try {
-        if (!auth.currentUser) {
-          throw Error('Sila login dahulu');
+        return;
+      }
+
+      const crmAuth = firebase.auth();
+
+      crmAuth.onAuthStateChanged(user => {
+        $('login').hidden = !!user;
+        $('approve').hidden = !user;
+        $('switch').hidden = !user;
+
+        $('account').textContent =
+          user ? 'Akaun: ' + user.email : '';
+      });
+
+      $('login').onsubmit = async event => {
+        event.preventDefault();
+
+        $('signin').disabled = true;
+        $('status').textContent = 'Sedang login...';
+
+        try {
+          await crmAuth.signInWithEmailAndPassword(
+            $('email').value,
+            $('password').value
+          );
+
+          $('password').value = '';
+
+          $('status').textContent =
+            'Semak skop dan alamat kembali sebelum benarkan.';
+        } catch {
+          $('status').textContent =
+            'Login gagal. Semak akaun CRM atau cuba semula.';
+        } finally {
+          $('signin').disabled = false;
         }
+      };
 
-        const token = await auth.currentUser.getIdToken();
+      $('switch').onclick = () => crmAuth.signOut();
 
-        const response = await fetch(
-          '/api/murpati/mcp?action=consent',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer ' + token
-            },
-            body: JSON.stringify(params)
+      $('approve').onclick = async () => {
+        $('approve').disabled = true;
+        $('status').textContent = 'Menyambungkan...';
+
+        try {
+          if (!crmAuth.currentUser) {
+            throw Error('Sila login dahulu');
           }
-        );
 
-        const data = await response.json();
+          const token = await crmAuth.currentUser.getIdToken();
 
-        if (!response.ok) {
-          throw Error(data.error || 'Sambungan gagal');
+          const response = await fetch(
+            '/api/murpati/mcp?action=consent',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + token
+              },
+              body: JSON.stringify(params)
+            }
+          );
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw Error(data.error || 'Sambungan gagal');
+          }
+
+          const destination = new URL(data.redirect);
+
+          if (destination.protocol !== 'https:') {
+            throw Error('Alamat kembali tidak sah');
+          }
+
+          location.assign(destination.toString());
+        } catch (e) {
+          $('status').textContent = e.message;
+          $('approve').disabled = false;
         }
-
-        const destination = new URL(data.redirect);
-
-        if (destination.protocol !== 'https:') {
-          throw Error('Alamat kembali tidak sah');
-        }
-
-        location.assign(destination.toString());
-      } catch (e) {
-        $('status').textContent = e.message;
-        $('approve').disabled = false;
-      }
-    };
+      };
+    })();
   </script>
 </body>
 </html>
