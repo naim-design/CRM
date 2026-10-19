@@ -673,8 +673,8 @@
 <div id="view-murpati" class="view murpati-workspace">
  <div class="section-head"><div><h2>◉ MURPATI <span style="font-size:14px;font-weight:500">— YGrow Formula HQ</span></h2><p>WhatsApp Official · Dashboard &amp; Sales Tracking</p></div></div>
  <div class="mp-toolbar"><label>Dari <input id="mp-from" type="date"></label><label>Hingga <input id="mp-to" type="date"></label><button type="button" class="btn btn-ghost" id="mp-refresh">↻ Refresh</button><span id="mp-state" class="hint-chip">Menunggu data</span></div>
- <div class="mp-tabs" id="mp-tabs"><button data-mp-tab="dashboard" class="active">Dashboard</button><button data-mp-tab="leads">Leads Database</button><button data-mp-tab="sales">Sales Tracking</button><button data-mp-tab="campaign">Campaign Performance</button><button data-mp-tab="conversation">Conversation Analytics</button><button data-mp-tab="staff">Staff &amp; AI</button><button data-mp-tab="sync">Sync &amp; Settings</button></div>
- <div id="mp-content" aria-live="polite"></div>
+ <div class="mp-tabs" id="mp-tabs"><button data-mp-tab="dashboard" class="active">Dashboard</button><button data-mp-tab="leads">Leads Database</button><button data-mp-tab="sales">Sales Tracking</button><button data-mp-tab="campaign">Campaign Performance</button><button data-mp-tab="conversation">Conversation Analytics</button><button data-mp-tab="staff">Staff &amp; AI</button><button data-mp-tab="reports">Laporan CRM</button> <button data-mp-tab="sync">Sync &amp; Settings</button></div>
+ <div id="mp-content" aria-live="polite"></div> <div id="mp-reports" hidden></div>
 </div>
 
     <div id="view-ygrowhub" class="view yg-hub">
@@ -3018,7 +3018,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v132-murpati-history"></script>
+<script src="js/app.js?v=v132-murpati-history"></script> <script src="js/murpati-reports.js?v=v136"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 <div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div></body>
 </html>
