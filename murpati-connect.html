@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Sambung laporan CRM</title>
+
+  <style>
+    body {
+      font: 16px system-ui;
+      background: #f1f7f5;
+      color: #153b36;
+      margin: 0;
+      padding: 32px 16px;
+    }
+
+    main {
+      max-width: 460px;
+      margin: 40px auto;
+      background: white;
+      padding: 28px;
+      border-radius: 18px;
+    }
+
+    label, input, button {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      margin: 12px 0;
+    }
+
+    input, button {
+      font: inherit;
+      padding: 12px;
+      border: 1px solid #bdd3ce;
+      border-radius: 8px;
+    }
+
+    button {
+      background: #005b4a;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .6;
+    }
+
+    small {
+      overflow-wrap: anywhere;
+    }
+
+    #status {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Sambung laporan CRM</h1>
+
+    <p>
+      Benarkan sambungan ini membaca dan menyimpan
+      laporan dalaman YGrow Formula HQ.
+    </p>
+
+    <p>
+      Ia tidak boleh menghantar WhatsApp,
+      mengubah lead atau mengesahkan bayaran.
+    </p>
+
+    <p>
+      Skop diminta:
+      <strong id="scope"></strong>
+    </p>
+
+    <small>
+      Alamat kembali:
+      <span id="destination"></span>
+    </small>
+
+    <form id="login">
+      <label>
+        Email CRM
+        <input
+          id="email"
+          type="email"
+          autocomplete="username"
+          required
+        >
+      </label>
+
+      <label>
+        Kata laluan CRM
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+      </label>
+
+      <button id="signin" type="submit">
+        Login CRM
+      </button>
+    </form>
+
+    <p id="account"></p>
+
+    <button id="approve" type="button" hidden>
+      Benarkan sambungan laporan
+    </button>
+
+    <button id="switch" type="button" hidden>
+      Tukar akaun
+    </button>
+
+    <p id="status" role="status"></p>
+
+    <p>
+      <a href="/app.html">Batal dan kembali ke CRM</a>
+    </p>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <script src="/js/firebase-config.js"></script>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const query = new URLSearchParams(location.search);
+    const params = Object.fromEntries(query);
+
+    $('scope').textContent =
+      params.scope || 'reports.read reports.write';
+
+    $('destination').textContent =
+      params.redirect_uri || 'Tiada';
+
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      $('login').hidden = !!user;
+      $('approve').hidden = !user;
+      $('switch').hidden = !user;
+      $('account').textContent =
+        user ? 'Akaun: ' + user.email : '';
+    });
+
+    $('login').onsubmit = async event => {
+      event.preventDefault();
+
+      $('signin').disabled = true;
+      $('status').textContent = 'Sedang login...';
+
+      try {
+        await auth.signInWithEmailAndPassword(
+          $('email').value,
+          $('password').value
+        );
+
+        $('password').value = '';
+        $('status').textContent =
+          'Semak skop dan alamat kembali sebelum benarkan.';
+      } catch {
+        $('status').textContent =
+          'Login gagal. Semak akaun CRM atau cuba semula.';
+      } finally {
+        $('signin').disabled = false;
+      }
+    };
+
+    $('switch').onclick = () => auth.signOut();
+
+    $('approve').onclick = async () => {
+      $('approve').disabled = true;
+      $('status').textContent = 'Menyambungkan...';
+
+      try {
+        if (!auth.currentUser) {
+          throw Error('Sila login dahulu');
+        }
+
+        const token = await auth.currentUser.getIdToken();
+
+        const response = await fetch(
+          '/api/murpati/mcp?action=consent',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + token
+            },
+            body: JSON.stringify(params)
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw Error(data.error || 'Sambungan gagal');
+        }
+
+        const destination = new URL(data.redirect);
+
+        if (destination.protocol !== 'https:') {
+          throw Error('Alamat kembali tidak sah');
+        }
+
+        location.assign(destination.toString());
+      } catch (e) {
+        $('status').textContent = e.message;
+        $('approve').disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
