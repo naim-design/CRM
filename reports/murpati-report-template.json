@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "devicePhone": "601168185110",
+  "timezone": "Asia/Kuala_Lumpur",
+  "periodStart": "ISI_TARIKH_ISO_DENGAN_ZON",
+  "periodEnd": "ISI_TARIKH_ISO_DENGAN_ZON",
+  "generatedAt": "ISI_TARIKH_ISO_DENGAN_ZON",
+  "coverage": {
+    "listed": 0,
+    "readFull": 0,
+    "total": null,
+    "hasMore": null,
+    "filterTruncated": null
+  },
+  "confirmedChanges": [],
+  "staffActions": [],
+  "limitations": [
+    "Template kosong. Isi tarikh, liputan dan hasil semakan sebenar sebelum simpan."
+  ],
+  "failures": []
+}
