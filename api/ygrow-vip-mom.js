@@ -62,17 +62,63 @@ module.exports = async function handler(req,res) {
     if(!raw||typeof raw!=='object'||Array.isArray(raw))return res.status(400).json({ok:false,error:'Missing answers'});
     const data=mapRow(raw);
     if(!data.phone||!data.name)return res.status(422).json({ok:false,error:'Missing or invalid phone/name'});
-    // Deterministic document ID prevents duplicate submits, even under concurrent requests.
+    // A customer may already exist from the legacy Servicing module with a random document ID.
+    // Merge the registration into that SAME document, preserving servicing notes and history.
     const id='vipmom_'+crypto.createHash('sha256').update(data.phone).digest('hex').slice(0,32);
-    const db=getAdmin();const ref=db.collection('ygrowServiceCustomers').doc(id);
+    const db=getAdmin();
+    const col=db.collection('ygrowServiceCustomers');
+    const ref=col.doc(id);
     const result=await db.runTransaction(async tx=>{
-      const doc=await tx.get(ref);
-      if(doc.exists)return 'exists';
-      // Protect earlier manually imported records with different Firestore IDs.
-      const existing=await tx.get(db.collection('ygrowServiceCustomers').where('phone','==',data.phone).limit(1));
-      if(!existing.empty)return 'exists';
-      tx.create(ref,{...data,createdAt:admin.firestore.FieldValue.serverTimestamp(),updatedAt:admin.firestore.FieldValue.serverTimestamp()});
-      return 'created';
+      // Firestore transactions must perform all reads before any writes.
+      const deterministic=await tx.get(ref);
+      const matches=await tx.get(col.where('phone','==',data.phone));
+      const existing=deterministic.exists ? deterministic :
+        (matches.docs.find(d=>d.data().journey===true)||matches.docs[0]||null);
+      const now=admin.firestore.FieldValue.serverTimestamp();
+      if(!existing){
+        tx.create(ref,{...data,createdAt:now,updatedAt:now});
+        return 'created';
+      }
+      const old=existing.data()||{};
+      // Keep legacy servicing feedback/status, measurements, follow-ups and HQ notes intact.
+      // Store raw registration details separately for auditing and future re-submissions.
+      const formDetails={
+        name:data.name,phone:data.phone,childName:data.childName,childAge:data.childAge,
+        childGender:data.childGender,state:data.state,relationship:data.relationship,
+        boxes:data.boxes,startDate:data.startDate,before:data.before,
+        baselineDate:data.baselineDate,childWeight:data.childWeight,tried:data.tried,
+        feel:data.feel,routine:data.routine,feedback:data.feedback,
+        consentProgram:data.consentProgram,consentData:data.consentData,
+        consentInternal:data.consentInternal,consentPromo:data.consentPromo,
+        consentMarketing:data.consentMarketing,formTimestamp:data.formTimestamp
+      };
+      const patch={
+        journey:true,
+        journeyStatus:old.journeyStatus||'pending',
+        rewardStatus:old.rewardStatus||'Belum Layak',
+        source:old.source||'google_form_v120',
+        vipMomForm:formDetails,
+        vipMomLastSyncAt:now,
+        updatedAt:now
+      };
+      // Add or refresh registration fields, but never blank out existing values.
+      // If HQ has already edited journey details, keep those edits.
+      const fields=['name','childName','childAge','childGender','state','relationship',
+        'boxes','startDate','baselineDate','childWeight','tried','routine',
+        'consentProgram','consentData','consentInternal','consentPromo',
+        'consentMarketing','formTimestamp'];
+      for(const key of fields){
+        if(data[key] && (!old[key] || !old.journey)) patch[key]=data[key];
+      }
+      if(!old.journey){
+        // Legacy records can have a separate servicing height and experience.
+        // Only fill empty slots, never overwrite them.
+        if(old.before==null && data.before!=null){patch.before=data.before;patch.beforeKnown=true;}
+        if(!old.feel && data.feel)patch.feel=data.feel;
+        if(!old.feedback && data.feedback)patch.feedback=data.feedback;
+      }
+      tx.update(existing.ref,patch);
+      return old.journey?'updated':'linked';
     });
     return res.status(200).json({ok:true,result});
   } catch(err) {console.error('YGROW sync error',err.message);return res.status(500).json({ok:false,error:'Server sync failed'});}
