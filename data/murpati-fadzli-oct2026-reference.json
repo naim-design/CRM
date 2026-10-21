@@ -1,0 +1,107 @@
+{
+  "source": "10/2026 REPORT MAMARIAM (1).xlsx",
+  "sheet": "WABOT & CRM",
+  "section": "LEADS MURPATI (FADZLI BUAT IKLAN)",
+  "note": "Tarikh kolum A ialah #REF!. Baris ini TIDAK dipetakan kepada tarikh secara automatik. Rujukan sahaja.",
+  "rows": [
+    {
+      "row": 17,
+      "date": null,
+      "spend": 41.2776,
+      "spendBeforeSst": 38.22,
+      "leads": 12,
+      "clicks": 10,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 18,
+      "date": null,
+      "spend": 73.8072,
+      "spendBeforeSst": 68.34,
+      "leads": 27,
+      "clicks": 28,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 19,
+      "date": null,
+      "spend": 73.0944,
+      "spendBeforeSst": 67.68,
+      "leads": 27,
+      "clicks": 27,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 20,
+      "date": null,
+      "spend": 40.608,
+      "spendBeforeSst": 37.6,
+      "leads": 21,
+      "clicks": 21,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 21,
+      "date": null,
+      "spend": 57.186,
+      "spendBeforeSst": 52.95,
+      "leads": 9,
+      "clicks": 9,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 22,
+      "date": null,
+      "spend": 90.7416,
+      "spendBeforeSst": 84.02,
+      "leads": 22,
+      "clicks": 22,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 23,
+      "date": null,
+      "spend": 78.6456,
+      "spendBeforeSst": 72.82,
+      "leads": 24,
+      "clicks": 24,
+      "buyers": 0,
+      "sales": 0.0,
+      "dateIssue": true
+    },
+    {
+      "row": 24,
+      "date": null,
+      "spend": 51.57,
+      "spendBeforeSst": 47.75,
+      "leads": 17,
+      "clicks": 17,
+      "buyers": 1,
+      "sales": 99.0,
+      "dateIssue": true
+    },
+    {
+      "row": 36,
+      "date": null,
+      "spend": 506.9304,
+      "spendBeforeSst": 469.38,
+      "leads": 159,
+      "clicks": 158,
+      "buyers": 1,
+      "sales": 99.0,
+      "dateIssue": false
+    }
+  ]
+}
