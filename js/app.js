@@ -8367,7 +8367,7 @@ function editMonthlyMetric(type){
 document.querySelectorAll('[data-monthly-edit]').forEach(btn=>btn.addEventListener('click',()=>editMonthlyMetric(btn.dataset.monthlyEdit)));
 
 /* V78 YGROW OMNICHANNEL */
-let ygData=[];const ygP=['TikTok','WhatsApp','Ecommerce','Leads'],ygLabel=p=>p==='WhatsApp'?'CRM':p==='Leads'?'Leads WhatsApp':p,Y=id=>document.getElementById(id);
+let ygData=[];const ygP=['TikTok','WhatsApp','Ecommerce','Shopee','Leads'],ygLabel=p=>p==='WhatsApp'?'CRM':p==='Leads'?'Leads WhatsApp':p,Y=id=>document.getElementById(id);
 const ygM=n=>'RM '+Number(n||0).toLocaleString('en-MY',{maximumFractionDigits:2}),ygE=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function ygRange(){const d=new Date(),a=new Date(d.getFullYear(),d.getMonth(),1),b=new Date(d.getFullYear(),d.getMonth()+1,0);Y('yg-from').value=a.toISOString().slice(0,10);Y('yg-to').value=b.toISOString().slice(0,10)}
 function ygRows(){let f=Y('yg-from')?.value||'',t=Y('yg-to')?.value||'';return ygData.filter(x=>(!f||x.date>=f)&&(!t||x.date<=t))}
@@ -8871,3 +8871,15 @@ document.getElementById('fb108-saveanswer')?.addEventListener('click',async()=>{
   document.querySelectorAll('[data-mp-tab]').forEach(b=>b.addEventListener('click',()=>{tab=b.dataset.mpTab;render()}));
   ['mp-from','mp-to'].forEach(id=>$(id)?.addEventListener('change',render));$('mp-refresh')?.addEventListener('click',render);
 })();
+
+// Shopee period aggregate, guarded by deterministic document ID.
+document.getElementById('yg-shopee-import')?.addEventListener('click',async()=>{
+if(!auth.currentUser)return toast('Sila login dahulu.',true);
+const ref=db.collection('ygrowPlatformEntries').doc('shopee_20261014_20261021_ygrow');
+try{if((await ref.get()).exists)return toast('Data Shopee tempoh ini sudah diimport.');
+const s=await db.collection('ygrowPlatformEntries').where('platform','==','Shopee').get();
+if(s.docs.some(d=>d.data().date>='2026-10-14'&&d.data().date<='2026-10-21'))return toast('Ada rekod Shopee bertindih; semak dahulu.',true);
+if(!confirm('Import RM2,663.10, 19 order dan 19 unit bagi Shopee 14–21 Okt?'))return;
+await ref.set({date:'2026-10-21',periodStart:'2026-10-14',periodEnd:'2026-10-21',platform:'Shopee',campaign:'Shopee YGROW · agregat 14–21 Okt',packageName:'Campuran / Tidak Dinyatakan',orders:19,units:19,sales:2663.10,cost:0,costKnown:false,note:'Agregat tempoh 14–21 Okt, bukan jualan harian 21 Okt. Kos iklan belum diketahui; ROAS tidak tersedia.',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('Import Shopee berjaya ✓');
+}catch(e){toast('Gagal import: '+e.message,true)}
+});
