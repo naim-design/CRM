@@ -12,5 +12,11 @@
       "source": "/.well-known/oauth-authorization-server",
       "destination": "/api/murpati/mcp?action=metadata"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/murpati/daily-sheet-sync",
+      "schedule": "0 1 * * *"
+    }
   ]
 }
