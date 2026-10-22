@@ -1,55 +1,430 @@
-// Google Sheets -> Firestore Murpati ad costs; diagnostics for Sheets 403.
+
+'use strict';
+
+// V140 - Google Sheets -> Firestore Murpati
+// Kolum A  = Tarikh
+// Kolum P  = Kos Ads sebelum SST
+// Kolum Q  = Kos Ads termasuk SST
+// Kolum S  = Link Clicks
+// Kolum T  = Jumlah Leads
+// Kolum X  = Jumlah Customer / Buyer
+// Kolum AB = Jumlah Sales
+
 const crypto = require('node:crypto');
-const {getDb} = require('../wabot/firebase');
-const tab = process.env.GOOGLE_SHEETS_MURPATI_TAB || 'WABOT & CRM';
-function cred(){
-  if(process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT) return JSON.parse(process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT);
-  if(process.env.FIREBASE_SERVICE_ACCOUNT) return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  return {client_email:process.env.FIREBASE_CLIENT_EMAIL,private_key:process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g,'\n')};
+const { getDb } = require('../wabot/firebase');
+
+const tab =
+  process.env.GOOGLE_SHEETS_MURPATI_TAB ||
+  'WABOT & CRM';
+
+function credentials() {
+  if (process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT) {
+    return JSON.parse(
+      process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT
+    );
+  }
+
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    return JSON.parse(
+      process.env.FIREBASE_SERVICE_ACCOUNT
+    );
+  }
+
+  return {
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    private_key: process.env.FIREBASE_PRIVATE_KEY
+      ?.replace(/\\n/g, '\n')
+  };
 }
-const b64=x=>Buffer.from(typeof x==='string'?x:JSON.stringify(x)).toString('base64url');
-async function token(c){
-  if(!c.client_email||!c.private_key) throw Error('Service account missing');
-  const now=Math.floor(Date.now()/1000),h=b64({alg:'RS256',typ:'JWT'}),p=b64({iss:c.client_email,scope:'https://www.googleapis.com/auth/spreadsheets.readonly',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3500});
-  const sig=crypto.sign('RSA-SHA256',Buffer.from(h+'.'+p),c.private_key.replace(/\\n/g,'\n')).toString('base64url');
-  const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion:h+'.'+p+'.'+sig})});
-  const j=await r.json();if(!r.ok)throw Error('Google OAuth gagal: '+(j.error||r.status));return j.access_token;
+
+function base64url(value) {
+  return Buffer.from(
+    typeof value === 'string'
+      ? value
+      : JSON.stringify(value)
+  ).toString('base64url');
 }
-function n(x){let y=Number(String(x||'').replace(/[,RM\s]/g,''));return Number.isFinite(y)?y:0}
-function day(v){if(/^\d{4}-\d{2}-\d{2}$/.test(String(v||'').trim()))return String(v).trim();let m=String(v||'').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');return null}
-module.exports=async(req,res)=>{
-  res.setHeader('Cache-Control','no-store');
-  if(req.method!=='GET')return res.status(405).json({ok:false,error:'GET only'});
-  if(!process.env.CRON_SECRET||req.headers.authorization!=='Bearer '+process.env.CRON_SECRET)return res.status(401).json({ok:false,error:'Unauthorized'});
-  try{
-    const id=process.env.GOOGLE_SHEETS_MURPATI_ID;if(!id)throw Error('GOOGLE_SHEETS_MURPATI_ID belum ditetapkan');
-    const c=cred();const access=await token(c);
-    console.info('[murpati-sheet-sync] auth',JSON.stringify({serviceAccountEmail:c.client_email,credentialSource:process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT?'GOOGLE_SHEETS_SERVICE_ACCOUNT':process.env.FIREBASE_SERVICE_ACCOUNT?'FIREBASE_SERVICE_ACCOUNT':'FIREBASE_CLIENT_EMAIL'}));
-    const range=encodeURIComponent("'"+tab.replace(/'/g,"''")+"'!A1:AB500");
-    const response=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(id)}/values/${range}?valueRenderOption=FORMATTED_VALUE`,{headers:{Authorization:'Bearer '+access}});
-    const data=await response.json();
-    if(!response.ok){
-      const code=response.status;
-      const kind=code===403?'SHEETS_ACCESS_DENIED':code===404?'SHEET_NOT_FOUND':code===400?'SHEET_RANGE_INVALID':'SHEETS_API_ERROR';
-      const details=(data.error?.details||[]).flatMap(x=>x.reason?[x.reason]:x.errors||[]).slice(0,3);
-      console.error('[murpati-sheet-sync] sheets-error',JSON.stringify({code:kind,status:code,googleMessage:String(data.error?.message||'').slice(0,700),googleStatus:data.error?.status||null,details}));
-      const err=new Error('Google Sheets API returned HTTP '+code+' ('+kind+'). See sheets-error logs.');err.status=code;err.code=kind;throw err;
+
+async function getGoogleToken(c) {
+  if (!c.client_email || !c.private_key) {
+    throw new Error('Service account missing');
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const header = base64url({
+    alg: 'RS256',
+    typ: 'JWT'
+  });
+
+  const payload = base64url({
+    iss: c.client_email,
+    scope:
+      'https://www.googleapis.com/auth/spreadsheets.readonly',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3500
+  });
+
+  const unsigned = header + '.' + payload;
+
+  const signature = crypto.sign(
+    'RSA-SHA256',
+    Buffer.from(unsigned),
+    c.private_key.replace(/\\n/g, '\n')
+  ).toString('base64url');
+
+  const response = await fetch(
+    'https://oauth2.googleapis.com/token',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type':
+          'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type:
+          'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: unsigned + '.' + signature
+      })
     }
-    const rows=data.values||[];
-    if(!rows.slice(0,4).some(row=>(row||[]).some(cell=>/LEADS\s+MURPATI/i.test(String(cell||'')))))throw Error('Tajuk LEADS MURPATI tidak dijumpai pada baris 1-4; semak tab dan struktur Sheet');
-    let valid=[],skipped=0;
-    for(let i=4;i<rows.length;i++){
-      const r=rows[i]||[];if(!r[16]&&!r[15])continue;
-      const date=day(r[0]);if(!date){skipped++;continue}
-      const spend=n(r[16]),sales=n(r[27]),leads=n(r[19]),buyers=n(r[23]);
-      if(spend<=0||sales<0||leads<0||buyers<0)continue;
-      valid.push({date,sourceRow:i+1,spend,spendBeforeSst:n(r[15]),leads,clicks:n(r[18]),buyers,sales,source:'google_sheets_fadzli',updatedAt:new Date().toISOString()});
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      'Google OAuth gagal: ' +
+      (data.error || response.status)
+    );
+  }
+
+  return data.access_token;
+}
+
+function numberValue(value) {
+  const result = Number(
+    String(value ?? '')
+      .replace(/[,RM\s]/g, '')
+  );
+
+  return Number.isFinite(result) ? result : 0;
+}
+
+function validDate(year, month, date) {
+  const d = new Date(
+    Date.UTC(year, month - 1, date)
+  );
+
+  return (
+    d.getUTCFullYear() === year &&
+    d.getUTCMonth() === month - 1 &&
+    d.getUTCDate() === date
+  );
+}
+
+function formatDate(year, month, date) {
+  if (!validDate(year, month, date)) {
+    return null;
+  }
+
+  return (
+    String(year).padStart(4, '0') +
+    '-' +
+    String(month).padStart(2, '0') +
+    '-' +
+    String(date).padStart(2, '0')
+  );
+}
+
+function parseDate(value) {
+  const text = String(value ?? '').trim();
+
+  let match = text.match(
+    /^(\d{4})-(\d{1,2})-(\d{1,2})$/
+  );
+
+  if (match) {
+    return formatDate(
+      Number(match[1]),
+      Number(match[2]),
+      Number(match[3])
+    );
+  }
+
+  match = text.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+  );
+
+  if (!match) return null;
+
+  const first = Number(match[1]);
+  const second = Number(match[2]);
+  const year = Number(match[3]);
+
+  // Format Malaysia DD/MM/YYYY.
+  // Jika nilai kedua > 12, format sumber
+  // semestinya MM/DD/YYYY.
+  const month = second > 12 ? first : second;
+  const date = second > 12 ? second : first;
+
+  return formatDate(year, month, date);
+}
+
+module.exports = async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({
+      ok: false,
+      error: 'GET only'
+    });
+  }
+
+  if (
+    !process.env.CRON_SECRET ||
+    req.headers.authorization !==
+      'Bearer ' + process.env.CRON_SECRET
+  ) {
+    return res.status(401).json({
+      ok: false,
+      error: 'Unauthorized'
+    });
+  }
+
+  try {
+    const spreadsheetId =
+      process.env.GOOGLE_SHEETS_MURPATI_ID;
+
+    if (!spreadsheetId) {
+      throw new Error(
+        'GOOGLE_SHEETS_MURPATI_ID belum ditetapkan'
+      );
     }
-    if(!valid.length)return res.status(422).json({ok:false,error:'Tiada baris sah untuk sync. Semak tarikh kolum A, kos SST kolum Q, dan format data.',skipped,rowsRead:rows.length});
-    const db=getDb();const batch=db.batch();valid.forEach(x=>batch.set(db.collection('murpatiAdDaily').doc(x.date),x,{merge:true}));await batch.commit();
-    return res.status(200).json({ok:true,updated:valid.length,skipped,range:tab+'!A1:AB500'});
-  }catch(e){
-    const code=e.code||(/Tajuk LEADS MURPATI/.test(e.message)?'SHEET_HEADER_NOT_FOUND':/Service account missing/.test(e.message)?'SERVICE_ACCOUNT_MISSING':'SYNC_ERROR');
-    const status=e.status||500;console.error('[murpati-sheet-sync]',JSON.stringify({code,status,message:e.message}));return res.status(status).json({ok:false,code,error:e.message});
+
+    const c = credentials();
+    const accessToken = await getGoogleToken(c);
+
+    console.info(
+      '[murpati-sheet-sync] auth',
+      JSON.stringify({
+        serviceAccountEmail: c.client_email,
+        credentialSource:
+          process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT
+            ? 'GOOGLE_SHEETS_SERVICE_ACCOUNT'
+            : process.env.FIREBASE_SERVICE_ACCOUNT
+              ? 'FIREBASE_SERVICE_ACCOUNT'
+              : 'FIREBASE_CLIENT_EMAIL'
+      })
+    );
+
+    const range = encodeURIComponent(
+      "'" + tab.replace(/'/g, "''") + "'!A1:AB500"
+    );
+
+    const url =
+      'https://sheets.googleapis.com/v4/spreadsheets/' +
+      encodeURIComponent(spreadsheetId) +
+      '/values/' +
+      range +
+      '?valueRenderOption=FORMATTED_VALUE';
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: 'Bearer ' + accessToken
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      const status = response.status;
+
+      const code =
+        status === 403
+          ? 'SHEETS_ACCESS_DENIED'
+          : status === 404
+            ? 'SHEET_NOT_FOUND'
+            : status === 400
+              ? 'SHEET_RANGE_INVALID'
+              : 'SHEETS_API_ERROR';
+
+      console.error(
+        '[murpati-sheet-sync] sheets-error',
+        JSON.stringify({
+          code,
+          status,
+          googleMessage: String(
+            data.error?.message || ''
+          ).slice(0, 700),
+          googleStatus: data.error?.status || null
+        })
+      );
+
+      const error = new Error(
+        'Google Sheets API HTTP ' +
+        status +
+        ' (' +
+        code +
+        ')'
+      );
+
+      error.status = status;
+      error.code = code;
+
+      throw error;
+    }
+
+    const rows = data.values || [];
+
+    const headerFound = rows
+      .slice(0, 4)
+      .some(row =>
+        (row || []).some(cell =>
+          /LEADS\s+MURPATI/i.test(
+            String(cell || '')
+          )
+        )
+      );
+
+    if (!headerFound) {
+      throw new Error(
+        'Tajuk LEADS MURPATI tidak dijumpai'
+      );
+    }
+
+    const valid = [];
+    const invalidDates = [];
+    let skipped = 0;
+
+    for (let i = 4; i < rows.length; i++) {
+      const r = rows[i] || [];
+
+      // Kolum Q atau P mesti mempunyai nilai.
+      if (!r[16] && !r[15]) {
+        continue;
+      }
+
+      const date = parseDate(r[0]);
+
+      if (!date) {
+        skipped++;
+
+        invalidDates.push({
+          row: i + 1,
+          value: String(r[0] ?? '').slice(0, 40)
+        });
+
+        continue;
+      }
+
+      const spend = numberValue(r[16]);
+      const spendBeforeSst = numberValue(r[15]);
+      const clicks = numberValue(r[18]);
+      const leads = numberValue(r[19]);
+      const buyers = numberValue(r[23]);
+      const sales = numberValue(r[27]);
+
+      if (
+        spend <= 0 ||
+        sales < 0 ||
+        leads < 0 ||
+        buyers < 0
+      ) {
+        skipped++;
+        continue;
+      }
+
+      valid.push({
+        date,
+        sourceRow: i + 1,
+        spend,
+        spendBeforeSst,
+        clicks,
+        leads,
+        buyers,
+        sales,
+        source: 'google_sheets_fadzli',
+        updatedAt: new Date().toISOString()
+      });
+    }
+
+    if (!valid.length) {
+      return res.status(422).json({
+        ok: false,
+        code: 'NO_VALID_ROWS',
+        error: 'Tiada baris sah untuk sync',
+        skipped,
+        rowsRead: rows.length,
+        invalidDates: invalidDates.slice(0, 10)
+      });
+    }
+
+    // Hentikan sync jika tarikh tidak sah.
+    // Elakkan dashboard menerima data separa.
+    if (invalidDates.length) {
+      return res.status(422).json({
+        ok: false,
+        code: 'INVALID_SHEET_DATES',
+        error:
+          'Ada tarikh Google Sheets yang tidak sah',
+        invalidDates: invalidDates.slice(0, 20),
+        skipped
+      });
+    }
+
+    const db = getDb();
+    const batch = db.batch();
+
+    for (const record of valid) {
+      const ref = db
+        .collection('murpatiAdDaily')
+        .doc(record.date);
+
+      batch.set(ref, record, {
+        merge: true
+      });
+    }
+
+    await batch.commit();
+
+    console.info(
+      '[murpati-sheet-sync] success',
+      JSON.stringify({
+        updated: valid.length,
+        skipped,
+        firstDate: valid[0]?.date,
+        lastDate: valid[valid.length - 1]?.date
+      })
+    );
+
+    return res.status(200).json({
+      ok: true,
+      version: 'V140',
+      updated: valid.length,
+      skipped,
+      rowsRead: rows.length,
+      range: tab + '!A1:AB500',
+      dates: valid.map(x => x.date)
+    });
+
+  } catch (error) {
+    const code = error.code || 'SYNC_ERROR';
+    const status = error.status || 500;
+
+    console.error(
+      '[murpati-sheet-sync]',
+      JSON.stringify({
+        code,
+        status,
+        message: error.message
+      })
+    );
+
+    return res.status(status).json({
+      ok: false,
+      code,
+      error: error.message
+    });
   }
 };
