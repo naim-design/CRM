@@ -1,19 +1,23 @@
 
 'use strict';
 
-// V140 - Google Sheets -> Firestore Murpati
-// Kolum A  = Tarikh
-// Kolum P  = Kos Ads sebelum SST
-// Kolum Q  = Kos Ads termasuk SST
-// Kolum S  = Link Clicks
-// Kolum T  = Jumlah Leads
-// Kolum X  = Jumlah Customer / Buyer
-// Kolum AB = Jumlah Sales
+// V141 - MURPATI GOOGLE SHEETS -> FIRESTORE
+// Google Sheets date format: MM/DD/YYYY
+//
+// A  = Tarikh
+// P  = Kos Ads sebelum SST
+// Q  = Kos Ads termasuk SST
+// S  = Link Clicks
+// T  = Jumlah Leads
+// X  = Jumlah Customer
+// AB = Total Sales
 
 const crypto = require('node:crypto');
 const { getDb } = require('../wabot/firebase');
 
-const tab =
+const VERSION = 'V141';
+
+const TAB =
   process.env.GOOGLE_SHEETS_MURPATI_TAB ||
   'WABOT & CRM';
 
@@ -32,12 +36,15 @@ function credentials() {
 
   return {
     client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    private_key: process.env.FIREBASE_PRIVATE_KEY
-      ?.replace(/\\n/g, '\n')
+    private_key:
+      process.env.FIREBASE_PRIVATE_KEY?.replace(
+        /\\n/g,
+        '\n'
+      )
   };
 }
 
-function base64url(value) {
+function b64(value) {
   return Buffer.from(
     typeof value === 'string'
       ? value
@@ -45,19 +52,19 @@ function base64url(value) {
   ).toString('base64url');
 }
 
-async function getGoogleToken(c) {
+async function getToken(c) {
   if (!c.client_email || !c.private_key) {
     throw new Error('Service account missing');
   }
 
   const now = Math.floor(Date.now() / 1000);
 
-  const header = base64url({
+  const header = b64({
     alg: 'RS256',
     typ: 'JWT'
   });
 
-  const payload = base64url({
+  const payload = b64({
     iss: c.client_email,
     scope:
       'https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -95,80 +102,74 @@ async function getGoogleToken(c) {
   if (!response.ok) {
     throw new Error(
       'Google OAuth gagal: ' +
-      (data.error || response.status)
+      (data.error_description ||
+        data.error ||
+        response.status)
     );
   }
 
   return data.access_token;
 }
 
-function numberValue(value) {
-  const result = Number(
+function num(value) {
+  const n = Number(
     String(value ?? '')
       .replace(/[,RM\s]/g, '')
   );
 
-  return Number.isFinite(result) ? result : 0;
+  return Number.isFinite(n) ? n : 0;
 }
 
-function validDate(year, month, date) {
+function formatDate(year, month, day) {
   const d = new Date(
-    Date.UTC(year, month - 1, date)
+    Date.UTC(year, month - 1, day)
   );
 
-  return (
-    d.getUTCFullYear() === year &&
-    d.getUTCMonth() === month - 1 &&
-    d.getUTCDate() === date
-  );
-}
-
-function formatDate(year, month, date) {
-  if (!validDate(year, month, date)) {
+  if (
+    d.getUTCFullYear() !== year ||
+    d.getUTCMonth() !== month - 1 ||
+    d.getUTCDate() !== day
+  ) {
     return null;
   }
 
-  return (
-    String(year).padStart(4, '0') +
-    '-' +
-    String(month).padStart(2, '0') +
-    '-' +
-    String(date).padStart(2, '0')
-  );
+  return [
+    String(year).padStart(4, '0'),
+    String(month).padStart(2, '0'),
+    String(day).padStart(2, '0')
+  ].join('-');
 }
 
 function parseDate(value) {
   const text = String(value ?? '').trim();
 
-  let match = text.match(
+  // YYYY-MM-DD
+  let m = text.match(
     /^(\d{4})-(\d{1,2})-(\d{1,2})$/
   );
 
-  if (match) {
+  if (m) {
     return formatDate(
-      Number(match[1]),
-      Number(match[2]),
-      Number(match[3])
+      Number(m[1]),
+      Number(m[2]),
+      Number(m[3])
     );
   }
 
-  match = text.match(
+  // MM/DD/YYYY - Google Sheets format
+  m = text.match(
     /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
   );
 
-  if (!match) return null;
+  if (m) {
+    return formatDate(
+      Number(m[3]),
+      Number(m[1]),
+      Number(m[2])
+    );
+  }
 
-  const first = Number(match[1]);
-  const second = Number(match[2]);
-  const year = Number(match[3]);
-
-  // Format Malaysia DD/MM/YYYY.
-  // Jika nilai kedua > 12, format sumber
-  // semestinya MM/DD/YYYY.
-  const month = second > 12 ? first : second;
-  const date = second > 12 ? second : first;
-
-  return formatDate(year, month, date);
+  return null;
 }
 
 module.exports = async (req, res) => {
@@ -193,84 +194,45 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const spreadsheetId =
+    const id =
       process.env.GOOGLE_SHEETS_MURPATI_ID;
 
-    if (!spreadsheetId) {
+    if (!id) {
       throw new Error(
-        'GOOGLE_SHEETS_MURPATI_ID belum ditetapkan'
+        'GOOGLE_SHEETS_MURPATI_ID missing'
       );
     }
 
     const c = credentials();
-    const accessToken = await getGoogleToken(c);
-
-    console.info(
-      '[murpati-sheet-sync] auth',
-      JSON.stringify({
-        serviceAccountEmail: c.client_email,
-        credentialSource:
-          process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT
-            ? 'GOOGLE_SHEETS_SERVICE_ACCOUNT'
-            : process.env.FIREBASE_SERVICE_ACCOUNT
-              ? 'FIREBASE_SERVICE_ACCOUNT'
-              : 'FIREBASE_CLIENT_EMAIL'
-      })
-    );
+    const token = await getToken(c);
 
     const range = encodeURIComponent(
-      "'" + tab.replace(/'/g, "''") + "'!A1:AB500"
+      "'" + TAB.replace(/'/g, "''") + "'!A1:AB500"
     );
 
     const url =
       'https://sheets.googleapis.com/v4/spreadsheets/' +
-      encodeURIComponent(spreadsheetId) +
+      encodeURIComponent(id) +
       '/values/' +
       range +
       '?valueRenderOption=FORMATTED_VALUE';
 
     const response = await fetch(url, {
       headers: {
-        Authorization: 'Bearer ' + accessToken
+        Authorization: 'Bearer ' + token
       }
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      const status = response.status;
-
-      const code =
-        status === 403
-          ? 'SHEETS_ACCESS_DENIED'
-          : status === 404
-            ? 'SHEET_NOT_FOUND'
-            : status === 400
-              ? 'SHEET_RANGE_INVALID'
-              : 'SHEETS_API_ERROR';
-
-      console.error(
-        '[murpati-sheet-sync] sheets-error',
-        JSON.stringify({
-          code,
-          status,
-          googleMessage: String(
-            data.error?.message || ''
-          ).slice(0, 700),
-          googleStatus: data.error?.status || null
-        })
-      );
-
       const error = new Error(
-        'Google Sheets API HTTP ' +
-        status +
-        ' (' +
-        code +
-        ')'
+        data.error?.message ||
+        'Google Sheets API error'
       );
 
-      error.status = status;
-      error.code = code;
+      error.status = response.status;
+      error.code = 'SHEETS_API_ERROR';
 
       throw error;
     }
@@ -280,7 +242,7 @@ module.exports = async (req, res) => {
     const headerFound = rows
       .slice(0, 4)
       .some(row =>
-        (row || []).some(cell =>
+        row.some(cell =>
           /LEADS\s+MURPATI/i.test(
             String(cell || '')
           )
@@ -288,9 +250,12 @@ module.exports = async (req, res) => {
       );
 
     if (!headerFound) {
-      throw new Error(
-        'Tajuk LEADS MURPATI tidak dijumpai'
-      );
+      return res.status(422).json({
+        ok: false,
+        version: VERSION,
+        code: 'HEADER_NOT_FOUND',
+        error: 'LEADS MURPATI header not found'
+      });
     }
 
     const valid = [];
@@ -300,7 +265,6 @@ module.exports = async (req, res) => {
     for (let i = 4; i < rows.length; i++) {
       const r = rows[i] || [];
 
-      // Kolum Q atau P mesti mempunyai nilai.
       if (!r[16] && !r[15]) {
         continue;
       }
@@ -308,22 +272,21 @@ module.exports = async (req, res) => {
       const date = parseDate(r[0]);
 
       if (!date) {
-        skipped++;
-
         invalidDates.push({
           row: i + 1,
           value: String(r[0] ?? '').slice(0, 40)
         });
 
+        skipped++;
         continue;
       }
 
-      const spend = numberValue(r[16]);
-      const spendBeforeSst = numberValue(r[15]);
-      const clicks = numberValue(r[18]);
-      const leads = numberValue(r[19]);
-      const buyers = numberValue(r[23]);
-      const sales = numberValue(r[27]);
+      const spend = num(r[16]);
+      const spendBeforeSst = num(r[15]);
+      const clicks = num(r[18]);
+      const leads = num(r[19]);
+      const buyers = num(r[23]);
+      const sales = num(r[27]);
 
       if (
         spend <= 0 ||
@@ -349,27 +312,49 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (!valid.length) {
+    if (invalidDates.length) {
+      console.error(
+        '[murpati-sheet-sync] INVALID_DATES',
+        JSON.stringify(invalidDates.slice(0, 20))
+      );
+
       return res.status(422).json({
         ok: false,
-        code: 'NO_VALID_ROWS',
-        error: 'Tiada baris sah untuk sync',
-        skipped,
-        rowsRead: rows.length,
-        invalidDates: invalidDates.slice(0, 10)
+        version: VERSION,
+        code: 'INVALID_SHEET_DATES',
+        invalidDates: invalidDates.slice(0, 20),
+        skipped
       });
     }
 
-    // Hentikan sync jika tarikh tidak sah.
-    // Elakkan dashboard menerima data separa.
-    if (invalidDates.length) {
+    if (!valid.length) {
       return res.status(422).json({
         ok: false,
-        code: 'INVALID_SHEET_DATES',
-        error:
-          'Ada tarikh Google Sheets yang tidak sah',
-        invalidDates: invalidDates.slice(0, 20),
+        version: VERSION,
+        code: 'NO_VALID_ROWS',
+        rowsRead: rows.length,
         skipped
+      });
+    }
+
+    // Avoid silent overwrite from duplicate dates.
+    const seen = new Set();
+    const duplicates = [];
+
+    for (const record of valid) {
+      if (seen.has(record.date)) {
+        duplicates.push(record.date);
+      }
+
+      seen.add(record.date);
+    }
+
+    if (duplicates.length) {
+      return res.status(422).json({
+        ok: false,
+        version: VERSION,
+        code: 'DUPLICATE_DATES',
+        dates: [...new Set(duplicates)]
       });
     }
 
@@ -377,35 +362,35 @@ module.exports = async (req, res) => {
     const batch = db.batch();
 
     for (const record of valid) {
-      const ref = db
-        .collection('murpatiAdDaily')
-        .doc(record.date);
-
-      batch.set(ref, record, {
-        merge: true
-      });
+      batch.set(
+        db.collection('murpatiAdDaily')
+          .doc(record.date),
+        record,
+        { merge: true }
+      );
     }
 
     await batch.commit();
 
+    const summary = {
+      version: VERSION,
+      updated: valid.length,
+      skipped,
+      firstDate: valid[0].date,
+      lastDate: valid[valid.length - 1].date
+    };
+
     console.info(
       '[murpati-sheet-sync] success',
-      JSON.stringify({
-        updated: valid.length,
-        skipped,
-        firstDate: valid[0]?.date,
-        lastDate: valid[valid.length - 1]?.date
-      })
+      JSON.stringify(summary)
     );
 
     return res.status(200).json({
       ok: true,
-      version: 'V140',
-      updated: valid.length,
-      skipped,
+      ...summary,
       rowsRead: rows.length,
-      range: tab + '!A1:AB500',
-      dates: valid.map(x => x.date)
+      range: TAB + '!A1:AB500',
+      dates: valid.map(r => r.date)
     });
 
   } catch (error) {
@@ -413,8 +398,9 @@ module.exports = async (req, res) => {
     const status = error.status || 500;
 
     console.error(
-      '[murpati-sheet-sync]',
+      '[murpati-sheet-sync] error',
       JSON.stringify({
+        version: VERSION,
         code,
         status,
         message: error.message
@@ -423,6 +409,7 @@ module.exports = async (req, res) => {
 
     return res.status(status).json({
       ok: false,
+      version: VERSION,
       code,
       error: error.message
     });
