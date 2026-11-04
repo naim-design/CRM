@@ -39,7 +39,7 @@
 <details class="crm-nav-fold" open><summary>Dashboard</summary><div class="crm-nav-children"><button data-view="dashboard" data-team-area="crm">Dashboard</button><button data-view="feedback" data-team-area="crm">Feedback</button><button data-view="poster" data-team-area="crm">Poster</button><button data-view="survey" data-team-area="crm">Survey</button><button data-view="template" data-team-area="crm">Template</button><button data-view="tiktokleads" data-team-area="crm">TikTok Leads</button><button data-view="laporan" data-team-area="crm">Laporan</button></div></details>
 <details class="crm-nav-fold"><summary>Database</summary><div class="crm-nav-children"><button data-view="contacts" data-team-area="crm">Database</button><button data-view="filter" data-team-area="crm">Filter</button></div></details>
 <details class="crm-nav-fold" open><summary>YGROW</summary><div class="crm-nav-children"><button data-view="ygrowhub" data-team-area="crm">YGROW</button><button data-view="ygrowposting" data-team-area="crm">Posting YGROW</button><button data-view="ygrowservice" data-team-area="crm">Servicing YGROW</button></div></details>
-<details class="crm-nav-fold" id="murpati-menu"><summary>◉ MURPATI</summary><div class="crm-nav-children"><button data-view="murpati" data-murpati-tab="dashboard" data-team-area="crm">Dashboard</button><button data-view="murpati" data-murpati-tab="leads" data-team-area="crm">Leads Database</button><button data-view="murpati" data-murpati-tab="sales" data-team-area="crm">Sales Tracking</button><button data-view="murpati" data-murpati-tab="campaign" data-team-area="crm">Campaign Performance</button><button data-view="murpati" data-murpati-tab="conversation" data-team-area="crm">Conversation Analytics</button><button data-view="murpati" data-murpati-tab="staff" data-team-area="crm">Staff &amp; AI Performance</button><button data-view="murpati" data-murpati-tab="sync" data-team-area="crm">Sync &amp; Settings</button></div></details>
+<details class="crm-nav-fold" id="murpati-menu"><summary>◉ MURPATI</summary><div class="crm-nav-children"><button data-view="murpati" data-murpati-tab="dashboard" data-team-area="crm">Dashboard</button></div></details>
 <details class="crm-nav-fold" ><summary>Campaign Manager</summary><div class="crm-nav-children"><button data-view="campaignmanager" data-team-area="crm">Campaign Manager</button><button data-view="wabotlive" data-team-area="crm">Wabot Live</button><button data-view="wabotcontrol" data-team-area="crm">Wabot Control</button><button data-view="aiinsight" data-team-area="crm">AI Insight</button></div></details>
 <details class="crm-nav-fold" ><summary>Planning & To Do</summary><div class="crm-nav-children"><button data-view="planning" data-team-area="crm">Planning</button><button data-view="todo" data-team-area="crm">To-Do</button><button data-view="recap" data-team-area="crm">Recap Julai</button><button data-view="salespages" data-team-area="crm">Sales Pages</button></div></details>
 <details class="crm-nav-fold"><summary>Analytics</summary><div class="crm-nav-children"><button data-view="pageanalytics" data-team-area="crm">Page Analytics</button><button data-view="projection" data-team-area="crm">Projection</button><button data-view="packageanalysis" data-team-area="crm">Pakej Analisis</button><button data-view="pricingcalculator" data-team-area="crm">Pricing Calculator</button><button data-view="analyticspro" data-team-area="crm">Analytics Pro</button></div></details>
@@ -673,8 +673,20 @@
 <div id="view-murpati" class="view murpati-workspace">
  <div class="section-head"><div><h2>◉ MURPATI <span style="font-size:14px;font-weight:500">— YGrow Formula HQ</span></h2><p>WhatsApp Official · Dashboard &amp; Sales Tracking</p></div></div>
  <div class="mp-toolbar"><label>Dari <input id="mp-from" type="date"></label><label>Hingga <input id="mp-to" type="date"></label><button type="button" class="btn btn-ghost" id="mp-refresh">↻ Refresh</button><span id="mp-state" class="hint-chip">Menunggu data</span></div>
- <div class="mp-tabs" id="mp-tabs"><button data-mp-tab="dashboard" class="active">Dashboard</button><button data-mp-tab="leads">Leads Database</button><button data-mp-tab="sales">Sales Tracking</button><button data-mp-tab="campaign">Campaign Performance</button><button data-mp-tab="conversation">Conversation Analytics</button><button data-mp-tab="staff">Staff &amp; AI</button><button data-mp-tab="reports">Laporan CRM</button> <button data-mp-tab="sync">Sync &amp; Settings</button></div>
- <div id="mp-content" aria-live="polite"></div> <div id="mp-reports" hidden></div>
+ <div class="mp-tabs" id="mp-tabs"><button data-mp-tab="dashboard" class="active">Dashboard</button></div>
+ <div id="mp-content" aria-live="polite" hidden></div>
+<section id="mp-manual"><div class="mp-panel"><h3>Input Data Manual Murpati</h3><p>Masukkan angka harian mengikut staf. Tiada sync diperlukan.</p>
+<form id="mp-manual-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+<label>Tarikh<input name="date" type="date" required></label><label>Staf<input name="staff" required maxlength="80"></label>
+<label>Leads<input name="leads" type="number" min="0" value="0" required></label>
+<label>Reply<input name="reply" type="number" min="0" value="0" required></label>
+<label>Buyer<input name="buyers" type="number" min="0" value="0" required></label>
+<label>Sales RM<input name="sales" type="number" min="0" step="0.01" value="0" required></label>
+<label>Kos Iklan RM<input name="spend" type="number" min="0" step="0.01" value="0" required></label>
+<label>Catatan<input name="notes" maxlength="250"></label>
+<div><button class="btn btn-primary" type="submit" id="mp-manual-save">Simpan</button><button class="btn btn-ghost" type="button" id="mp-manual-cancel" hidden>Batal</button></div></form><p id="mp-manual-status" role="status"></p></div>
+<div id="mp-manual-kpis" class="mp-cards"></div>
+<div class="mp-panel mp-table-wrap"><h3>Rekod Harian</h3><table class="mp-table"><thead><tr><th>Tarikh</th><th>Staf</th><th>Leads</th><th>Reply</th><th>Buyer</th><th>Sales</th><th>Kos</th><th>Tindakan</th></tr></thead><tbody id="mp-manual-rows"></tbody></table></div></section> <div id="mp-reports" hidden></div>
 </div>
 
     <div id="view-ygrowhub" class="view yg-hub">
@@ -3021,5 +3033,37 @@ Ahmad	60112223344"></textarea>
 <script src="js/app.js?v=v132-murpati-history"></script> <script src="js/murpati-reports.js?v=v136"></script>
 <script src="js/murpati-analytics-v136.js?v=139.1"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
-<div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div></body>
+<div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div><script>
+(function(){
+const form=document.getElementById('mp-manual-form');if(!form)return;
+const status=document.getElementById('mp-manual-status'),body=document.getElementById('mp-manual-rows'),kpis=document.getElementById('mp-manual-kpis'),cancel=document.getElementById('mp-manual-cancel'),save=document.getElementById('mp-manual-save');
+const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+const N=x=>Number(x||0).toLocaleString('en-MY'),RM=x=>'RM '+Number(x||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+let rows=[],editId=null,unsub=null;form.elements.date.value=today();
+function reset(){editId=null;form.reset();form.elements.date.value=today();cancel.hidden=true;save.textContent='Simpan'}
+function render(){
+const from=document.getElementById('mp-from')?.value||'',to=document.getElementById('mp-to')?.value||'';
+const a=rows.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
+const sum=k=>a.reduce((v,x)=>v+Number(x[k]||0),0),leads=sum('leads'),reply=sum('reply'),buyers=sum('buyers'),sales=sum('sales'),spend=sum('spend');
+const m=[['Leads',N(leads)],['Reply',N(reply)],['Buyer',N(buyers)],['Sales',RM(sales)],['Kos Iklan',RM(spend)],['ROI',spend?(sales/spend).toFixed(2)+'x':'—'],['Conversion Rate',leads?(buyers/leads*100).toFixed(2)+'%':'—']];
+kpis.innerHTML=m.map(([k,v])=>'<div class="mp-card"><small>'+E(k)+'</small><strong>'+E(v)+'</strong></div>').join('');
+body.innerHTML=a.length?a.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.staff)+'</td><td>'+N(x.leads)+'</td><td>'+N(x.reply)+'</td><td>'+N(x.buyers)+'</td><td>'+RM(x.sales)+'</td><td>'+RM(x.spend)+'</td><td><button type="button" data-edit="'+E(x.id)+'">Edit</button> <button type="button" data-delete="'+E(x.id)+'">Padam</button></td></tr>').join(''):'<tr><td colspan="8">Tiada rekod manual.</td></tr>';
+}
+function start(){if(unsub||!window.db)return;unsub=db.collection('murpatiManualDaily').orderBy('date','desc').limit(2000).onSnapshot(s=>{rows=s.docs.map(d=>({id:d.id,...d.data()}));status.textContent='Data manual tersedia';render()},e=>status.textContent='Ralat baca: '+e.message)}
+form.addEventListener('submit',async e=>{e.preventDefault();if(!window.db){status.textContent='Firebase belum tersedia';return}
+const d={date:form.elements.date.value,staff:form.elements.staff.value.trim(),notes:form.elements.notes.value.trim()};
+for(const k of ['leads','reply','buyers','sales','spend'])d[k]=Number(form.elements[k].value);
+if(!d.date||!d.staff||['leads','reply','buyers','sales','spend'].some(k=>!Number.isFinite(d[k])||d[k]<0)){status.textContent='Sila semak input';return}
+save.disabled=true;try{const c=db.collection('murpatiManualDaily');if(editId)await c.doc(editId).update({...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});else await c.add({...d,createdAt:firebase.firestore.FieldValue.serverTimestamp()});reset();status.textContent='Rekod berjaya disimpan'}catch(err){status.textContent='Gagal simpan: '+err.message}finally{save.disabled=false}});
+cancel.addEventListener('click',reset);
+body.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+if(b.dataset.edit){const x=rows.find(r=>r.id===b.dataset.edit);if(!x)return;editId=x.id;for(const k of ['date','staff','leads','reply','buyers','sales','spend','notes'])form.elements[k].value=x[k]??'';cancel.hidden=false;save.textContent='Kemaskini';form.scrollIntoView({behavior:'smooth'});}
+if(b.dataset.delete){if(!confirm('Padam rekod manual ini?'))return;try{await db.collection('murpatiManualDaily').doc(b.dataset.delete).delete();status.textContent='Rekod dipadam';if(editId===b.dataset.delete)reset()}catch(err){status.textContent='Gagal padam: '+err.message}}});
+['mp-from','mp-to'].forEach(id=>document.getElementById(id)?.addEventListener('change',render));
+document.querySelectorAll('[data-view="murpati"]').forEach(b=>b.addEventListener('click',()=>{start();render()}));
+if(window.firebase?.auth)firebase.auth().onAuthStateChanged(u=>{if(u)start();else if(unsub){unsub();unsub=null;rows=[];render()}});
+setTimeout(start,1200);
+})();
+</script></body>
 </html>
