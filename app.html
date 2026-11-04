@@ -3031,7 +3031,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js?v=v132-murpati-history"></script> <script src="js/murpati-reports.js?v=v136"></script>
-<script src="js/murpati-analytics-v136.js?v=click-leads-v147"></script>
+<script src="js/murpati-analytics-v136.js?v=firebase-fix-v148"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 <div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div><script>
 (function(){
@@ -3050,8 +3050,8 @@ const m=[['Link Click',N(leads)],['Leads',N(reply)],['Buyer',N(buyers)],['Sales'
 kpis.innerHTML=m.map(([k,v])=>'<div class="mp-card"><small>'+E(k)+'</small><strong>'+E(v)+'</strong></div>').join('');
 body.innerHTML=a.length?a.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.staff)+'</td><td>'+N(x.leads)+'</td><td>'+N(x.reply)+'</td><td>'+N(x.buyers)+'</td><td>'+RM(x.sales)+'</td><td>'+RM(x.spend)+'</td><td><button type="button" data-edit="'+E(x.id)+'">Edit</button> <button type="button" data-delete="'+E(x.id)+'">Padam</button></td></tr>').join(''):'<tr><td colspan="7">Tiada rekod manual.</td></tr>';
 }
-function start(){if(unsub||!window.db)return;unsub=db.collection('murpatiManualDaily').orderBy('date','desc').limit(2000).onSnapshot(s=>{rows=s.docs.map(d=>({id:d.id,...d.data()}));status.textContent='Data manual tersedia';render()},e=>status.textContent='Ralat baca: '+e.message)}
-form.addEventListener('submit',async e=>{e.preventDefault();if(!window.db){status.textContent='Firebase belum tersedia';return}
+function start(){if(unsub||typeof db==='undefined')return;unsub=db.collection('murpatiManualDaily').orderBy('date','desc').limit(2000).onSnapshot(s=>{rows=s.docs.map(d=>({id:d.id,...d.data()}));status.textContent='Data manual tersedia';render()},e=>status.textContent='Ralat baca: '+e.message)}
+form.addEventListener('submit',async e=>{e.preventDefault();if(typeof db==='undefined'){status.textContent='Firebase belum tersedia. Sila refresh halaman.';return}
 const d={date:form.elements.date.value,notes:form.elements.notes.value.trim()};
 for(const k of ['leads','reply','buyers','sales','spend'])d[k]=Number(form.elements[k].value);
 if(!d.date||['leads','reply','buyers','sales','spend'].some(k=>!Number.isFinite(d[k])||d[k]<0)){status.textContent='Sila semak input';return}
