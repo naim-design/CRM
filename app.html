@@ -416,7 +416,7 @@
           </div>
           <div class="dash-weekly-table-wrap">
             <table class="tbl dash-weekly-table sortable-table">
-              <thead><tr><th>Minggu</th><th>Tempoh</th><th>Blast</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Sales</th><th>Kos</th><th>ROI</th><th>ROAS</th></tr></thead>
+              <thead><tr><th>Minggu</th><th>Tempoh</th><th>Blast</th><th>Sent</th><th>Reply</th><th>Reply Rate</th><th>Buyer</th><th>Order</th><th>Unit</th><th>Sales</th><th>Kos</th><th>ROI</th><th>ROAS</th></tr></thead>
               <tbody id="dash-weekly-body"><tr><td colspan="11" class="empty-state">Tiada data mingguan lagi.</td></tr></tbody>
             </table>
           </div>
@@ -681,6 +681,8 @@
 <label>Link Click<input name="leads" type="number" min="0" value="0" required></label>
 <label>Leads<input name="reply" type="number" min="0" value="0" required></label>
 <label>Buyer<input name="buyers" type="number" min="0" value="0" required></label>
+<label>Jumlah Order<input name="orders" type="number" min="0" step="1" value="0" required></label>
+<label>Unit Terjual (Kotak)<input name="units" type="number" min="0" step="1" value="0" required></label>
 <label>Sales RM<input name="sales" type="number" min="0" step="0.01" value="0" required></label>
 <label>Kos Iklan RM<input name="spend" type="number" min="0" step="0.01" value="0" required></label>
 <label>Catatan<input name="notes" maxlength="250"></label>
@@ -3031,7 +3033,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js?v=v132-murpati-history"></script> <script src="js/murpati-reports.js?v=v136"></script>
-<script src="js/murpati-analytics-v136.js?v=closing-rate-v149"></script>
+<script src="js/murpati-analytics-v136.js?v=orders-units-v150"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 <div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div><script>
 (function(){
@@ -3048,17 +3050,17 @@ const a=rows.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
 const sum=k=>a.reduce((v,x)=>v+Number(x[k]||0),0),leads=sum('leads'),reply=sum('reply'),buyers=sum('buyers'),sales=sum('sales'),spend=sum('spend');
 const m=[['Link Click',N(leads)],['Leads',N(reply)],['Buyer',N(buyers)],['Sales',RM(sales)],['Kos Iklan',RM(spend)],['ROI',spend?(sales/spend).toFixed(2)+'x':'—'],['Conversion Rate',reply?(buyers/reply*100).toFixed(2)+'%':'—']];
 kpis.innerHTML=m.map(([k,v])=>'<div class="mp-card"><small>'+E(k)+'</small><strong>'+E(v)+'</strong></div>').join('');
-body.innerHTML=a.length?a.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.staff)+'</td><td>'+N(x.leads)+'</td><td>'+N(x.reply)+'</td><td>'+N(x.buyers)+'</td><td>'+RM(x.sales)+'</td><td>'+RM(x.spend)+'</td><td><button type="button" data-edit="'+E(x.id)+'">Edit</button> <button type="button" data-delete="'+E(x.id)+'">Padam</button></td></tr>').join(''):'<tr><td colspan="7">Tiada rekod manual.</td></tr>';
+body.innerHTML=a.length?a.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.staff)+'</td><td>'+N(x.leads)+'</td><td>'+N(x.reply)+'</td><td>'+N(x.buyers)+'</td><td>'+RM(x.sales)+'</td><td>'+RM(x.spend)+'</td><td><button type="button" data-edit="'+E(x.id)+'">Edit</button> <button type="button" data-delete="'+E(x.id)+'">Padam</button></td></tr>').join(''):'<tr><td colspan="9">Tiada rekod manual.</td></tr>';
 }
 function start(){if(unsub||typeof db==='undefined')return;unsub=db.collection('murpatiManualDaily').orderBy('date','desc').limit(2000).onSnapshot(s=>{rows=s.docs.map(d=>({id:d.id,...d.data()}));status.textContent='Data manual tersedia';render()},e=>status.textContent='Ralat baca: '+e.message)}
 form.addEventListener('submit',async e=>{e.preventDefault();if(typeof db==='undefined'){status.textContent='Firebase belum tersedia. Sila refresh halaman.';return}
 const d={date:form.elements.date.value,notes:form.elements.notes.value.trim()};
-for(const k of ['leads','reply','buyers','sales','spend'])d[k]=Number(form.elements[k].value);
-if(!d.date||['leads','reply','buyers','sales','spend'].some(k=>!Number.isFinite(d[k])||d[k]<0)){status.textContent='Sila semak input';return}
+for(const k of ['leads','reply','buyers','orders','units','sales','spend'])d[k]=Number(form.elements[k].value);
+if(!d.date||['leads','reply','buyers','orders','units','sales','spend'].some(k=>!Number.isFinite(d[k])||d[k]<0)||['leads','reply','buyers','orders','units'].some(k=>!Number.isInteger(d[k]))){status.textContent='Sila semak input';return}if(d.orders<d.buyers||d.units<d.orders){status.textContent='Order mesti sekurang-kurangnya Buyer; Unit Terjual mesti sekurang-kurangnya Order.';return}
 save.disabled=true;try{const c=db.collection('murpatiManualDaily');if(editId)await c.doc(editId).update({...d,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});else await c.add({...d,createdAt:firebase.firestore.FieldValue.serverTimestamp()});reset();status.textContent='Rekod berjaya disimpan'}catch(err){status.textContent='Gagal simpan: '+err.message}finally{save.disabled=false}});
 cancel.addEventListener('click',reset);
 body.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
-if(b.dataset.edit){const x=rows.find(r=>r.id===b.dataset.edit);if(!x)return;editId=x.id;for(const k of ['date','leads','reply','buyers','sales','spend','notes'])form.elements[k].value=x[k]??'';cancel.hidden=false;save.textContent='Kemaskini';form.scrollIntoView({behavior:'smooth'});}
+if(b.dataset.edit){const x=rows.find(r=>r.id===b.dataset.edit);if(!x)return;editId=x.id;for(const k of ['date','leads','reply','buyers','orders','units','sales','spend','notes'])form.elements[k].value=x[k]??'';cancel.hidden=false;save.textContent='Kemaskini';form.scrollIntoView({behavior:'smooth'});}
 if(b.dataset.delete){if(!confirm('Padam rekod manual ini?'))return;try{await db.collection('murpatiManualDaily').doc(b.dataset.delete).delete();status.textContent='Rekod dipadam';if(editId===b.dataset.delete)reset()}catch(err){status.textContent='Gagal padam: '+err.message}}});
 ['mp-from','mp-to'].forEach(id=>document.getElementById(id)?.addEventListener('change',render));
 document.querySelectorAll('[data-view="murpati"]').forEach(b=>b.addEventListener('click',()=>{start();render()}));
