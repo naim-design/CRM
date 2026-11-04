@@ -678,15 +678,15 @@
 <section id="mp-manual"><div class="mp-panel"><h3>Input Data Manual Murpati</h3><p>Masukkan angka prestasi harian. Tiada sync diperlukan.</p>
 <form id="mp-manual-form" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
 <label>Tarikh<input name="date" type="date" required></label>
-<label>Leads<input name="leads" type="number" min="0" value="0" required></label>
-<label>Reply<input name="reply" type="number" min="0" value="0" required></label>
+<label>Link Click<input name="leads" type="number" min="0" value="0" required></label>
+<label>Leads<input name="reply" type="number" min="0" value="0" required></label>
 <label>Buyer<input name="buyers" type="number" min="0" value="0" required></label>
 <label>Sales RM<input name="sales" type="number" min="0" step="0.01" value="0" required></label>
 <label>Kos Iklan RM<input name="spend" type="number" min="0" step="0.01" value="0" required></label>
 <label>Catatan<input name="notes" maxlength="250"></label>
 <div><button class="btn btn-primary" type="submit" id="mp-manual-save">Simpan</button><button class="btn btn-ghost" type="button" id="mp-manual-cancel" hidden>Batal</button></div></form><p id="mp-manual-status" role="status"></p></div>
 <div id="mp-manual-kpis" class="mp-cards"></div>
-<div class="mp-panel mp-table-wrap"><h3>Rekod Harian</h3><table class="mp-table"><thead><tr><th>Tarikh</th><th>Leads</th><th>Reply</th><th>Buyer</th><th>Sales</th><th>Kos</th><th>Tindakan</th></tr></thead><tbody id="mp-manual-rows"></tbody></table></div></section> <div id="mp-reports" hidden></div>
+<div class="mp-panel mp-table-wrap"><h3>Rekod Harian</h3><table class="mp-table"><thead><tr><th>Tarikh</th><th>Link Click</th><th>Leads</th><th>Buyer</th><th>Sales</th><th>Kos</th><th>Tindakan</th></tr></thead><tbody id="mp-manual-rows"></tbody></table></div></section> <div id="mp-reports" hidden></div>
 </div>
 
     <div id="view-ygrowhub" class="view yg-hub">
@@ -3031,7 +3031,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
 <script src="js/app.js?v=v132-murpati-history"></script> <script src="js/murpati-reports.js?v=v136"></script>
-<script src="js/murpati-analytics-v136.js?v=manual-kpi-v146"></script>
+<script src="js/murpati-analytics-v136.js?v=click-leads-v147"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 <div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div><script>
 (function(){
@@ -3046,7 +3046,7 @@ function render(){
 const from=document.getElementById('mp-from')?.value||'',to=document.getElementById('mp-to')?.value||'';
 const a=rows.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to));
 const sum=k=>a.reduce((v,x)=>v+Number(x[k]||0),0),leads=sum('leads'),reply=sum('reply'),buyers=sum('buyers'),sales=sum('sales'),spend=sum('spend');
-const m=[['Leads',N(leads)],['Reply',N(reply)],['Buyer',N(buyers)],['Sales',RM(sales)],['Kos Iklan',RM(spend)],['ROI',spend?(sales/spend).toFixed(2)+'x':'—'],['Conversion Rate',leads?(buyers/leads*100).toFixed(2)+'%':'—']];
+const m=[['Link Click',N(leads)],['Leads',N(reply)],['Buyer',N(buyers)],['Sales',RM(sales)],['Kos Iklan',RM(spend)],['ROI',spend?(sales/spend).toFixed(2)+'x':'—'],['Conversion Rate',reply?(buyers/reply*100).toFixed(2)+'%':'—']];
 kpis.innerHTML=m.map(([k,v])=>'<div class="mp-card"><small>'+E(k)+'</small><strong>'+E(v)+'</strong></div>').join('');
 body.innerHTML=a.length?a.map(x=>'<tr><td>'+E(x.date)+'</td><td>'+E(x.staff)+'</td><td>'+N(x.leads)+'</td><td>'+N(x.reply)+'</td><td>'+N(x.buyers)+'</td><td>'+RM(x.sales)+'</td><td>'+RM(x.spend)+'</td><td><button type="button" data-edit="'+E(x.id)+'">Edit</button> <button type="button" data-delete="'+E(x.id)+'">Padam</button></td></tr>').join(''):'<tr><td colspan="7">Tiada rekod manual.</td></tr>';
 }
