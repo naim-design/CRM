@@ -1,6 +1,7 @@
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
+let formPanel=null,recordsPanel=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const fmt=v=>Number(v||0).toLocaleString('en-MY'),rm=v=>'RM '+Number(v||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
 const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');
@@ -11,7 +12,7 @@ function metric(title,value,detail,icon){return '<article class="mpm-kpi"><div c
 function chart(data,key,color){const W=700,H=200,P=26,max=Math.max(1,...data.map(x=>Number(x[key]||0))),coords=data.map((x,i)=>[P+(W-P*2)*i/Math.max(1,data.length-1),H-P-(H-P*2)*Number(x[key]||0)/max]);const path=coords.map((p,i)=>(i?'L':'M')+p.join(' ')).join(' ');return '<svg class="mpm-chart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Graf '+esc(key)+'"><line x1="'+P+'" y1="'+(H-P)+'" x2="'+(W-P)+'" y2="'+(H-P)+'" stroke="#d9e3e4"/><path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+coords.map((p,i)=>'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="'+color+'"><title>'+esc(data[i].date)+': '+esc(data[i][key])+'</title></circle>').join('')+'</svg><div class="mpm-chart-axis"><span>'+esc(data[0]?.date||'')+'</span><span>'+esc(data[data.length-1]?.date||'')+'</span></div>'}
 function donut(people,total){const palette=['#92214e','#e95b91','#f6b944','#9b76e7','#65a8ed','#6cbda7'];let running=0;const stops=people.map((p,i)=>{const a=running;running+=total?p.leads/total*100:0;return palette[i%palette.length]+' '+a+'% '+running+'%'});const bg=stops.length?'conic-gradient('+stops.join(',')+')':'#f2e6ec';return '<div class="mpm-donut-layout"><div class="mpm-donut" style="background:'+bg+'"><div class="mpm-donut-center"><small>Jumlah Leads</small><strong>'+fmt(total)+'</strong></div></div><div class="mpm-legend">'+(people.length?people.map((p,i)=>'<div><i style="background:'+palette[i%palette.length]+'"></i><span>'+esc(p.name)+'</span><b>'+(total?(p.leads/total*100).toFixed(1):'0')+'%</b></div>').join(''):'<p>Belum ada data staf</p>')+'</div></div>'}
 function render(){
-const box=$('mp-content'),manual=$('mp-manual');if(!box||!manual)return;box.hidden=false;
+const box=$('mp-content'),manual=$('mp-manual');if(!box||!manual)return;box.hidden=false;if(!formPanel)formPanel=manual.querySelector('.mp-panel:first-child');if(!recordsPanel)recordsPanel=[...manual.querySelectorAll('.mp-panel')].find(x=>x!==formPanel);
 const [fs,fe]=bounds(),from=$('mp-from')?.value||fs,to=$('mp-to')?.value||fe;
 const filtered=rows.filter(r=>r.date>=from&&r.date<=to),leads=sum(filtered,'leads'),reply=sum(filtered,'reply'),buyers=sum(filtered,'buyers'),sales=sum(filtered,'sales'),spend=sum(filtered,'spend');
 const roas=spend?sales/spend:null,cr=leads?buyers/leads*100:null,rr=leads?reply/leads*100:null;
@@ -34,8 +35,8 @@ box.innerHTML='<div class="mpr-wrap"><header class="mpr-banner"><div class="mpr-
 '<div class="mpr-lower"><div id="mpr-form-slot"></div><section class="mpr-panel mpr-records"><div class="mpr-record-head"><h3>Rekod Harian Terakhir</h3><span>'+fmt(filtered.length)+' rekod</span></div><div id="mpr-table-slot"></div></section></div>'+
 '<p class="mpr-note">Semua angka dikira daripada rekod manual sahaja. Data contoh dalam rujukan tidak digunakan.</p></div>';
 const slot=$('mpr-form-slot'),tableSlot=$('mpr-table-slot');
-if(slot)slot.appendChild(manual.querySelector('.mp-panel:first-child'));
-if(tableSlot)tableSlot.appendChild(manual.querySelector('.mp-panel'));
+if(slot&&formPanel)slot.appendChild(formPanel);
+if(tableSlot&&recordsPanel)tableSlot.appendChild(recordsPanel);
 manual.style.display='none';
 const old=$('mp-manual-kpis');if(old)old.style.display='none';
 }
