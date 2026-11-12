@@ -15,7 +15,7 @@
     if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
   })();
 </script>
-<script src="https://unpkg.com/lucide@latest"></script></head>
+<script src="https://unpkg.com/lucide@latest"></script><style>#view-ygrowhub .yg-quick-ranges{display:flex;gap:8px;flex-wrap:wrap;align-items:end;grid-column:1/-1}#view-ygrowhub .yg-quick-ranges .btn{width:auto;flex:0 0 auto;padding:10px 13px;background:#fff;border:1px solid #d9b894;border-radius:10px;color:#6d3e19;font-weight:700}#view-ygrowhub .yg-quick-ranges .btn.active{background:#b7682a;color:#fff;border-color:#b7682a}#view-ygrowhub .yg-filters{align-items:end}</style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
 <div id="loading-screen" class="loading-screen"><span class="spinner"></span> Memuatkan...</div>
@@ -692,7 +692,7 @@
 </div>
 
     <div id="view-ygrowhub" class="view yg-hub">
-      <section class="yg-hero"><div><div class="yg-eyebrow">YGROW · OMNICHANNEL PERFORMANCE</div><h2>Dashboard YGROW Semua Platform</h2><p>Compile TikTok, WhatsApp, Ecommerce, Shopee dan Leads untuk pantau unit terjual, sales, kos, ROAS dan pakej setiap platform.</p><div class="yg-filters"><label>Dari<input type="date" id="yg-from"></label><label>Hingga<input type="date" id="yg-to"></label><button class="btn" id="yg-month" type="button">Bulan Ini</button></div></div><img src="assets/ygrow-dashboard-banner.png" alt="YGROW Formula"></section>
+      <section class="yg-hero"><div><div class="yg-eyebrow">YGROW · OMNICHANNEL PERFORMANCE</div><h2>Dashboard YGROW Semua Platform</h2><p>Compile TikTok, WhatsApp, Ecommerce, Shopee dan Leads untuk pantau unit terjual, sales, kos, ROAS dan pakej setiap platform.</p><div class="yg-filters"><label>Dari<input type="date" id="yg-from"></label><label>Hingga<input type="date" id="yg-to"></label><div class="yg-quick-ranges" role="group" aria-label="Penapis tarikh pantas"><button class="btn" type="button" data-yg-range="lastmonth">Last Month</button><button class="btn" type="button" data-yg-range="last7">Last 7 Days</button><button class="btn" type="button" data-yg-range="last30">Last 30 Days</button><button class="btn" type="button" data-yg-range="thismonth">This Month</button></div></div></div><img src="assets/ygrow-dashboard-banner.png" alt="YGROW Formula"></section>
       <section class="yg-kpis"><article><span>TOTAL SALES</span><strong id="yg-sales-total">RM 0</strong><small>Semua platform</small></article><article><span>UNIT TERJUAL</span><strong id="yg-units-total">0</strong><small>Jumlah kotak</small></article><article><span>TOTAL KOS</span><strong id="yg-cost-total">RM 0</strong><small>Kos digunakan</small></article><article><span>OVERALL ROAS</span><strong id="yg-roas-total">0.00x</strong><small>Sales ÷ Kos</small></article><article><span>TOTAL ORDER</span><strong id="yg-orders-total">0</strong><small>Semua channel</small></article><article><span>PLATFORM SALES TERTINGGI</span><strong id="yg-top">—</strong><small id="yg-top-note">Belum ada data</small></article></section>
       <section id="yg-platform-cards" class="yg-platform-grid"></section><section id="yg-leads-breakdown" class="yg-ecom-breakdown" style="display:none"><div class="yg-head"><div><small>LEADS WHATSAPP TEAM</small><h3>Prestasi Mengikut Kempen & Staf</h3></div><span class="yg-ecom-hint">Jumlah semua kempen + pecahan individu</span></div><div id="yg-leads-campaign-cards" class="yg-ecom-staff-grid"></div></section><section id="yg-ecom-breakdown" class="yg-ecom-breakdown" style="display:none">
 <div class="yg-head"><div><small>ECOMMERCE TEAM</small><h3>Breakdown Encik Azim & Encik Aiman</h3></div><span class="yg-ecom-hint">Overall + individual performance</span></div>
@@ -3032,7 +3032,7 @@ Ahmad	60112223344"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase-config.js"></script>
-<script src="js/app.js?v=v132-murpati-history"></script> <script src="js/murpati-reports.js?v=v136"></script>
+<script src="js/app.js?v=ygrow-date-presets-v151"></script> <script src="js/murpati-reports.js?v=v136"></script>
 <script src="js/murpati-analytics-v136.js?v=orders-units-v150"></script>
 <script src="js/salespage-analytics.js?v=v1"></script>
 <div id="fb112-modal" class="fb112-modal" hidden role="dialog" aria-modal="true" aria-label="Lihat bukti feedback"><div class="fb112-modal-head"><b>Screenshot Feedback Customer</b><div><button type="button" data-fb112-save>⬇ Download</button><button type="button" onclick="document.getElementById('fb112-modal').hidden=true">✕ Tutup</button></div></div><img alt="Screenshot feedback customer saiz besar" /></div><script>
