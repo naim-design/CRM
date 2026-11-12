@@ -3253,6 +3253,7 @@ function draw(){
  const scroll=panel.querySelector('.bpm-scroll');if(!scroll)return;scroll.before(tools);
  const {m,y}=currentMonth(),product=currentProduct();
  tools.querySelector('[data-bpm-seed]').style.display=product==='ygrow'&&m===10&&y===2026?'':'none';
+ if(product==='love'&&m===10&&y===2026){const b=document.createElement('button');b.type='button';b.dataset.bpmLoveSeed='1';b.textContent='＋ Masukkan Planning Love Hormom Nov 2026';tools.insertBefore(b,tools.querySelector('small'));}
  const grid=panel.querySelector('.bpm-grid');if(!grid)return;
  for(const cell of [...grid.querySelectorAll('.bpm-day')]){
   cell.querySelectorAll('.bpm-plan').forEach(x=>x.remove());
@@ -3291,6 +3292,25 @@ dialog.querySelector('#bpm-delete').onclick=async()=>{if(!selected||!confirm('Pa
 panel.addEventListener('click',async e=>{
  if(e.target.closest('[data-bpm-add]'))open();
  const item=e.target.closest('[data-plan-id]');if(item)open(item.dataset.planId);
+ if(e.target.closest('[data-bpm-love-seed]')){
+  if(!confirm('Masukkan planning Love Hormom November 2026? Semua aktiviti akan berstatus Planned dan boleh diedit.'))return;
+  const seed=[];
+  for(let day=10;day<=15;day++){
+   seed.push([day,'Seeding · Telegram Group','Campaign','Prelaunching: seeding dalam group Telegram. Semak bahan dan copywriting.']);
+   seed.push([day,'Seeding · Facebook','Campaign','Prelaunching: seeding di Facebook. Semak bahan dan copywriting.']);
+   seed.push([day,'Review Petang · Team CRM','Review','Semak progress, gambar, copywriting, template dan persediaan launching.']);
+  }
+  seed.push([16,'Final Review · Rumusan Akhir','Review','Rumusan akhir sebelum kempen launching.']);
+  for(const [day,title,note] of [[22,'Launching · Masalah','Fokus masalah pelanggan'],[23,'Launching · Solusi','Fokus solusi Love Hormom'],[24,'Launching · USP / Info','Fokus bahan dan maklumat produk'],[25,'Launching · Hari Promo','Hari launching / promo'],[26,'Launching · Last Call','Follow-up pelanggan yang belum grab']])seed.push([day,title,'Campaign',note]);
+  const existing=new Set(plans.filter(x=>x.product==='love').map(x=>x.date+'|'+x.title));let count=0;
+  for(const [day,title,type,note] of seed){
+   const date='2026-11-'+String(day).padStart(2,'0');
+   if(existing.has(date+'|'+title))continue;
+   const id='love_202611_'+day+'_'+title.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+   try{await save({id,product:'love',date,title,type,time:'',status:'Planned',pic:'',note});count++}catch(err){alert('Gagal simpan: '+err.message);break}
+  }
+  alert(count+' aktiviti Love Hormom ditambah.');draw();return;
+ }
  if(e.target.closest('[data-bpm-seed]')){
   if(!confirm('Tambah cadangan YGROW November 2026? Ini jadual planning, bukan blast yang sudah dihantar.'))return;
   const seed=[[9,'Double Digit · USP / Info','Campaign'],[10,'Double Digit · Testimoni','Campaign'],[11,'Double Digit · Promo 11.11','Campaign'],[23,'Payday · USP / Info','Campaign'],[24,'Payday · Testimoni','Campaign'],[25,'Payday · Launching','Campaign'],[26,'Payday · Last Call (cadangan)','Campaign']];
