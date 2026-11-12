@@ -15,7 +15,15 @@
     if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
   })();
 </script>
-<script src="https://unpkg.com/lucide@latest"></script><style>#view-ygrowhub .yg-quick-ranges{display:flex;gap:8px;flex-wrap:wrap;align-items:end;grid-column:1/-1}#view-ygrowhub .yg-quick-ranges .btn{width:auto;flex:0 0 auto;padding:10px 13px;background:#fff;border:1px solid #d9b894;border-radius:10px;color:#6d3e19;font-weight:700}#view-ygrowhub .yg-quick-ranges .btn.active{background:#b7682a;color:#fff;border-color:#b7682a}#view-ygrowhub .yg-filters{align-items:end}</style></head>
+<script src="https://unpkg.com/lucide@latest"></script><style>#view-ygrowhub .yg-quick-ranges{display:flex;gap:8px;flex-wrap:wrap;align-items:end;grid-column:1/-1}#view-ygrowhub .yg-quick-ranges .btn{width:auto;flex:0 0 auto;padding:10px 13px;background:#fff;border:1px solid #d9b894;border-radius:10px;color:#6d3e19;font-weight:700}#view-ygrowhub .yg-quick-ranges .btn.active{background:#b7682a;color:#fff;border-color:#b7682a}#view-ygrowhub .yg-filters{align-items:end}</style><style id="bw-live-board-v161">
+#view-blastcalendar.bw-week-mode>.v80-title .v80-month-nav,#view-blastcalendar.bw-week-mode>section:not(#bw-week-root){display:none!important}
+#bw-week-root{--line:#e1e9e9;--ink:#14333b;--muted:#70838a;color:var(--ink)}
+.bw-mode-tabs{display:flex;gap:7px;margin:12px 0}.bw-mode-tabs button,.bw-nav button,.bw-staff button{border:1px solid var(--line);border-radius:9px;padding:9px 12px;background:#fff;color:var(--ink);font-weight:700;cursor:pointer}.bw-mode-tabs .active,.bw-staff .active{background:#073d39;color:white}
+.bw-toolbar{display:flex;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:16px}.bw-clock strong{display:block;font-size:34px;line-height:1.1}.bw-clock small,.bw-muted{color:var(--muted);font-size:11px}.bw-nav,.bw-staff{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.bw-nav strong{min-width:150px;text-align:center;font-size:12px}.bw-live{margin-left:auto;background:#e6faf4;color:#08765d;border-radius:25px;padding:9px 12px;font-size:11px;font-weight:800}
+.bw-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.bw-kpis article{border:1px solid var(--line);border-radius:14px;background:#fff;padding:13px}.bw-kpis span{display:block;font-size:10px;color:var(--muted);font-weight:800}.bw-kpis strong{display:block;font-size:22px;margin:5px 0}.bw-kpis small{font-size:10px;color:var(--muted)}
+.bw-board-scroll{overflow:auto;border:1px solid var(--line);border-radius:14px;background:white}.bw-board{display:grid;grid-template-columns:62px repeat(7,minmax(160px,1fr));min-width:1182px}.bw-head{border-left:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 8px;background:#f8fbfa}.bw-head.today{box-shadow:inset 0 3px #e45a68;background:#fff7f8}.bw-head b{display:block;font-size:12px}.bw-head small{font-size:10px;color:var(--muted)}.bw-progress{height:4px;background:#e6ebec;border-radius:6px;margin:9px 0 5px;overflow:hidden}.bw-progress i{display:block;height:100%;background:#06a68c}.bw-slot{background:#f4f7f7;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:none;font-size:10px;letter-spacing:2px;font-weight:800}.bw-cell{padding:8px;min-height:115px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}.bw-cell.today{background:#fffbfc}.bw-cell.now{box-shadow:inset 0 0 0 2px #e45a68}.bw-card{border:1px solid #dfe7e8;border-left:4px solid var(--accent,#0b9281);border-radius:9px;padding:9px;background:#fff;margin-bottom:7px;box-shadow:0 2px 8px #183a3810}.bw-card h4{font-size:12px;margin:0 0 6px}.bw-card p{font-size:10px;color:#6c8187;margin:4px 0}.bw-chip{display:inline-block;background:#eff7f5;border-radius:5px;padding:3px 5px;font-size:10px;margin:2px}.bw-card .bw-tag{font-size:9px;font-weight:800;color:var(--accent,#0b9281)}.bw-card.fresh{animation:bw-flash 1s ease 3}@keyframes bw-flash{50%{box-shadow:0 0 0 5px #19c18e55}}.bw-footnote{font-size:11px;color:var(--muted);margin:10px 0}
+@media(max-width:850px){.bw-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bw-live{margin-left:0}}
+</style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
 <div id="loading-screen" class="loading-screen"><span class="spinner"></span> Memuatkan...</div>
@@ -3068,5 +3076,68 @@ if(window.firebase?.auth)firebase.auth().onAuthStateChanged(u=>{if(u)start();els
 setTimeout(start,1200);
 })();
 </script><style>#view-murpati .mp-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 18px}#view-murpati .mp-date-presets{display:flex;gap:7px;flex-wrap:wrap}#view-murpati .mp-date-presets button{background:#fff;border:1px solid #ead6e0;border-radius:9px;padding:9px 12px;color:#77314f;font-weight:700;cursor:pointer}#view-murpati .mp-date-presets button.active{background:#9f285f;color:#fff;border-color:#9f285f}#view-murpati .mp-toolbar label{display:flex;align-items:center;gap:6px}#view-murpati .mp-toolbar input{border:1px solid #ead6e0;border-radius:8px;padding:8px}#view-murpati #mp-manual-rows td{vertical-align:middle}</style>
-<script>(function(){const from=document.getElementById('mp-from'),to=document.getElementById('mp-to');if(!from||!to)return;const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');const buttons=[...document.querySelectorAll('[data-mp-range]')];function apply(k){const now=new Date(),a=new Date(now.getFullYear(),now.getMonth(),now.getDate()),b=new Date(a);if(k==='yesterday'){a.setDate(a.getDate()-1);b.setTime(a.getTime())}else if(k==='last7'){a.setDate(a.getDate()-6)}else if(k==='lastmonth'){a.setMonth(a.getMonth()-1,1);b.setDate(0)}else if(k==='thismonth'){a.setDate(1)}from.value=iso(a);to.value=iso(b);buttons.forEach(x=>x.classList.toggle('active',x.dataset.mpRange===k));from.dispatchEvent(new Event('change'));to.dispatchEvent(new Event('change'))}buttons.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.mpRange)));[from,to].forEach(el=>el.addEventListener('input',()=>buttons.forEach(b=>b.classList.remove('active'))));apply('last7')})();</script></body>
+<script>(function(){const from=document.getElementById('mp-from'),to=document.getElementById('mp-to');if(!from||!to)return;const iso=d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');const buttons=[...document.querySelectorAll('[data-mp-range]')];function apply(k){const now=new Date(),a=new Date(now.getFullYear(),now.getMonth(),now.getDate()),b=new Date(a);if(k==='yesterday'){a.setDate(a.getDate()-1);b.setTime(a.getTime())}else if(k==='last7'){a.setDate(a.getDate()-6)}else if(k==='lastmonth'){a.setMonth(a.getMonth()-1,1);b.setDate(0)}else if(k==='thismonth'){a.setDate(1)}from.value=iso(a);to.value=iso(b);buttons.forEach(x=>x.classList.toggle('active',x.dataset.mpRange===k));from.dispatchEvent(new Event('change'));to.dispatchEvent(new Event('change'))}buttons.forEach(b=>b.addEventListener('click',()=>apply(b.dataset.mpRange)));[from,to].forEach(el=>el.addEventListener('input',()=>buttons.forEach(b=>b.classList.remove('active'))));apply('last7')})();</script><script id="bw-live-board-script-v161">
+(function(){
+ const view=document.getElementById('view-blastcalendar');if(!view)return;
+ const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ const sunday=d=>{let n=new Date(d.getFullYear(),d.getMonth(),d.getDate());n.setDate(n.getDate()-n.getDay());return n};
+ const safe=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const n=v=>Number(v||0),fmt=v=>n(v).toLocaleString('en-MY'), money=v=>'RM '+n(v).toLocaleString('en-MY',{maximumFractionDigits:2,minimumFractionDigits:2});
+ const days=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'],months=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
+ const slots=[['PAGI',0,12],['PETANG',12,19],['MALAM',19,24],['TANPA MASA',-1,-1]];
+ let start=sunday(new Date()),staff='all',week=true,last='',seen=null,fresh=new Set(),changed=Date.now();
+ const tabs=document.createElement('div');tabs.className='bw-mode-tabs';tabs.innerHTML='<button type="button" data-bw-mode="week" class="active">● Minggu Live</button><button type="button" data-bw-mode="month">Bulan &amp; Topup</button>';
+ view.querySelector('.v80-title').insertAdjacentElement('afterend',tabs);
+ const root=document.createElement('section');root.id='bw-week-root';root.innerHTML='<div class="bw-toolbar"><div class="bw-clock"><strong id="bw-clock">--:--</strong><small id="bw-date"></small></div><div class="bw-nav"><button data-bw-nav="-1">‹</button><button data-bw-nav="0">Hari Ini</button><strong id="bw-range"></strong><button data-bw-nav="1">›</button></div><div class="bw-staff" id="bw-staff"></div><span class="bw-live" id="bw-live">● DATA FIRESTORE</span></div><div class="bw-kpis" id="bw-kpis"></div><div class="bw-board-scroll"><div class="bw-board" id="bw-board"></div></div><p class="bw-footnote">Data rekod sebenar daripada entri CRM. Jumaat dan Sabtu tiada target; kadar kos €0.0133 per Sent. Status penghantaran langsung memerlukan maklumat daripada Wabot.</p>';
+ tabs.insertAdjacentElement('afterend',root);
+ function rows(){try{return typeof allEntries!=='undefined'&&Array.isArray(allEntries)?allEntries:[]}catch(e){return []}}
+ function dateOf(x){return typeof bcEntryDate==='function'?bcEntryDate(x):String(x.tarikh||'').slice(0,10)}
+ function hour(x){const m=String(x.masa||'').match(/^(\d{1,2}):(\d{2})/);return m?Number(m[1])+Number(m[2])/60:-1}
+ function slot(x){const h=hour(x);return h<0?3:h<12?0:h<19?1:2}
+ function staffOf(x){return String(x.staffName||x.staff||'Tidak dinyatakan').trim()}
+ function titleOf(x){return x.template||x.namaTemplate||x.templateName||x.source||'Blast tanpa nama'}
+ function render(force){
+  if(!week||!view.classList.contains('active'))return;
+  const now=new Date(),today=iso(now),ds=Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(d.getDate()+i);return d}),keys=new Set(ds.map(iso));
+  const all=rows(),weekRows=all.filter(x=>keys.has(dateOf(x))),names=[...new Set(weekRows.map(staffOf))].sort();
+  if(staff!=='all'&&!names.includes(staff))staff='all';
+  const filtered=staff==='all'?weekRows:weekRows.filter(x=>staffOf(x)===staff);
+  const sig=JSON.stringify(filtered.map(x=>[x.id,x.sent,x.reply,x.buyer,x.sales,x.masa,x.template,x.staffName,x.kategori]))+'|'+iso(start)+'|'+staff+'|'+today+'|'+now.getHours();
+  if(!force&&sig===last)return;last=sig;
+  const ids=new Set(all.map(x=>x.id).filter(Boolean));if(seen){for(const id of ids)if(!seen.has(id))fresh.add(id)}seen=ids;changed=Date.now();
+  document.getElementById('bw-staff').innerHTML='<button data-bw-staff="all" class="'+(staff==='all'?'active':'')+'">Semua</button>'+names.map(x=>'<button data-bw-staff="'+safe(x)+'" class="'+(staff===x?'active':'')+'">'+safe(x)+'</button>').join('');
+  document.getElementById('bw-range').textContent=ds[0].getDate()+' '+months[ds[0].getMonth()]+' – '+ds[6].getDate()+' '+months[ds[6].getMonth()]+' '+ds[6].getFullYear();
+  const stats=ds.map(d=>{const rr=filtered.filter(x=>dateOf(x)===iso(d));return {d,rr,sent:rr.reduce((a,x)=>a+n(x.sent),0),work:d.getDay()!==5&&d.getDay()!==6}});
+  const sent=stats.reduce((a,x)=>a+x.sent,0),reply=filtered.reduce((a,x)=>a+n(x.reply),0),buyer=filtered.reduce((a,x)=>a+n(x.buyer),0),sales=filtered.reduce((a,x)=>a+n(x.sales),0);
+  const elapsed=stats.filter(x=>x.work&&iso(x.d)<=today).length,target=elapsed*3000,hit=stats.filter(x=>x.work&&iso(x.d)<=today&&x.sent>=3000).length,cost=sent*0.0133;
+  const k=(label,value,sub)=>'<article><span>'+label+'</span><strong>'+value+'</strong><small>'+sub+'</small></article>';
+  document.getElementById('bw-kpis').innerHTML=[
+   k('BLAST MINGGU INI',fmt(filtered.length),fmt(sent)+' mesej Sent'),
+   k('SENT VS TARGET',target?(sent/target*100).toFixed(1)+'%':'—',fmt(sent)+' / '+fmt(target)+' setakat hari ini'),
+   k('BEZA TARGET',(sent-target>=0?'+':'')+fmt(sent-target),sent>=target?'Melebihi sasaran':'Belum capai sasaran'),
+   k('HARI CAPAI 3K',hit+'/'+elapsed,'Ahad–Khamis sahaja'),
+   k('HARI INI',stats.find(x=>iso(x.d)===today)?fmt(stats.find(x=>iso(x.d)===today).sent):'—','Sent pada hari semasa'),
+   k('SALES',money(sales),fmt(buyer)+' buyer · '+(sent?(reply/sent*100).toFixed(1):'0.0')+'% reply'),
+   k('KOS BLAST','€'+cost.toFixed(2),'≈ '+money(cost*4.73)+' · ROAS '+(cost?(sales/(cost*4.73)).toFixed(2):'0.00')+'x'),
+   k('HARI TERBAIK',days[stats.reduce((a,x)=>x.sent>a.sent?x:a,stats[0]).d.getDay()],fmt(Math.max(...stats.map(x=>x.sent)))+' Sent')
+  ].join('');
+  let html='<div class="bw-head"></div>';
+  for(const x of stats){const t=iso(x.d)===today;html+='<div class="bw-head '+(t?'today':'')+'"><b>'+days[x.d.getDay()]+' '+x.d.getDate()+' '+months[x.d.getMonth()]+'</b><small>'+(x.work?fmt(x.sent)+' / 3,000 Sent':'CUTI · '+fmt(x.sent)+' Sent')+' · '+x.rr.length+' blast</small><div class="bw-progress"><i style="width:'+(x.work?Math.min(100,x.sent/3000*100):0)+'%"></i></div></div>'}
+  for(let i=0;i<slots.length;i++){const [name]=slots[i];if(i===3&&!filtered.some(x=>slot(x)===3))continue;html+='<div class="bw-slot">'+name+'</div>';
+   for(const x of stats){const active=iso(x.d)===today&&i=== (now.getHours()<12?0:now.getHours()<19?1:2);html+='<div class="bw-cell '+(iso(x.d)===today?'today ':'')+(active?'now':'')+'">';
+    for(const en of x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b))){
+     const cat=String(en.kategori||'Lain-lain'),accent=/tiktok/i.test(cat)?'#d94576':/ygrow|susu/i.test(cat)?'#c47a1b':/retarget/i.test(cat)?'#287bc4':'#7456c9';
+     html+='<article class="bw-card '+(fresh.has(en.id)?'fresh':'')+'" style="--accent:'+accent+'"><h4>'+safe(titleOf(en))+'</h4><p>'+safe(en.masa||'Masa tidak diisi')+' · '+safe(en.wabotAccount||en.source||'')+'</p><span class="bw-chip">'+fmt(en.sent)+' Sent</span><span class="bw-chip">'+fmt(en.reply)+' Reply</span><span class="bw-chip">'+fmt(en.buyer)+' Buyer</span><span class="bw-chip">'+money(en.sales)+'</span><p class="bw-tag">'+safe(cat)+' · '+safe(staffOf(en))+'</p></article>';
+    }html+='</div>';
+   }
+  }
+  document.getElementById('bw-board').innerHTML=html;
+  if(fresh.size)setTimeout(()=>{fresh.clear();last=''},5500);
+ }
+ function clock(){const d=new Date();document.getElementById('bw-clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');document.getElementById('bw-date').textContent=days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()}
+ function mode(m){week=m==='week';view.classList.toggle('bw-week-mode',week);root.style.display=week?'':'none';tabs.querySelectorAll('[data-bw-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bwMode===m));if(week)render(true);else if(typeof bcRender==='function')bcRender()}
+ view.addEventListener('click',e=>{const m=e.target.closest('[data-bw-mode]'),nav=e.target.closest('[data-bw-nav]'),st=e.target.closest('[data-bw-staff]');if(m)mode(m.dataset.bwMode);else if(nav){const v=Number(nav.dataset.bwNav);if(v===0)start=sunday(new Date());else start.setDate(start.getDate()+7*v);render(true)}else if(st){staff=st.dataset.bwStaff;render(true)}});
+ mode('week');clock();setInterval(()=>{clock();render(false)},2500);
+})();
+</script></body>
 </html>
