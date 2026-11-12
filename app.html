@@ -60,6 +60,24 @@
 #bw-product-month .bpm-empty{margin-top:14px;text-align:center;font-size:10px;color:#a0afb1}
 #bw-product-month .bpm-unknown{font-size:11px;color:#8b6c7a;margin-top:11px}
 @media(max-width:700px){#bw-product-month .bpm-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style><style id="bpm-planner-v164">
+#bw-product-month .bpm-planner-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+#bw-product-month .bpm-planner-tools button{background:#80345f;color:#fff;border-color:#80345f}
+#bw-product-month .bpm-plan{display:block;text-align:left;width:100%;padding:6px;margin-top:5px;border:1px solid #d8e7ff;border-left:3px solid #507bc5;border-radius:6px;background:#eff5ff;color:#315487;font-size:10px;line-height:1.3;cursor:pointer}
+#bw-product-month .bpm-plan[data-status="Ready"]{background:#fff8e7;border-color:#f0dfad;color:#85620b}
+#bw-product-month .bpm-plan[data-status="Sent"]{background:#eaf8f2;border-color:#c2e6d6;color:#12694c}
+#bw-product-month .bpm-plan[data-status="Completed"]{background:#e6f8ed;border-color:#b9e5c9;color:#0b7541}
+#bw-product-month .bpm-plan b,#bw-product-month .bpm-plan small{display:block}
+#bpm-plan-dialog{border:1px solid #d9e2e2;border-radius:17px;padding:22px;width:min(520px,calc(100vw - 28px));max-height:90vh;overflow:auto;box-shadow:0 25px 80px #152e3255;background:#fff;color:#1b393b}
+#bpm-plan-dialog::backdrop{background:#0b252a88}
+#bpm-plan-dialog form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#bpm-plan-dialog label{font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:5px}
+#bpm-plan-dialog input,#bpm-plan-dialog select,#bpm-plan-dialog textarea{padding:10px;border:1px solid #d8e2e2;border-radius:8px;font:inherit;min-width:0}
+#bpm-plan-dialog .wide{grid-column:1/-1}
+#bpm-plan-dialog .actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#bpm-plan-dialog button{padding:10px 14px;border:1px solid #d4dede;background:white;border-radius:9px;cursor:pointer}
+#bpm-plan-dialog button[type=submit]{background:#80345f;color:white}
+#bpm-plan-dialog #bpm-delete{color:#b13247;margin-right:auto}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3216,6 +3234,80 @@ p.innerHTML=html;
 p.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.bpmProduct){product=b.dataset.bpmProduct;render(true)}else if(b.dataset.bpmNav!==undefined){const v=Number(b.dataset.bpmNav);month=v===0?new Date(new Date().getFullYear(),new Date().getMonth(),1):new Date(month.getFullYear(),month.getMonth()+v,1);render(true)}});
 const obs=new MutationObserver(()=>render(true));obs.observe(root,{attributes:true,attributeFilter:['style']});
 setInterval(()=>render(false),4000);render(true);
+})();
+</script><script id="bpm-planner-script-v164">
+(function(){
+const panel=document.getElementById('bw-product-month');if(!panel)return;
+const store='crmBlastProductPlansV164',labels={jus:'Jus Mamariam',ygrow:'Susu YGROW Formula',love:'Love Hormom'};
+let plans=[],firebaseReady=false,unsub=null,selected=null;
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+function currentProduct(){return panel.querySelector('[data-bpm-product].active')?.dataset.bpmProduct||'jus'}
+function currentMonth(){const txt=panel.querySelector('.bpm-nav strong')?.textContent||'';const months=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];const m=months.findIndex(x=>txt.startsWith(x)),y=Number(txt.match(/\d{4}/)?.[0]);return m>=0&&y?{m,y}:{m:new Date().getMonth(),y:new Date().getFullYear()}}
+function readLocal(){try{return JSON.parse(localStorage.getItem(store)||'[]')}catch(e){return []}}
+function sync(){if(!firebaseReady)plans=readLocal();draw()}
+function draw(){
+ const old=panel.querySelector('.bpm-planner-tools');if(old)old.remove();
+ const tools=document.createElement('div');tools.className='bpm-planner-tools';
+ tools.innerHTML='<button type="button" data-bpm-add>＋ Tambah Aktiviti</button><button type="button" data-bpm-seed>Masukkan Cadangan YGROW Nov 2026</button><small style="color:#79888b">'+(firebaseReady?'● Disimpan di Firestore':'● Simpanan peranti ini sahaja (Firestore belum tersedia)')+'</small>';
+ const scroll=panel.querySelector('.bpm-scroll');if(!scroll)return;scroll.before(tools);
+ const {m,y}=currentMonth(),product=currentProduct();
+ tools.querySelector('[data-bpm-seed]').style.display=product==='ygrow'&&m===10&&y===2026?'':'none';
+ const grid=panel.querySelector('.bpm-grid');if(!grid)return;
+ for(const cell of [...grid.querySelectorAll('.bpm-day')]){
+  cell.querySelectorAll('.bpm-plan').forEach(x=>x.remove());
+  if(cell.classList.contains('other'))continue;
+  const d=Number(cell.querySelector('.bpm-date span')?.textContent),date=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  const list=plans.filter(x=>x.product===product&&x.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  for(const x of list){const b=document.createElement('button');b.type='button';b.className='bpm-plan';b.dataset.status=x.status||'Planned';b.dataset.planId=x.id;b.innerHTML='<b>'+esc(x.time?x.time+' · ':'')+esc(x.title)+'</b><small>'+esc(x.status||'Planned')+(x.pic?' · '+esc(x.pic):'')+'</small>';cell.appendChild(b)}
+  const empty=cell.querySelector('.bpm-empty');if(empty&&list.length)empty.style.display='none';
+ }
+}
+const dialog=document.createElement('dialog');dialog.id='bpm-plan-dialog';dialog.innerHTML='<h3 id="bpm-dialog-title">Aktiviti CRM</h3><form id="bpm-plan-form"><label>Produk<select name="product" required><option value="jus">Jus Mamariam</option><option value="ygrow">Susu YGROW Formula</option><option value="love">Love Hormom</option></select></label><label>Tarikh<input type="date" name="date" required></label><label class="wide">Tajuk Aktiviti<input name="title" maxlength="140" required placeholder="Contoh: Payday · USP / Info"></label><label>Masa (pilihan)<input type="time" name="time"></label><label>Status<select name="status"><option>Planned</option><option>Ready</option><option>Sent</option><option>Completed</option></select></label><label>PIC<input name="pic" maxlength="90" placeholder="Nama staf"></label><label>Jenis Aktiviti<select name="type"><option>Campaign</option><option>Follow-up</option><option>Review</option><option>Lain-lain</option></select></label><label class="wide">Nota / Target Database<textarea name="note" rows="3" placeholder="Sasaran, mesej, atau catatan"></textarea></label><div class="actions"><button type="button" id="bpm-delete">Padam</button><button type="button" id="bpm-cancel">Batal</button><button type="submit">Simpan Aktiviti</button></div></form>';
+document.body.appendChild(dialog);
+const form=dialog.querySelector('form');
+function open(id,date){
+ selected=id||null;const x=plans.find(p=>p.id===id),cm=currentMonth();
+ form.elements.product.value=x?.product||currentProduct();
+ form.elements.date.value=x?.date||date||iso(new Date(cm.y,cm.m,1));
+ for(const k of ['title','time','pic','note'])form.elements[k].value=x?.[k]||'';
+ form.elements.status.value=x?.status||'Planned';form.elements.type.value=x?.type||'Campaign';
+ dialog.querySelector('#bpm-dialog-title').textContent=id?'Edit Aktiviti CRM':'Tambah Aktiviti CRM';
+ dialog.querySelector('#bpm-delete').style.display=id?'':'none';dialog.showModal();
+}
+async function save(x){
+ if(firebaseReady){await db.collection('crmBlastProductPlans').doc(x.id).set({...x,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});return}
+ const a=readLocal(),i=a.findIndex(p=>p.id===x.id);if(i<0)a.push(x);else a[i]=x;localStorage.setItem(store,JSON.stringify(a));sync();
+}
+async function remove(id){
+ if(firebaseReady){await db.collection('crmBlastProductPlans').doc(id).delete();return}
+ localStorage.setItem(store,JSON.stringify(readLocal().filter(x=>x.id!==id)));sync();
+}
+form.addEventListener('submit',async e=>{e.preventDefault();const b=form.querySelector('[type=submit]');b.disabled=true;const x={id:selected||'plan_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)};
+for(const k of ['product','date','title','time','status','pic','type','note'])x[k]=form.elements[k].value.trim();
+try{await save(x);dialog.close()}catch(err){alert('Gagal simpan: '+err.message)}finally{b.disabled=false}});
+dialog.querySelector('#bpm-cancel').onclick=()=>dialog.close();
+dialog.querySelector('#bpm-delete').onclick=async()=>{if(!selected||!confirm('Padam aktiviti ini?'))return;try{await remove(selected);dialog.close()}catch(err){alert('Gagal padam: '+err.message)}};
+panel.addEventListener('click',async e=>{
+ if(e.target.closest('[data-bpm-add]'))open();
+ const item=e.target.closest('[data-plan-id]');if(item)open(item.dataset.planId);
+ if(e.target.closest('[data-bpm-seed]')){
+  if(!confirm('Tambah cadangan YGROW November 2026? Ini jadual planning, bukan blast yang sudah dihantar.'))return;
+  const seed=[[9,'Double Digit · USP / Info','Campaign'],[10,'Double Digit · Testimoni','Campaign'],[11,'Double Digit · Promo 11.11','Campaign'],[23,'Payday · USP / Info','Campaign'],[24,'Payday · Testimoni','Campaign'],[25,'Payday · Launching','Campaign'],[26,'Payday · Last Call (cadangan)','Campaign']];
+  for(let d=1;d<=30;d++){const w=new Date(2026,10,d).getDay();if([0,2,4].includes(w))seed.push([d,'Follow-up Leads YGROW November','Follow-up'])}
+  const existing=new Set(plans.filter(x=>x.product==='ygrow').map(x=>x.date+'|'+x.title));
+  let count=0;for(const [day,title,type] of seed){const date='2026-11-'+String(day).padStart(2,'0');if(existing.has(date+'|'+title))continue;try{await save({id:'ygrow_202611_'+day+'_'+type.replace(/[^a-z]/gi,'').toLowerCase()+'_'+(title.includes('Double')?'dd':title.includes('Payday')?'pd':'fu'),product:'ygrow',date,title,type,time:'',status:'Planned',pic:'',note:'Cadangan perancangan; boleh edit tarikh, status, PIC dan nota.'});count++}catch(err){alert('Gagal import: '+err.message);break}}
+  alert(count+' aktiviti cadangan ditambah.');draw();
+ }
+});
+const observer=new MutationObserver(()=>{clearTimeout(observer._t);observer._t=setTimeout(draw,80)});observer.observe(panel,{childList:true,subtree:false});
+setInterval(draw,6000);
+try{
+ if(typeof db!=='undefined'&&db&&typeof db.collection==='function'){
+  unsub=db.collection('crmBlastProductPlans').onSnapshot(s=>{firebaseReady=true;plans=s.docs.map(d=>({id:d.id,...d.data()}));draw()},err=>{firebaseReady=false;sync();console.warn('[CRM Product Planner]',err)});
+ }
+}catch(e){console.warn('[CRM Product Planner]',e)}
+sync();
 })();
 </script></body>
 </html>
