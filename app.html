@@ -23,6 +23,17 @@
 .bw-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.bw-kpis article{border:1px solid var(--line);border-radius:14px;background:#fff;padding:13px}.bw-kpis span{display:block;font-size:10px;color:var(--muted);font-weight:800}.bw-kpis strong{display:block;font-size:22px;margin:5px 0}.bw-kpis small{font-size:10px;color:var(--muted)}
 .bw-board-scroll{overflow:auto;border:1px solid var(--line);border-radius:14px;background:white}.bw-board{display:grid;grid-template-columns:62px repeat(7,minmax(160px,1fr));min-width:1182px}.bw-head{border-left:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 8px;background:#f8fbfa}.bw-head.today{box-shadow:inset 0 3px #e45a68;background:#fff7f8}.bw-head b{display:block;font-size:12px}.bw-head small{font-size:10px;color:var(--muted)}.bw-progress{height:4px;background:#e6ebec;border-radius:6px;margin:9px 0 5px;overflow:hidden}.bw-progress i{display:block;height:100%;background:#06a68c}.bw-slot{background:#f4f7f7;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:none;font-size:10px;letter-spacing:2px;font-weight:800}.bw-cell{padding:8px;min-height:115px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}.bw-cell.today{background:#fffbfc}.bw-cell.now{box-shadow:inset 0 0 0 2px #e45a68}.bw-card{border:1px solid #dfe7e8;border-left:4px solid var(--accent,#0b9281);border-radius:9px;padding:9px;background:#fff;margin-bottom:7px;box-shadow:0 2px 8px #183a3810}.bw-card h4{font-size:12px;margin:0 0 6px}.bw-card p{font-size:10px;color:#6c8187;margin:4px 0}.bw-chip{display:inline-block;background:#eff7f5;border-radius:5px;padding:3px 5px;font-size:10px;margin:2px}.bw-card .bw-tag{font-size:9px;font-weight:800;color:var(--accent,#0b9281)}.bw-card.fresh{animation:bw-flash 1s ease 3}@keyframes bw-flash{50%{box-shadow:0 0 0 5px #19c18e55}}.bw-footnote{font-size:11px;color:var(--muted);margin:10px 0}
 @media(max-width:850px){.bw-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.bw-live{margin-left:0}}
+</style><style id="bw-stickers-v162">
+#bw-week-root .bw-cell{position:relative;background-image:radial-gradient(circle at 92% 12%,#e8f5f24d 0 13px,transparent 14px)}
+#bw-week-root .bw-cell.today{background-color:#fffbfc}
+#bw-week-root .bw-sticker{display:flex;align-items:center;gap:8px;padding:10px 9px;border:1px dashed #cbdcda;border-radius:11px;background:linear-gradient(135deg,#f7fcfb,#f2f8f7);color:#65817e;min-height:62px}
+#bw-week-root .bw-sticker .bw-emoji{font-size:23px;filter:saturate(.85)}
+#bw-week-root .bw-sticker b{display:block;font-size:10px;color:#51756f}
+#bw-week-root .bw-sticker small{display:block;font-size:9px;margin-top:3px}
+#bw-week-root .bw-review{margin:0 0 8px;padding:10px;border-radius:11px;border:1px solid #d5c9f1;background:linear-gradient(135deg,#f9f5ff,#f0eaff);color:#503c83}
+#bw-week-root .bw-review .bw-review-title{font-size:11px;font-weight:850;display:flex;align-items:center;gap:6px}
+#bw-week-root .bw-review p{font-size:10px;margin:5px 0 0;color:#776998}
+#bw-week-root .bw-review .bw-review-tag{font-size:9px;font-weight:700;color:#7553a8;margin-top:7px}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3125,7 +3136,10 @@ setTimeout(start,1200);
   for(const x of stats){const t=iso(x.d)===today;html+='<div class="bw-head '+(t?'today':'')+'"><b>'+days[x.d.getDay()]+' '+x.d.getDate()+' '+months[x.d.getMonth()]+'</b><small>'+(x.work?fmt(x.sent)+' / 3,000 Sent':'CUTI · '+fmt(x.sent)+' Sent')+' · '+x.rr.length+' blast</small><div class="bw-progress"><i style="width:'+(x.work?Math.min(100,x.sent/3000*100):0)+'%"></i></div></div>'}
   for(let i=0;i<slots.length;i++){const [name]=slots[i];if(i===3&&!filtered.some(x=>slot(x)===3))continue;html+='<div class="bw-slot">'+name+'</div>';
    for(const x of stats){const active=iso(x.d)===today&&i=== (now.getHours()<12?0:now.getHours()<19?1:2);html+='<div class="bw-cell '+(iso(x.d)===today?'today ':'')+(active?'now':'')+'">';
-    for(const en of x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b))){
+    const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));
+    if(i===1)html+='<article class="bw-review"><div class="bw-review-title">📋 Review Petang · Team CRM</div><p>Semak prestasi blast, leads, reply &amp; closing harian</p><div class="bw-review-tag">🔁 Setiap petang · Aktiviti rutin</div></article>';
+    if(!cellEntries.length){const sticker=i===0?['☀️','Morning Planning','Ruang untuk blast pagi']:i===1?['🌤️','Afternoon Focus','Tiada blast tambahan']:i===2?['🌙','Night Wrap-up','Ruang untuk blast malam']:['🗂️','Belum Dijadualkan','Tiada masa direkod'];html+='<div class="bw-sticker" aria-label="Tiada rekod blast"><span class="bw-emoji">'+sticker[0]+'</span><span><b>'+sticker[1]+'</b><small>'+sticker[2]+'</small></span></div>';}
+    for(const en of cellEntries){
      const cat=String(en.kategori||'Lain-lain'),accent=/tiktok/i.test(cat)?'#d94576':/ygrow|susu/i.test(cat)?'#c47a1b':/retarget/i.test(cat)?'#287bc4':'#7456c9';
      html+='<article class="bw-card '+(fresh.has(en.id)?'fresh':'')+'" style="--accent:'+accent+'"><h4>'+safe(titleOf(en))+'</h4><p>'+safe(en.masa||'Masa tidak diisi')+' · '+safe(en.wabotAccount||en.source||'')+'</p><span class="bw-chip">'+fmt(en.sent)+' Sent</span><span class="bw-chip">'+fmt(en.reply)+' Reply</span><span class="bw-chip">'+fmt(en.buyer)+' Buyer</span><span class="bw-chip">'+money(en.sales)+'</span><p class="bw-tag">'+safe(cat)+' · '+safe(staffOf(en))+'</p></article>';
     }html+='</div>';
