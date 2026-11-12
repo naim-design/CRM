@@ -78,6 +78,17 @@
 #bpm-plan-dialog button{padding:10px 14px;border:1px solid #d4dede;background:white;border-radius:9px;cursor:pointer}
 #bpm-plan-dialog button[type=submit]{background:#80345f;color:white}
 #bpm-plan-dialog #bpm-delete{color:#b13247;margin-right:auto}
+</style><style id="bpm-brand-headers-v165">
+#bw-product-month .bpm-brand{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:125px;border-radius:15px;padding:17px 20px;margin:12px 0;overflow:hidden}
+#bw-product-month .bpm-brand[data-brand=jus]{background:linear-gradient(110deg,#fff1f0,#f9d8d8);color:#792c39}
+#bw-product-month .bpm-brand[data-brand=ygrow]{background:linear-gradient(110deg,#fffaf0,#f2e2c6);color:#64401c}
+#bw-product-month .bpm-brand[data-brand=love]{background:linear-gradient(110deg,#f9f3ff,#e9d9f2);color:#59396e}
+#bw-product-month .bpm-brand h4{margin:5px 0;font-size:21px;color:inherit}
+#bw-product-month .bpm-brand small{font-size:11px;opacity:.85}
+#bw-product-month .bpm-brand img{max-width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 7px 7px #0002)}
+#bw-product-month .bpm-brand button{font-size:10px;padding:7px 9px;background:#ffffffb8;color:inherit;border-color:#ffffffd9;margin-top:9px}
+#bw-product-month .bpm-brand .bpm-brand-icon{font-size:56px}
+@media(max-width:600px){#bw-product-month .bpm-brand{padding:12px;min-height:105px}#bw-product-month .bpm-brand h4{font-size:16px}#bw-product-month .bpm-brand img{height:88px;max-width:88px}}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3328,6 +3339,35 @@ try{
  }
 }catch(e){console.warn('[CRM Product Planner]',e)}
 sync();
+})();
+</script><script id="bpm-brand-headers-script-v165">
+(function(){
+const panel=document.getElementById('bw-product-month');if(!panel)return;
+const brands={jus:{name:'Jus Mamariam',tag:'Timeline kempen & blasting · 250 ml',icon:'🍷'},ygrow:{name:'Susu YGROW Formula',tag:'Double Digit · Payday · Follow-up Leads',icon:'🥛'},love:{name:'Love Hormom',tag:'Prelaunching · Seeding · Launching',icon:'💜'}};
+const prefix='crm-product-calendar-image-';
+let current='';
+function draw(){
+ const key=panel.querySelector('[data-bpm-product].active')?.dataset.bpmProduct||'jus',data=brands[key],tabs=panel.querySelector('.bpm-tabs');
+ if(!tabs)return;
+ let head=panel.querySelector('.bpm-brand');if(!head){head=document.createElement('section');head.className='bpm-brand';tabs.after(head)}
+ if(current===key&&head.dataset.brand===key)return;current=key;head.dataset.brand=key;
+ const src=localStorage.getItem(prefix+key);
+ head.innerHTML='<div><small>PRODUCT CAMPAIGN CALENDAR</small><h4>'+data.name+'</h4><small>'+data.tag+'</small><div><button type="button" data-bpm-upload>📷 '+(src?'Tukar':'Letak')+' Gambar Produk</button><input type="file" accept="image/png,image/jpeg,image/webp" hidden data-bpm-file></div></div>'+(src?'<img alt="'+data.name+'">':'<span class="bpm-brand-icon">'+data.icon+'</span>');
+ if(src)head.querySelector('img').src=src;
+}
+panel.addEventListener('click',e=>{if(e.target.closest('[data-bpm-upload]'))panel.querySelector('[data-bpm-file]')?.click()});
+panel.addEventListener('change',e=>{
+ if(!e.target.matches('[data-bpm-file]'))return;const file=e.target.files?.[0];if(!file)return;
+ if(!file.type.startsWith('image/'))return alert('Sila pilih gambar produk.');
+ const img=new Image();img.onload=()=>{
+ const cv=document.createElement('canvas'),max=320,scale=Math.min(1,max/Math.max(img.width,img.height));cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);
+ cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+ try{localStorage.setItem(prefix+current,cv.toDataURL('image/webp',.75));current='';draw()}catch(err){alert('Ruang simpanan gambar penuh. Cuba gambar lebih kecil.')}
+ URL.revokeObjectURL(img.src);
+ };img.src=URL.createObjectURL(file);
+});
+new MutationObserver(()=>draw()).observe(panel,{childList:true,subtree:false});
+setInterval(draw,1200);draw();
 })();
 </script></body>
 </html>
