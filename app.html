@@ -108,6 +108,26 @@
 #bw-product-month .bpm-summary article{border-radius:13px}
 #bw-product-month .bpm-grid .bpm-day{border-radius:11px;min-height:140px}
 @media(max-width:700px){#bw-product-month .bpm-brand{min-height:150px!important;padding:17px!important}#bw-product-month .bpm-brand>div{max-width:65%}#bw-product-month .bpm-brand>img{height:130px!important;max-width:125px!important;margin-right:0}#bw-product-month .bpm-brand[data-brand=love]>img{max-width:140px!important}#bw-product-month .bpm-brand h4{font-size:20px!important}}
+</style><style id="bpm-brand-final-v167">
+#bw-product-month .bpm-brand{min-height:245px!important;padding:30px 45px!important;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px}
+#bw-product-month .bpm-brand[data-brand=jus]{background:linear-gradient(105deg,#fff6f4 0%,#fce3e5 57%,#eeb0bd 100%)!important}
+#bw-product-month .bpm-brand[data-brand=ygrow]{background:linear-gradient(105deg,#fffcf6 0%,#f7e8d1 57%,#d8b17c 100%)!important}
+#bw-product-month .bpm-brand[data-brand=love]{background:linear-gradient(105deg,#fcf9ff 0%,#f0e3f8 57%,#d4b1e5 100%)!important}
+#bw-product-month .bpm-brand::before{right:-55px;top:-190px;width:510px;height:510px;border:65px solid #ffffff40}
+#bw-product-month .bpm-brand-copy{position:relative;z-index:3;max-width:65%!important}
+#bw-product-month .bpm-brand-copy>small{font-size:11px!important;letter-spacing:2.6px!important;font-weight:850}
+#bw-product-month .bpm-brand-copy h4{font-size:clamp(25px,3vw,37px)!important;margin:15px 0 8px!important;letter-spacing:-1px!important}
+#bw-product-month .bpm-brand-copy p{font-size:14px;margin:0 0 16px;opacity:.87}
+#bw-product-month .bpm-brand-chip{display:inline-block;background:#ffffffa6;border:1px solid #ffffffb7;border-radius:99px;padding:8px 14px;font-size:11px;font-weight:750}
+#bw-product-month .bpm-product-stage{width:245px;height:220px;flex:0 0 245px;position:relative;display:flex;justify-content:center;align-items:center;z-index:2}
+#bw-product-month .bpm-stage-glow{position:absolute;width:225px;height:225px;border-radius:50%;background:radial-gradient(circle,#fff9 0%,#fff2 60%,transparent 75%);filter:blur(2px)}
+#bw-product-month .bpm-product-art{position:relative;width:190px;height:216px;background-image:url('assets/calendar-products.svg');background-repeat:no-repeat;background-size:570px 216px;filter:drop-shadow(0 17px 12px #2d142b33)}
+#bw-product-month .bpm-product-jus{background-position:0 0}
+#bw-product-month .bpm-product-ygrow{background-position:-190px 0}
+#bw-product-month .bpm-product-love{background-position:-380px 0}
+#bw-product-month .bpm-brand[data-brand=jus] .bpm-product-stage::after{content:'mamariam';position:absolute;right:-5px;bottom:23px;width:59px;height:150px;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;transform:rotate(180deg);font-size:14px;letter-spacing:1px;font-weight:900;color:#fbe8bb;background:linear-gradient(130deg,#e8414f,#ad263c);border:2px solid #d7515b;border-radius:4px;box-shadow:8px 10px 15px #3d18232a;z-index:-1}
+#bw-product-month .bpm-brand .bpm-brand-icon,#bw-product-month .bpm-brand>img,#bw-product-month [data-bpm-upload]{display:none!important}
+@media(max-width:700px){#bw-product-month .bpm-brand{min-height:170px!important;padding:18px!important}#bw-product-month .bpm-brand-copy{max-width:65%!important}#bw-product-month .bpm-brand-copy h4{font-size:21px!important}#bw-product-month .bpm-brand-copy p{font-size:11px}#bw-product-month .bpm-brand-chip{font-size:9px;padding:6px 8px}#bw-product-month .bpm-product-stage{width:120px;height:145px;flex-basis:120px}#bw-product-month .bpm-product-art{width:115px;height:131px;background-size:345px 131px}#bw-product-month .bpm-product-ygrow{background-position:-115px 0}#bw-product-month .bpm-product-love{background-position:-230px 0}#bw-product-month .bpm-brand[data-brand=jus] .bpm-product-stage::after{width:34px;height:90px;right:-7px;bottom:14px;font-size:9px}}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3359,34 +3379,22 @@ try{
 }catch(e){console.warn('[CRM Product Planner]',e)}
 sync();
 })();
-</script><script id="bpm-brand-headers-script-v165">
+</script><script id="bpm-brand-headers-script-v167">
 (function(){
 const panel=document.getElementById('bw-product-month');if(!panel)return;
-const brands={jus:{name:'Jus Mamariam',tag:'Timeline kempen & blasting · 250 ml',icon:'🍷'},ygrow:{name:'Susu YGROW Formula',tag:'Double Digit · Payday · Follow-up Leads',icon:'🥛'},love:{name:'Love Hormom',tag:'Prelaunching · Seeding · Launching',icon:'💜'}};
-const prefix='crm-product-calendar-image-';
+const brands={
+jus:{name:'Jus Mamariam',tag:'Timeline kempen & blasting · 250 ml',sub:'Jus Mamariam · Delima, Kurma & Roselle'},
+ygrow:{name:'Susu YGROW Formula',tag:'Double Digit · Payday · Follow-up Leads',sub:'Susu coklat hazelnut · 400 g'},
+love:{name:'Love Hormom',tag:'Prelaunching · Seeding · Launching',sub:'Love Hormom · 15 sachets × 4 g'}
+};
 let current='';
 function draw(){
- const key=panel.querySelector('[data-bpm-product].active')?.dataset.bpmProduct||'jus',data=brands[key],tabs=panel.querySelector('.bpm-tabs');
- if(!tabs)return;
- let head=panel.querySelector('.bpm-brand');if(!head){head=document.createElement('section');head.className='bpm-brand';tabs.after(head)}
- if(current===key&&head.dataset.brand===key)return;current=key;head.dataset.brand=key;
- const src=localStorage.getItem(prefix+key);
- head.innerHTML='<div><small>PRODUCT CAMPAIGN CALENDAR</small><h4>'+data.name+'</h4><small>'+data.tag+'</small><div><button type="button" data-bpm-upload>📷 '+(src?'Tukar':'Letak')+' Gambar Produk</button><input type="file" accept="image/png,image/jpeg,image/webp" hidden data-bpm-file></div></div>'+(src?'<img alt="'+data.name+'">':'<span class="bpm-brand-icon">'+data.icon+'</span>');
- if(src)head.querySelector('img').src=src;
+const key=panel.querySelector('[data-bpm-product].active')?.dataset.bpmProduct||'jus',data=brands[key],tabs=panel.querySelector('.bpm-tabs');if(!tabs)return;
+let head=panel.querySelector('.bpm-brand');if(!head){head=document.createElement('section');head.className='bpm-brand';tabs.after(head)}
+if(current===key&&head.dataset.brand===key)return;current=key;head.dataset.brand=key;
+head.innerHTML='<div class="bpm-brand-copy"><small>PRODUCT CAMPAIGN CALENDAR</small><h4>'+data.name+'</h4><p>'+data.tag+'</p><span class="bpm-brand-chip">'+data.sub+'</span></div><div class="bpm-product-stage"><div class="bpm-stage-glow"></div><div class="bpm-product-art bpm-product-'+key+'" role="img" aria-label="Gambar produk rasmi '+data.name+'"></div></div>';
 }
-panel.addEventListener('click',e=>{if(e.target.closest('[data-bpm-upload]'))panel.querySelector('[data-bpm-file]')?.click()});
-panel.addEventListener('change',e=>{
- if(!e.target.matches('[data-bpm-file]'))return;const file=e.target.files?.[0];if(!file)return;
- if(!file.type.startsWith('image/'))return alert('Sila pilih gambar produk.');
- const img=new Image();img.onload=()=>{
- const cv=document.createElement('canvas'),max=320,scale=Math.min(1,max/Math.max(img.width,img.height));cv.width=Math.round(img.width*scale);cv.height=Math.round(img.height*scale);
- cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
- try{localStorage.setItem(prefix+current,cv.toDataURL('image/webp',.75));current='';draw()}catch(err){alert('Ruang simpanan gambar penuh. Cuba gambar lebih kecil.')}
- URL.revokeObjectURL(img.src);
- };img.src=URL.createObjectURL(file);
-});
-new MutationObserver(()=>draw()).observe(panel,{childList:true,subtree:false});
-setInterval(draw,1200);draw();
+new MutationObserver(draw).observe(panel,{childList:true,subtree:false});setInterval(draw,1800);draw();
 })();
 </script></body>
 </html>
