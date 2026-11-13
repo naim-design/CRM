@@ -158,6 +158,12 @@
 #bw-product-month .bpm-day.bpm-weekend .bpm-event,#bw-product-month .bpm-day.bpm-weekend .bpm-plan{position:relative;z-index:1}
 #bw-product-month .bpm-day.bpm-weekend .bpm-date{color:#447158}
 #bw-week-root .bw-head:nth-child(7),#bw-week-root .bw-head:nth-child(8){background:#eff7f1}
+</style><style id="bpm-weekend-v170">
+#bw-product-month .bpm-day.bpm-weekend{background:#f4f7f5!important;border-color:#dce7df!important}
+#bw-product-month .bpm-dayname:nth-child(6),#bw-product-month .bpm-dayname:nth-child(7){background:#eaf2ed;color:#426b52}
+#bw-product-month .bpm-weekend-tag{color:#447354;font-size:9px;font-weight:750}
+#bw-product-month .bpm-weekend-note{margin-top:12px;padding:10px 8px;border-radius:8px;background:#e7f1e9;color:#3b6b4b;font-size:10px;font-weight:750;line-height:1.6}
+#bw-product-month .bpm-weekend-note small{display:block;margin-top:3px;font-size:9px;font-weight:500;color:#688274}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3261,6 +3267,7 @@ setTimeout(start,1200);
   for(let i=0;i<slots.length;i++){const [name]=slots[i];if(i===3&&!filtered.some(x=>slot(x)===3))continue;html+='<div class="bw-slot">'+name+'</div>';
    for(const x of stats){const active=iso(x.d)===today&&i=== (now.getHours()<12?0:now.getHours()<19?1:2);html+='<div class="bw-cell '+(iso(x.d)===today?'today ':'')+(active?'now':'')+'">';
     const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));
+    if([5,6].includes(x.d.getDay())&&i===1)html+='<article class="bw-review"><div class="bw-review-title">🌿 Cuti Weekend</div><p>Tiada kempen dijadualkan · Siapkan to-do tertangguh untuk minggu depan</p></article>';
     if(i===1&&![5,6].includes(x.d.getDay()))html+='<article class="bw-review"><div class="bw-review-title">📋 Review Petang · Team CRM</div><p>Semak prestasi blast, leads, reply &amp; closing harian</p><div class="bw-review-tag">🔁 Setiap petang · Aktiviti rutin</div></article>';
     if(!cellEntries.length){const sticker=i===0?['☀️','Morning Planning','Ruang untuk blast pagi']:i===1?['🌤️','Afternoon Focus','Tiada blast tambahan']:i===2?['🌙','Night Wrap-up','Ruang untuk blast malam']:['🗂️','Belum Dijadualkan','Tiada masa direkod'];html+='<div class="bw-sticker" aria-label="Tiada rekod blast"><span class="bw-emoji">'+sticker[0]+'</span><span><b>'+sticker[1]+'</b><small>'+sticker[2]+'</small></span></div>';}
     for(const en of cellEntries){
@@ -3305,7 +3312,7 @@ for(let i=0;i<count;i++){
 const d=new Date(month.getFullYear(),month.getMonth(),i-offset+1),key=iso(d),outside=d.getMonth()!==month.getMonth(),today=key===iso(new Date()),entries=records.filter(x=>dateOf(x)===key);
 const weekend=d.getDay()===5||d.getDay()===6;
 html+='<div class="bpm-day '+(outside?'other ':'')+(today?'today ':'')+(weekend?'bpm-weekend':'')+'"><div class="bpm-date"><span>'+d.getDate()+'</span>'+(today?'<span>● Hari Ini</span>':weekend?'<span class="bpm-weekend-tag">🌿 Cuti Weekend</span>':'')+'</div>';
-if(!outside){for(const x of entries){const title=x.template||x.namaTemplate||x.templateName||x.source||'Blast';html+='<div class="bpm-event"><b>'+safe(title)+'</b><small>'+safe(x.masa||'Tiada masa')+' · '+Number(x.sent||0).toLocaleString('en-MY')+' Sent</small></div>'}
+if(!outside){if(weekend)html+='<div class="bpm-weekend-note">🗂️ Siapkan to-do tertangguh untuk minggu depan<br><small>Tiada aktiviti kempen dijadualkan</small></div>';for(const x of entries){const title=x.template||x.namaTemplate||x.templateName||x.source||'Blast';html+='<div class="bpm-event"><b>'+safe(title)+'</b><small>'+safe(x.masa||'Tiada masa')+' · '+Number(x.sent||0).toLocaleString('en-MY')+' Sent</small></div>'}
 if(!weekend)html+='<div class="bpm-review">📋 Review Petang · Team CRM</div>';
 if(!entries.length&&!weekend)html+='<div class="bpm-empty">✦ Tiada blast direkod</div>';
 }html+='</div>'}
@@ -3358,9 +3365,11 @@ function draw(){
   cell.querySelectorAll('.bpm-plan').forEach(x=>x.remove());
   if(cell.classList.contains('other'))continue;
   const d=Number(cell.querySelector('.bpm-date span')?.textContent),date=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  const list=visiblePlans().filter(x=>x.product===product&&x.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const isWeekend=[5,6].includes(new Date(y,m,d).getDay());
+  const list=isWeekend?[]:visiblePlans().filter(x=>x.product===product&&x.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  if(isWeekend&&!cell.querySelector('.bpm-weekend-note')){const note=document.createElement('div');note.className='bpm-weekend-note';note.innerHTML='🗂️ Siapkan to-do tertangguh untuk minggu depan<small>Tiada aktiviti kempen dijadualkan</small>';cell.appendChild(note)}
   for(const x of list){const b=document.createElement('button');b.type='button';b.className='bpm-plan';b.dataset.status=x.status||'Planned';b.dataset.planId=x.id;b.innerHTML='<b>'+esc(x.time?x.time+' · ':'')+esc(x.title)+'</b><small>'+esc(x.status||'Planned')+(x.pic?' · '+esc(x.pic):'')+'</small>';cell.appendChild(b)}
-  const empty=cell.querySelector('.bpm-empty');if(empty&&list.length)empty.style.display='none';
+  const empty=cell.querySelector('.bpm-empty');if(empty)empty.style.display=(list.length||isWeekend)?'none':'';
  }
 }
 const dialog=document.createElement('dialog');dialog.id='bpm-plan-dialog';dialog.innerHTML='<h3 id="bpm-dialog-title">Aktiviti CRM</h3><form id="bpm-plan-form"><label>Produk<select name="product" required><option value="jus">Jus Mamariam</option><option value="ygrow">Susu YGROW Formula</option><option value="love">Love Hormom</option></select></label><label>Tarikh<input type="date" name="date" required></label><label class="wide">Tajuk Aktiviti<input name="title" maxlength="140" required placeholder="Contoh: Payday · USP / Info"></label><label>Masa (pilihan)<input type="time" name="time"></label><label>Status<select name="status"><option>Planned</option><option>Ready</option><option>Sent</option><option>Completed</option></select></label><label>PIC<input name="pic" maxlength="90" placeholder="Nama staf"></label><label>Jenis Aktiviti<select name="type"><option>Campaign</option><option>Follow-up</option><option>Review</option><option>Lain-lain</option></select></label><label class="wide">Nota / Target Database<textarea name="note" rows="3" placeholder="Sasaran, mesej, atau catatan"></textarea></label><div class="actions"><button type="button" id="bpm-delete">Padam</button><button type="button" id="bpm-cancel">Batal</button><button type="submit">Simpan Aktiviti</button></div></form>';
