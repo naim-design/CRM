@@ -199,6 +199,11 @@
 /* Compact banners: preserve original artwork without cropping */
 #bw-product-month .bpm-brand{width:100%!important;max-width:100%!important;aspect-ratio:auto!important;height:clamp(190px,24vw,285px)!important;min-height:0!important;margin:10px 0 14px!important;background-size:100% 100%!important;background-position:center!important;border-radius:14px!important}
 @media(max-width:700px){#bw-product-month .bpm-brand{height:clamp(120px,29vw,190px)!important;border-radius:10px!important}}
+</style><style id="bpm-dialog-stability-v174">
+#bpm-plan-dialog{position:fixed!important;inset:0!important;margin:auto!important;z-index:2147483647!important;max-height:min(90vh,800px)!important;overflow-y:auto!important}
+#bpm-plan-dialog::backdrop{background:rgba(12,28,38,.65)!important}
+#bw-product-month .bpm-planner-tools{position:relative;z-index:2}
+#bw-product-month .bpm-planner-tools [data-bpm-add]{cursor:pointer;touch-action:manipulation}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3402,12 +3407,11 @@ function visiblePlans(){const saved=new Map(plans.map(p=>[p.id,p])),deleted=dele
 function readLocal(){try{return JSON.parse(localStorage.getItem(store)||'[]')}catch(e){return []}}
 function sync(){if(!firebaseReady)plans=readLocal();draw()}
 function draw(){
- const old=panel.querySelector('.bpm-planner-tools');if(old)old.remove();
- const tools=document.createElement('div');tools.className='bpm-planner-tools';
- tools.innerHTML='<button type="button" data-bpm-add>＋ Tambah Aktiviti</button><button type="button" data-bpm-seed>Masukkan Cadangan YGROW Nov 2026</button><small style="color:#79888b">'+(firebaseReady?'● Disimpan di Firestore':'● Simpanan peranti ini sahaja (Firestore belum tersedia)')+'</small>';
- const scroll=panel.querySelector('.bpm-scroll');if(!scroll)return;scroll.before(tools);
+ let tools=panel.querySelector('.bpm-planner-tools');if(!tools){tools=document.createElement('div');tools.className='bpm-planner-tools';tools.innerHTML='<button type="button" data-bpm-add>＋ Tambah Aktiviti</button><button type="button" data-bpm-seed>Masukkan Cadangan YGROW Nov 2026</button><small style="color:#79888b">'+(firebaseReady?'● Disimpan di Firestore':'● Simpanan peranti ini sahaja (Firestore belum tersedia)')+'</small>';
+ const scroll=panel.querySelector('.bpm-scroll');if(!scroll)return;scroll.before(tools)}
  const {m,y}=currentMonth(),product=currentProduct();
  tools.querySelector('[data-bpm-seed]').style.display=product==='ygrow'&&m===10&&y===2026?'':'none';
+ tools.querySelectorAll('[data-bpm-love-seed]').forEach(b=>b.remove());
  if(product==='love'&&m===10&&y===2026){const b=document.createElement('button');b.type='button';b.dataset.bpmLoveSeed='1';b.textContent='＋ Masukkan Planning Love Hormom Nov 2026';tools.insertBefore(b,tools.querySelector('small'));}
  const grid=panel.querySelector('.bpm-grid');if(!grid)return;
  for(const cell of [...grid.querySelectorAll('.bpm-day')]){
@@ -3431,7 +3435,7 @@ function open(id,date){
  for(const k of ['title','time','pic','note'])form.elements[k].value=x?.[k]||'';
  form.elements.status.value=x?.status||'Planned';form.elements.type.value=x?.type||'Campaign';
  dialog.querySelector('#bpm-dialog-title').textContent=id?'Edit Aktiviti CRM':'Tambah Aktiviti CRM';
- dialog.querySelector('#bpm-delete').style.display=id?'':'none';dialog.showModal();
+ dialog.querySelector('#bpm-delete').style.display=id?'':'none';if(!dialog.open)dialog.showModal();
 }
 async function save(x){
  if(firebaseReady){await db.collection('crmBlastProductPlans').doc(x.id).set({...x,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});return}
@@ -3448,8 +3452,8 @@ try{await save(x);dialog.close()}catch(err){alert('Gagal simpan: '+err.message)}
 dialog.querySelector('#bpm-cancel').onclick=()=>dialog.close();
 dialog.querySelector('#bpm-delete').onclick=async()=>{if(!selected||!confirm('Padam aktiviti ini?'))return;try{await remove(selected);dialog.close()}catch(err){alert('Gagal padam: '+err.message)}};
 panel.addEventListener('click',async e=>{
- if(e.target.closest('[data-bpm-add]'))open();
- const item=e.target.closest('[data-plan-id]');if(item)open(item.dataset.planId);
+ if(e.target.closest('[data-bpm-add]')){e.preventDefault();open();return;}
+ const item=e.target.closest('[data-plan-id]');if(item){e.preventDefault();open(item.dataset.planId);return;}
  if(e.target.closest('[data-bpm-love-seed]')){
   if(!confirm('Masukkan planning Love Hormom November 2026? Semua aktiviti akan berstatus Planned dan boleh diedit.'))return;
   const seed=[];
