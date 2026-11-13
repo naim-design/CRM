@@ -150,6 +150,14 @@
 #bw-product-month .bpm-plan b{font-size:10px;font-weight:750}
 #bw-product-month .bpm-plan small{font-size:9px;opacity:.8}
 #bw-product-month .bpm-day:has(.bpm-plan){min-height:165px}
+</style><style id="bpm-weekend-v170">
+#bw-product-month .bpm-dayname:nth-child(7n+6),#bw-product-month .bpm-dayname:nth-child(7n){background:#e9f2ed!important;color:#527663!important}
+#bw-product-month .bpm-day.bpm-weekend{background:linear-gradient(145deg,#f2f8f4,#eaf3ee)!important;border:1px solid #d6e6dc!important}
+#bw-product-month .bpm-day.bpm-weekend.today{border:2px solid #6aab82!important}
+#bw-product-month .bpm-weekend-tag{font-size:9px;font-weight:750;color:#47805e;white-space:nowrap}
+#bw-product-month .bpm-day.bpm-weekend .bpm-event,#bw-product-month .bpm-day.bpm-weekend .bpm-plan{position:relative;z-index:1}
+#bw-product-month .bpm-day.bpm-weekend .bpm-date{color:#447158}
+#bw-week-root .bw-head:nth-child(7),#bw-week-root .bw-head:nth-child(8){background:#eff7f1}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3253,7 +3261,7 @@ setTimeout(start,1200);
   for(let i=0;i<slots.length;i++){const [name]=slots[i];if(i===3&&!filtered.some(x=>slot(x)===3))continue;html+='<div class="bw-slot">'+name+'</div>';
    for(const x of stats){const active=iso(x.d)===today&&i=== (now.getHours()<12?0:now.getHours()<19?1:2);html+='<div class="bw-cell '+(iso(x.d)===today?'today ':'')+(active?'now':'')+'">';
     const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));
-    if(i===1)html+='<article class="bw-review"><div class="bw-review-title">📋 Review Petang · Team CRM</div><p>Semak prestasi blast, leads, reply &amp; closing harian</p><div class="bw-review-tag">🔁 Setiap petang · Aktiviti rutin</div></article>';
+    if(i===1&&![5,6].includes(x.d.getDay()))html+='<article class="bw-review"><div class="bw-review-title">📋 Review Petang · Team CRM</div><p>Semak prestasi blast, leads, reply &amp; closing harian</p><div class="bw-review-tag">🔁 Setiap petang · Aktiviti rutin</div></article>';
     if(!cellEntries.length){const sticker=i===0?['☀️','Morning Planning','Ruang untuk blast pagi']:i===1?['🌤️','Afternoon Focus','Tiada blast tambahan']:i===2?['🌙','Night Wrap-up','Ruang untuk blast malam']:['🗂️','Belum Dijadualkan','Tiada masa direkod'];html+='<div class="bw-sticker" aria-label="Tiada rekod blast"><span class="bw-emoji">'+sticker[0]+'</span><span><b>'+sticker[1]+'</b><small>'+sticker[2]+'</small></span></div>';}
     for(const en of cellEntries){
      const cat=String(en.kategori||'Lain-lain'),accent=/tiktok/i.test(cat)?'#d94576':/ygrow|susu/i.test(cat)?'#c47a1b':/retarget/i.test(cat)?'#287bc4':'#7456c9';
@@ -3295,10 +3303,11 @@ html+='<div class="bpm-scroll"><div class="bpm-grid">'+['Ahad','Isnin','Selasa',
 const first=new Date(month.getFullYear(),month.getMonth(),1),offset=first.getDay(),days=new Date(month.getFullYear(),month.getMonth()+1,0).getDate(),count=Math.ceil((offset+days)/7)*7;
 for(let i=0;i<count;i++){
 const d=new Date(month.getFullYear(),month.getMonth(),i-offset+1),key=iso(d),outside=d.getMonth()!==month.getMonth(),today=key===iso(new Date()),entries=records.filter(x=>dateOf(x)===key);
-html+='<div class="bpm-day '+(outside?'other ':'')+(today?'today':'')+'"><div class="bpm-date"><span>'+d.getDate()+'</span>'+(today?'<span>● Hari Ini</span>':'')+'</div>';
+const weekend=d.getDay()===5||d.getDay()===6;
+html+='<div class="bpm-day '+(outside?'other ':'')+(today?'today ':'')+(weekend?'bpm-weekend':'')+'"><div class="bpm-date"><span>'+d.getDate()+'</span>'+(today?'<span>● Hari Ini</span>':weekend?'<span class="bpm-weekend-tag">🌿 Cuti Weekend</span>':'')+'</div>';
 if(!outside){for(const x of entries){const title=x.template||x.namaTemplate||x.templateName||x.source||'Blast';html+='<div class="bpm-event"><b>'+safe(title)+'</b><small>'+safe(x.masa||'Tiada masa')+' · '+Number(x.sent||0).toLocaleString('en-MY')+' Sent</small></div>'}
-html+='<div class="bpm-review">📋 Review Petang · Team CRM</div>';
-if(!entries.length)html+='<div class="bpm-empty">✦ Tiada blast direkod</div>';
+if(!weekend)html+='<div class="bpm-review">📋 Review Petang · Team CRM</div>';
+if(!entries.length&&!weekend)html+='<div class="bpm-empty">✦ Tiada blast direkod</div>';
 }html+='</div>'}
 html+='</div></div><p class="bpm-unknown">Aktiviti Review Petang ialah rutin paparan, bukan rekod blast. Entri tanpa kategori produk yang jelas tidak dipadankan secara automatik.</p>';
 p.innerHTML=html;
