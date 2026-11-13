@@ -164,6 +164,28 @@
 #bw-product-month .bpm-weekend-tag{color:#447354;font-size:9px;font-weight:750}
 #bw-product-month .bpm-weekend-note{margin-top:12px;padding:10px 8px;border-radius:8px;background:#e7f1e9;color:#3b6b4b;font-size:10px;font-weight:750;line-height:1.6}
 #bw-product-month .bpm-weekend-note small{display:block;margin-top:3px;font-size:9px;font-weight:500;color:#688274}
+</style><style id="bw-tasks-v171">
+#bw-week-root .bw-head:nth-child(7),#bw-week-root .bw-head:nth-child(8){background:#edf5ef!important}
+#bw-week-root .bw-cell:nth-child(8n + 7),#bw-week-root .bw-cell:nth-child(8n + 8){background:#f6faf7}
+#bw-week-root .bw-weekend-card{background:#e5f2e8;border:1px solid #d1e6d7;border-radius:9px;padding:10px;color:#356a49;display:grid;gap:4px;font-size:11px}
+#bw-week-root .bw-weekend-card small{font-size:10px;font-weight:500}
+#bw-week-root .bw-task-add{display:block;width:100%;border:1px dashed #a7b8c5;border-radius:8px;background:#f7fafc;color:#376079;padding:8px 3px;font-size:10px;font-weight:750;margin:7px 0;cursor:pointer}
+#bw-week-root .bw-task-add:hover{background:#e9f4fb}
+#bw-week-root .bw-task-card{padding:10px;border-radius:9px;background:#fff9eb;border:1px solid #ecdcb1;border-left:3px solid #d49c36;margin:7px 0;overflow-wrap:anywhere;font-size:11px;color:#55401b}
+#bw-week-root .bw-task-card.done{background:#ecf7ee;border-color:#c8e4d0;border-left-color:#459d63}
+#bw-week-root .bw-task-card strong{display:block;margin:6px 0;font-size:11px}
+#bw-week-root .bw-task-card p{font-size:10px;line-height:1.5;margin:4px 0}
+#bw-week-root .bw-task-top,.bw-week-root .bw-task-buttons{display:flex;justify-content:space-between;gap:5px}
+#bw-week-root .bw-task-buttons{margin-top:8px}
+#bw-week-root .bw-task-buttons button{font-size:10px;border:1px solid #d9d2c1;background:white;border-radius:5px;padding:4px 8px;cursor:pointer}
+#bw-task-dialog{border:0;border-radius:16px;box-shadow:0 20px 80px #102d4155;padding:24px;width:min(430px,94vw);max-height:90vh;overflow:auto;font-family:Inter,system-ui,sans-serif;color:#193a45}
+#bw-task-dialog::backdrop{background:#10232a80}
+#bw-task-dialog h3{font-size:19px;margin:0 0 16px}
+#bw-task-dialog label{display:grid;gap:5px;margin:10px 0;font-size:12px;font-weight:700}
+#bw-task-dialog input,#bw-task-dialog select,#bw-task-dialog textarea{width:100%;box-sizing:border-box;border:1px solid #d3dee3;border-radius:8px;padding:10px;font:inherit}
+#bw-task-dialog .bw-task-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+#bw-task-dialog button{padding:10px 15px;border-radius:8px;border:1px solid #cdd8dd;cursor:pointer}
+#bw-task-dialog .bw-task-save{background:#087d78;color:white;border-color:#087d78}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3227,6 +3249,17 @@ setTimeout(start,1200);
  const days=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'],months=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
  const slots=[['PAGI',0,12],['PETANG',12,19],['MALAM',19,24],['TANPA MASA',-1,-1]];
  let start=sunday(new Date()),staff='all',week=true,last='',seen=null,fresh=new Set(),changed=Date.now();
+ const taskStore='crmWeeklyTasksV171';let tasks=[],taskUnsub=null,taskDb=false;
+ function readTasks(){try{return JSON.parse(localStorage.getItem(taskStore)||'[]')}catch(e){return []}}
+ function persistLocal(){localStorage.setItem(taskStore,JSON.stringify(tasks))}
+ function syncTasks(){try{if(typeof db!=='undefined'&&db&&typeof db.collection==='function'){taskDb=true;taskUnsub=db.collection('crmWeeklyTasks').onSnapshot(snap=>{tasks=snap.docs.map(d=>({id:d.id,...d.data()}));last='';render(true)},()=>{taskDb=false;tasks=readTasks();last='';render(true)});return}}catch(e){}tasks=readTasks()}
+ async function saveTask(t){if(taskDb){await db.collection('crmWeeklyTasks').doc(t.id).set(t)}else{tasks=tasks.filter(x=>x.id!==t.id).concat(t);persistLocal()}last='';render(true)}
+ async function deleteTask(id){if(taskDb){await db.collection('crmWeeklyTasks').doc(id).delete()}else{tasks=tasks.filter(x=>x.id!==id);persistLocal()}last='';render(true)}
+ function taskSlot(t){const h=Number((t.time||'12:00').split(':')[0]);return h<12?0:h<19?1:2}
+ const taskDialog=document.createElement('dialog');taskDialog.id='bw-task-dialog';taskDialog.innerHTML='<form method="dialog" id="bw-task-form"><h3 id="bw-task-heading">Tambah Aktiviti / To-do</h3><input type="hidden" name="id"><label>Tarikh<input name="date" type="date" required></label><label>Masa<input name="time" type="time" value="14:00" required></label><label>Jenis<select name="kind"><option value="To-do">To-do</option><option value="Aktiviti">Aktiviti</option></select></label><label>Tajuk<input name="title" maxlength="120" required placeholder="Contoh: Siapkan copywriting YGROW"></label><label>Nota<textarea name="note" rows="3" placeholder="Butiran kerja / bahan diperlukan"></textarea></label><label>Status<select name="status"><option value="Belum mula">Belum mula</option><option value="Dalam proses">Dalam proses</option><option value="Selesai">Selesai</option></select></label><div class="bw-task-actions"><button type="button" data-bw-close>Batal</button><button type="submit" class="bw-task-save">Simpan</button></div></form>';document.body.appendChild(taskDialog);
+ function openTask(date,id){const t=tasks.find(x=>x.id===id)||{id:'',date,time:'14:00',kind:'To-do',title:'',note:'',status:'Belum mula'};const form=taskDialog.querySelector('form');for(const k of ['id','date','time','kind','title','note','status'])form.elements[k].value=t[k]||'';taskDialog.querySelector('h3').textContent=id?'Edit Aktiviti / To-do':'Tambah Aktiviti / To-do';taskDialog.showModal()}
+ taskDialog.addEventListener('click',e=>{if(e.target.closest('[data-bw-close]'))taskDialog.close()});
+ taskDialog.querySelector('form').addEventListener('submit',async e=>{e.preventDefault();const fd=new FormData(e.currentTarget),t=Object.fromEntries(fd.entries());t.id=t.id||'task_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);t.updatedAt=new Date().toISOString();const b=taskDialog.querySelector('.bw-task-save');b.disabled=true;try{await saveTask(t);taskDialog.close()}catch(err){alert('Tidak berjaya simpan. Cuba lagi.')}finally{b.disabled=false}});
  const tabs=document.createElement('div');tabs.className='bw-mode-tabs';tabs.innerHTML='<button type="button" data-bw-mode="week" class="active">● Minggu Live</button><button type="button" data-bw-mode="month">Bulan &amp; Topup</button>';
  view.querySelector('.v80-title').insertAdjacentElement('afterend',tabs);
  const root=document.createElement('section');root.id='bw-week-root';root.innerHTML='<div class="bw-toolbar"><div class="bw-clock"><strong id="bw-clock">--:--</strong><small id="bw-date"></small></div><div class="bw-nav"><button data-bw-nav="-1">‹</button><button data-bw-nav="0">Hari Ini</button><strong id="bw-range"></strong><button data-bw-nav="1">›</button></div><div class="bw-staff" id="bw-staff"></div><span class="bw-live" id="bw-live">● DATA FIRESTORE</span></div><div class="bw-kpis" id="bw-kpis"></div><div class="bw-board-scroll"><div class="bw-board" id="bw-board"></div></div><p class="bw-footnote">Data rekod sebenar daripada entri CRM. Jumaat dan Sabtu tiada target; kadar kos €0.0133 per Sent. Status penghantaran langsung memerlukan maklumat daripada Wabot.</p>';
@@ -3243,7 +3276,7 @@ setTimeout(start,1200);
   const all=rows(),weekRows=all.filter(x=>keys.has(dateOf(x))),names=[...new Set(weekRows.map(staffOf))].sort();
   if(staff!=='all'&&!names.includes(staff))staff='all';
   const filtered=staff==='all'?weekRows:weekRows.filter(x=>staffOf(x)===staff);
-  const sig=JSON.stringify(filtered.map(x=>[x.id,x.sent,x.reply,x.buyer,x.sales,x.masa,x.template,x.staffName,x.kategori]))+'|'+iso(start)+'|'+staff+'|'+today+'|'+now.getHours();
+  const sig=JSON.stringify(filtered.map(x=>[x.id,x.sent,x.reply,x.buyer,x.sales,x.masa,x.template,x.staffName,x.kategori]))+'|'+iso(start)+'|'+staff+'|'+today+'|'+now.getHours()+'|'+JSON.stringify(tasks);
   if(!force&&sig===last)return;last=sig;
   const ids=new Set(all.map(x=>x.id).filter(Boolean));if(seen){for(const id of ids)if(!seen.has(id))fresh.add(id)}seen=ids;changed=Date.now();
   document.getElementById('bw-staff').innerHTML='<button data-bw-staff="all" class="'+(staff==='all'?'active':'')+'">Semua</button>'+names.map(x=>'<button data-bw-staff="'+safe(x)+'" class="'+(staff===x?'active':'')+'">'+safe(x)+'</button>').join('');
@@ -3266,10 +3299,13 @@ setTimeout(start,1200);
   for(const x of stats){const t=iso(x.d)===today;html+='<div class="bw-head '+(t?'today':'')+'"><b>'+days[x.d.getDay()]+' '+x.d.getDate()+' '+months[x.d.getMonth()]+'</b><small>'+(x.work?fmt(x.sent)+' / 3,000 Sent':'CUTI · '+fmt(x.sent)+' Sent')+' · '+x.rr.length+' blast</small><div class="bw-progress"><i style="width:'+(x.work?Math.min(100,x.sent/3000*100):0)+'%"></i></div></div>'}
   for(let i=0;i<slots.length;i++){const [name]=slots[i];if(i===3&&!filtered.some(x=>slot(x)===3))continue;html+='<div class="bw-slot">'+name+'</div>';
    for(const x of stats){const active=iso(x.d)===today&&i=== (now.getHours()<12?0:now.getHours()<19?1:2);html+='<div class="bw-cell '+(iso(x.d)===today?'today ':'')+(active?'now':'')+'">';
-    const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));
+    const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));const dayTasks=tasks.filter(t=>t.date===iso(x.d)&&taskSlot(t)===i);
+    if([5,6].includes(x.d.getDay())&&i===0)html+='<article class="bw-weekend-card"><b>🌿 Cuti Weekend</b><small>Tiada blast / kempen dijadualkan</small></article>';
     if([5,6].includes(x.d.getDay())&&i===1)html+='<article class="bw-review"><div class="bw-review-title">🌿 Cuti Weekend</div><p>Tiada kempen dijadualkan · Siapkan to-do tertangguh untuk minggu depan</p></article>';
     if(i===1&&![5,6].includes(x.d.getDay()))html+='<article class="bw-review"><div class="bw-review-title">📋 Review Petang · Team CRM</div><p>Semak prestasi blast, leads, reply &amp; closing harian</p><div class="bw-review-tag">🔁 Setiap petang · Aktiviti rutin</div></article>';
-    if(!cellEntries.length){const sticker=i===0?['☀️','Morning Planning','Ruang untuk blast pagi']:i===1?['🌤️','Afternoon Focus','Tiada blast tambahan']:i===2?['🌙','Night Wrap-up','Ruang untuk blast malam']:['🗂️','Belum Dijadualkan','Tiada masa direkod'];html+='<div class="bw-sticker" aria-label="Tiada rekod blast"><span class="bw-emoji">'+sticker[0]+'</span><span><b>'+sticker[1]+'</b><small>'+sticker[2]+'</small></span></div>';}
+    for(const t of dayTasks){html+='<article class="bw-task-card '+(t.status==='Selesai'?'done':'')+'"><div class="bw-task-top"><span>'+safe(t.kind)+'</span><span>'+safe(t.time)+'</span></div><strong>'+safe(t.title)+'</strong>'+(t.note?'<p>'+safe(t.note)+'</p>':'')+'<small>● '+safe(t.status)+'</small><div class="bw-task-buttons"><button type="button" data-bw-edit="'+safe(t.id)+'">Edit</button><button type="button" data-bw-delete="'+safe(t.id)+'">Padam</button></div></article>'}
+    html+='<button type="button" class="bw-task-add" data-bw-add="'+iso(x.d)+'" data-bw-slot="'+i+'">＋ Aktiviti / To-do</button>';
+    if(!cellEntries.length&&!dayTasks.length&&x.work){const sticker=i===0?['☀️','Morning Planning','Ruang untuk blast pagi']:i===1?['🌤️','Afternoon Focus','Tiada blast tambahan']:i===2?['🌙','Night Wrap-up','Ruang untuk blast malam']:['🗂️','Belum Dijadualkan','Tiada masa direkod'];html+='<div class="bw-sticker" aria-label="Tiada rekod blast"><span class="bw-emoji">'+sticker[0]+'</span><span><b>'+sticker[1]+'</b><small>'+sticker[2]+'</small></span></div>';}
     for(const en of cellEntries){
      const cat=String(en.kategori||'Lain-lain'),accent=/tiktok/i.test(cat)?'#d94576':/ygrow|susu/i.test(cat)?'#c47a1b':/retarget/i.test(cat)?'#287bc4':'#7456c9';
      html+='<article class="bw-card '+(fresh.has(en.id)?'fresh':'')+'" style="--accent:'+accent+'"><h4>'+safe(titleOf(en))+'</h4><p>'+safe(en.masa||'Masa tidak diisi')+' · '+safe(en.wabotAccount||en.source||'')+'</p><span class="bw-chip">'+fmt(en.sent)+' Sent</span><span class="bw-chip">'+fmt(en.reply)+' Reply</span><span class="bw-chip">'+fmt(en.buyer)+' Buyer</span><span class="bw-chip">'+money(en.sales)+'</span><p class="bw-tag">'+safe(cat)+' · '+safe(staffOf(en))+'</p></article>';
@@ -3281,8 +3317,8 @@ setTimeout(start,1200);
  }
  function clock(){const d=new Date();document.getElementById('bw-clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');document.getElementById('bw-date').textContent=days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()}
  function mode(m){week=m==='week';view.classList.toggle('bw-week-mode',week);root.style.display=week?'':'none';tabs.querySelectorAll('[data-bw-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bwMode===m));if(week)render(true);else if(typeof bcRender==='function')bcRender()}
- view.addEventListener('click',e=>{const m=e.target.closest('[data-bw-mode]'),nav=e.target.closest('[data-bw-nav]'),st=e.target.closest('[data-bw-staff]');if(m)mode(m.dataset.bwMode);else if(nav){const v=Number(nav.dataset.bwNav);if(v===0)start=sunday(new Date());else start.setDate(start.getDate()+7*v);render(true)}else if(st){staff=st.dataset.bwStaff;render(true)}});
- mode('week');clock();setInterval(()=>{clock();render(false)},2500);
+ view.addEventListener('click',e=>{const add=e.target.closest('[data-bw-add]'),edit=e.target.closest('[data-bw-edit]'),del=e.target.closest('[data-bw-delete]');if(add){openTask(add.dataset.bwAdd);taskDialog.querySelector('[name=time]').value=['09:00','14:00','20:00','14:00'][Number(add.dataset.bwSlot)]||'14:00';return}if(edit){openTask('',edit.dataset.bwEdit);return}if(del){if(confirm('Padam aktiviti / to-do ini?'))deleteTask(del.dataset.bwDelete);return}const m=e.target.closest('[data-bw-mode]'),nav=e.target.closest('[data-bw-nav]'),st=e.target.closest('[data-bw-staff]');if(m)mode(m.dataset.bwMode);else if(nav){const v=Number(nav.dataset.bwNav);if(v===0)start=sunday(new Date());else start.setDate(start.getDate()+7*v);render(true)}else if(st){staff=st.dataset.bwStaff;render(true)}});
+ syncTasks();mode('week');clock();setInterval(()=>{clock();render(false)},2500);
 })();
 </script><script id="bw-product-month-script-v163">
 (function(){
