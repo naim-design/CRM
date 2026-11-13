@@ -145,6 +145,11 @@
 #bw-product-month button{transition:background .2s ease,box-shadow .2s ease,transform .2s ease}
 #bw-product-month button:hover{transform:translateY(-1px)}
 @media(max-width:700px){#bw-product-month .bpm-brand-copy h4{font-size:22px!important}#bw-product-month .bpm-brand-copy p{font-size:11px!important}}
+</style><style id="bpm-planning-visible-v169">
+#bw-product-month .bpm-plan{display:block;text-align:left;width:100%;white-space:normal;overflow-wrap:anywhere;margin-top:5px;padding:7px 8px;border-radius:7px;line-height:1.35}
+#bw-product-month .bpm-plan b{font-size:10px;font-weight:750}
+#bw-product-month .bpm-plan small{font-size:9px;opacity:.8}
+#bw-product-month .bpm-day:has(.bpm-plan){min-height:165px}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3311,6 +3316,24 @@ const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 function currentProduct(){return panel.querySelector('[data-bpm-product].active')?.dataset.bpmProduct||'jus'}
 function currentMonth(){const txt=panel.querySelector('.bpm-nav strong')?.textContent||'';const months=['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];const m=months.findIndex(x=>txt.startsWith(x)),y=Number(txt.match(/\d{4}/)?.[0]);return m>=0&&y?{m,y}:{m:new Date().getMonth(),y:new Date().getFullYear()}}
+function defaultPlans(){
+ const a=[];const add=(product,day,title,type,note='')=>{const date='2026-11-'+String(day).padStart(2,'0');a.push({id:'default_'+product+'_'+day+'_'+a.length,product,date,title,type,note,time:'',pic:'',status:'Planned',isDefault:true})};
+ // YGROW: 11.11, Payday and follow-up 3x weekly
+ [[9,'11.11 · USP / Info'],[10,'11.11 · Testimoni'],[11,'11.11 · Hari Promo'],[23,'Payday · USP / Info'],[24,'Payday · Testimoni'],[25,'Payday · Launching'],[26,'Payday · Last Call']].forEach(([d,t])=>add('ygrow',d,t,'Campaign','Cadangan untuk database yang sama; semak dan edit mengikut progress.'));
+ for(let d=1;d<=30;d++)if([0,2,4].includes(new Date(2026,10,d).getDay()))add('ygrow',d,'Follow-up Leads November','Follow-up','Leads YGROW terkini; Ahad, Selasa dan Khamis.');
+ // Love Hormom: seeding, afternoon reviews, final review and launch sequence
+ for(let d=10;d<=15;d++){
+  add('love',d,'Seeding · Telegram','Campaign','Seeding prelaunching dalam group Telegram.');
+  add('love',d,'Seeding · Facebook','Campaign','Seeding prelaunching di Facebook.');
+  add('love',d,'Review Petang · Persediaan','Review','Semak progress gambar, copywriting dan bahan kempen bersama Team CRM.');
+ }
+ add('love',16,'Final Review · Rumusan Akhir','Review','Semakan akhir persediaan sebelum launching.');
+ [[22,'Masalah'],[23,'Solusi'],[24,'USP / Info'],[25,'Launching'],[26,'Last Call']].forEach(([d,t])=>add('love',d,'Launch · '+t,'Campaign','Kempen launching Love Hormom 22–26 November.'));
+ return a;
+}
+const defaults=defaultPlans(),deletedKey=store+'_deleted';
+function deletedIds(){try{return new Set(JSON.parse(localStorage.getItem(deletedKey)||'[]'))}catch(e){return new Set()}}
+function visiblePlans(){const saved=new Map(plans.map(p=>[p.id,p])),deleted=deletedIds();return [...defaults.filter(p=>!deleted.has(p.id)&&!saved.has(p.id)),...plans.filter(p=>!p.deleted)]}
 function readLocal(){try{return JSON.parse(localStorage.getItem(store)||'[]')}catch(e){return []}}
 function sync(){if(!firebaseReady)plans=readLocal();draw()}
 function draw(){
@@ -3326,7 +3349,7 @@ function draw(){
   cell.querySelectorAll('.bpm-plan').forEach(x=>x.remove());
   if(cell.classList.contains('other'))continue;
   const d=Number(cell.querySelector('.bpm-date span')?.textContent),date=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  const list=plans.filter(x=>x.product===product&&x.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const list=visiblePlans().filter(x=>x.product===product&&x.date===date).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
   for(const x of list){const b=document.createElement('button');b.type='button';b.className='bpm-plan';b.dataset.status=x.status||'Planned';b.dataset.planId=x.id;b.innerHTML='<b>'+esc(x.time?x.time+' · ':'')+esc(x.title)+'</b><small>'+esc(x.status||'Planned')+(x.pic?' · '+esc(x.pic):'')+'</small>';cell.appendChild(b)}
   const empty=cell.querySelector('.bpm-empty');if(empty&&list.length)empty.style.display='none';
  }
@@ -3335,7 +3358,7 @@ const dialog=document.createElement('dialog');dialog.id='bpm-plan-dialog';dialog
 document.body.appendChild(dialog);
 const form=dialog.querySelector('form');
 function open(id,date){
- selected=id||null;const x=plans.find(p=>p.id===id),cm=currentMonth();
+ selected=id||null;const x=visiblePlans().find(p=>p.id===id),cm=currentMonth();
  form.elements.product.value=x?.product||currentProduct();
  form.elements.date.value=x?.date||date||iso(new Date(cm.y,cm.m,1));
  for(const k of ['title','time','pic','note'])form.elements[k].value=x?.[k]||'';
@@ -3348,6 +3371,7 @@ async function save(x){
  const a=readLocal(),i=a.findIndex(p=>p.id===x.id);if(i<0)a.push(x);else a[i]=x;localStorage.setItem(store,JSON.stringify(a));sync();
 }
 async function remove(id){
+ if(id.startsWith('default_')){const d=deletedIds();d.add(id);localStorage.setItem(deletedKey,JSON.stringify([...d]));if(firebaseReady){await db.collection('crmBlastProductPlans').doc(id).set({id,deleted:true});}else{localStorage.setItem(store,JSON.stringify(readLocal().filter(x=>x.id!==id)));}sync();return}
  if(firebaseReady){await db.collection('crmBlastProductPlans').doc(id).delete();return}
  localStorage.setItem(store,JSON.stringify(readLocal().filter(x=>x.id!==id)));sync();
 }
@@ -3369,7 +3393,7 @@ panel.addEventListener('click',async e=>{
   }
   seed.push([16,'Final Review · Rumusan Akhir','Review','Rumusan akhir sebelum kempen launching.']);
   for(const [day,title,note] of [[22,'Launching · Masalah','Fokus masalah pelanggan'],[23,'Launching · Solusi','Fokus solusi Love Hormom'],[24,'Launching · USP / Info','Fokus bahan dan maklumat produk'],[25,'Launching · Hari Promo','Hari launching / promo'],[26,'Launching · Last Call','Follow-up pelanggan yang belum grab']])seed.push([day,title,'Campaign',note]);
-  const existing=new Set(plans.filter(x=>x.product==='love').map(x=>x.date+'|'+x.title));let count=0;
+  const existing=new Set(visiblePlans().filter(x=>x.product==='love').map(x=>x.date+'|'+x.title));let count=0;
   for(const [day,title,type,note] of seed){
    const date='2026-11-'+String(day).padStart(2,'0');
    if(existing.has(date+'|'+title))continue;
@@ -3382,7 +3406,7 @@ panel.addEventListener('click',async e=>{
   if(!confirm('Tambah cadangan YGROW November 2026? Ini jadual planning, bukan blast yang sudah dihantar.'))return;
   const seed=[[9,'Double Digit · USP / Info','Campaign'],[10,'Double Digit · Testimoni','Campaign'],[11,'Double Digit · Promo 11.11','Campaign'],[23,'Payday · USP / Info','Campaign'],[24,'Payday · Testimoni','Campaign'],[25,'Payday · Launching','Campaign'],[26,'Payday · Last Call (cadangan)','Campaign']];
   for(let d=1;d<=30;d++){const w=new Date(2026,10,d).getDay();if([0,2,4].includes(w))seed.push([d,'Follow-up Leads YGROW November','Follow-up'])}
-  const existing=new Set(plans.filter(x=>x.product==='ygrow').map(x=>x.date+'|'+x.title));
+  const existing=new Set(visiblePlans().filter(x=>x.product==='ygrow').map(x=>x.date+'|'+x.title));
   let count=0;for(const [day,title,type] of seed){const date='2026-11-'+String(day).padStart(2,'0');if(existing.has(date+'|'+title))continue;try{await save({id:'ygrow_202611_'+day+'_'+type.replace(/[^a-z]/gi,'').toLowerCase()+'_'+(title.includes('Double')?'dd':title.includes('Payday')?'pd':'fu'),product:'ygrow',date,title,type,time:'',status:'Planned',pic:'',note:'Cadangan perancangan; boleh edit tarikh, status, PIC dan nota.'});count++}catch(err){alert('Gagal import: '+err.message);break}}
   alert(count+' aktiviti cadangan ditambah.');draw();
  }
