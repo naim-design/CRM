@@ -204,6 +204,10 @@
 #bpm-plan-dialog::backdrop{background:rgba(12,28,38,.65)!important}
 #bw-product-month .bpm-planner-tools{position:relative;z-index:2}
 #bw-product-month .bpm-planner-tools [data-bpm-add]{cursor:pointer;touch-action:manipulation}
+</style><style id="bpm-real-image-v175">
+#bw-product-month .bpm-brand{padding:0!important;position:relative!important;overflow:hidden!important;background-color:#fce8ec!important}
+#bw-product-month .bpm-brand .bpm-banner-real{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:fill!important;filter:none!important;opacity:1!important;z-index:2!important;border:0!important}
+#bw-product-month .bpm-brand .bpm-brand-copy,#bw-product-month .bpm-brand .bpm-product-stage{display:none!important}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3504,7 +3508,7 @@ function draw(){
 const key=panel.querySelector('[data-bpm-product].active')?.dataset.bpmProduct||'jus',data=brands[key],tabs=panel.querySelector('.bpm-tabs');if(!tabs)return;
 let head=panel.querySelector('.bpm-brand');if(!head){head=document.createElement('section');head.className='bpm-brand';tabs.after(head)}
 if(current===key&&head.dataset.brand===key)return;current=key;head.dataset.brand=key;
-head.innerHTML='<div class="bpm-brand-copy"><small>PRODUCT CAMPAIGN CALENDAR</small><h4>'+data.name+'</h4><p>'+data.tag+'</p><span class="bpm-brand-chip">'+data.sub+'</span></div><div class="bpm-product-stage"><div class="bpm-stage-glow"></div><div class="bpm-product-art bpm-product-'+key+'" role="img" aria-label="Gambar produk rasmi '+data.name+'"></div></div>';
+head.innerHTML='<img class="bpm-banner-real" src="/images/'+encodeURIComponent(key==='jus'?'Reka Bentuk Kalendar Bulanan Jus Mamariam.png':key==='ygrow'?'Susu Mamariam YGrow Formula Coklat Hazelnut.png':'Kalendar Kempen LoveHormon Affron®.png')+'" alt="Banner rasmi '+data.name+'" loading="eager" decoding="async"><div class="bpm-brand-copy"><small>PRODUCT CAMPAIGN CALENDAR</small><h4>'+data.name+'</h4><p>'+data.tag+'</p><span class="bpm-brand-chip">'+data.sub+'</span></div><div class="bpm-product-stage"><div class="bpm-stage-glow"></div><div class="bpm-product-art bpm-product-'+key+'" role="img" aria-label="Gambar produk rasmi '+data.name+'"></div></div>';const banner=head.querySelector('.bpm-banner-real');if(banner)banner.addEventListener('error',function(){if(this.dataset.fallback)return;this.dataset.fallback='1';this.src='https://raw.githubusercontent.com/naim-design/CRM/main/images/'+encodeURIComponent(key==='jus'?'Reka Bentuk Kalendar Bulanan Jus Mamariam.png':key==='ygrow'?'Susu Mamariam YGrow Formula Coklat Hazelnut.png':'Kalendar Kempen LoveHormon Affron®.png')});
 }
 new MutationObserver(draw).observe(panel,{childList:true,subtree:false});setInterval(draw,1800);draw();
 })();
