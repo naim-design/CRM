@@ -208,6 +208,18 @@
 #bw-product-month .bpm-brand{padding:0!important;position:relative!important;overflow:hidden!important;background-color:#fce8ec!important}
 #bw-product-month .bpm-brand .bpm-banner-real{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:fill!important;filter:none!important;opacity:1!important;z-index:2!important;border:0!important}
 #bw-product-month .bpm-brand .bpm-brand-copy,#bw-product-month .bpm-brand .bpm-product-stage{display:none!important}
+</style><style id="bw-product-plan-sync-v176">
+#bw-week-root .bw-product-plan{position:relative;padding:10px;margin:7px 0;border-radius:9px;overflow-wrap:anywhere;font-size:11px;line-height:1.45}
+#bw-week-root .bw-product-manual{background:#e9f5ff;border:1px solid #9ccaf4;border-left:4px solid #1676c5;color:#194c76}
+#bw-week-root .bw-product-suggested{background:#f4efff;border:1px solid #e3d8fa;border-left:3px solid #a68ad4;color:#665087}
+#bw-week-root .bw-plan-meta{display:flex;justify-content:space-between;gap:5px;font-size:9px;opacity:.85}
+#bw-week-root .bw-plan-type{font-size:9px;letter-spacing:.03em;font-weight:800;margin:6px 0}
+#bw-week-root .bw-product-plan strong{display:block;font-size:11px}
+#bw-week-root .bw-product-plan p{font-size:10px;margin:5px 0;line-height:1.5}
+#bw-week-root .bw-product-plan small{display:block;margin-top:6px;font-size:10px}
+#bw-week-root .bw-plan-edit{font-size:10px;margin-top:7px;background:#fff;border:1px solid #bdd6e9;border-radius:6px;padding:5px 8px;cursor:pointer}
+#bw-product-month .bpm-plan[data-plan-id^="plan_"]{background:#e7f3ff!important;border:1px solid #9ccaf4!important;border-left:4px solid #1676c5!important;color:#194c76!important}
+#bw-product-month .bpm-plan[data-plan-id^="plan_"]::before{content:"✦ AKTIVITI STAF";display:block;font-size:9px;font-weight:800;letter-spacing:.04em;margin-bottom:4px}
 </style></head>
 <body data-team-workspace="crm" class="crm-sidebar-layout">
 
@@ -3271,6 +3283,16 @@ setTimeout(start,1200);
  const days=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'],months=['Jan','Feb','Mac','Apr','Mei','Jun','Jul','Ogo','Sep','Okt','Nov','Dis'];
  const slots=[['PAGI',0,12],['PETANG',12,19],['MALAM',19,24],['TANPA MASA',-1,-1]];
  let start=sunday(new Date()),staff='all',week=true,last='',seen=null,fresh=new Set(),changed=Date.now();
+ let productPlans=[],productPlansReady=false;
+ const planLocalKey='crmBlastProductPlansV164';
+ function refreshProductPlans(){
+  if(productPlansReady)return;
+  try{productPlans=JSON.parse(localStorage.getItem(planLocalKey)||'[]').filter(p=>!p.deleted)}catch(e){productPlans=[]}
+ }
+ function notifyWeeklyPlans(){last='';render(true)}
+ window.addEventListener('crm:product-plans-changed',e=>{if(e.detail&&Array.isArray(e.detail.plans)){productPlans=e.detail.plans.filter(p=>!p.deleted);productPlansReady=true}else{productPlansReady=false;refreshProductPlans()}notifyWeeklyPlans()});
+ window.addEventListener('storage',e=>{if(e.key===planLocalKey){productPlansReady=false;refreshProductPlans();notifyWeeklyPlans()}});
+ refreshProductPlans();
  const taskStore='crmWeeklyTasksV171';let tasks=[],taskUnsub=null,taskDb=false;
  function readTasks(){try{return JSON.parse(localStorage.getItem(taskStore)||'[]')}catch(e){return []}}
  function persistLocal(){localStorage.setItem(taskStore,JSON.stringify(tasks))}
@@ -3298,7 +3320,7 @@ setTimeout(start,1200);
   const all=rows(),weekRows=all.filter(x=>keys.has(dateOf(x))),names=[...new Set(weekRows.map(staffOf))].sort();
   if(staff!=='all'&&!names.includes(staff))staff='all';
   const filtered=staff==='all'?weekRows:weekRows.filter(x=>staffOf(x)===staff);
-  const sig=JSON.stringify(filtered.map(x=>[x.id,x.sent,x.reply,x.buyer,x.sales,x.masa,x.template,x.staffName,x.kategori]))+'|'+iso(start)+'|'+staff+'|'+today+'|'+now.getHours()+'|'+JSON.stringify(tasks);
+  const sig=JSON.stringify(filtered.map(x=>[x.id,x.sent,x.reply,x.buyer,x.sales,x.masa,x.template,x.staffName,x.kategori]))+'|'+iso(start)+'|'+staff+'|'+today+'|'+now.getHours()+'|'+JSON.stringify(tasks)+'|'+JSON.stringify(productPlans);
   if(!force&&sig===last)return;last=sig;
   const ids=new Set(all.map(x=>x.id).filter(Boolean));if(seen){for(const id of ids)if(!seen.has(id))fresh.add(id)}seen=ids;changed=Date.now();
   document.getElementById('bw-staff').innerHTML='<button data-bw-staff="all" class="'+(staff==='all'?'active':'')+'">Semua</button>'+names.map(x=>'<button data-bw-staff="'+safe(x)+'" class="'+(staff===x?'active':'')+'">'+safe(x)+'</button>').join('');
@@ -3321,10 +3343,11 @@ setTimeout(start,1200);
   for(const x of stats){const t=iso(x.d)===today;html+='<div class="bw-head '+(t?'today':'')+'"><b>'+days[x.d.getDay()]+' '+x.d.getDate()+' '+months[x.d.getMonth()]+'</b><small>'+(x.work?fmt(x.sent)+' / 3,000 Sent':'CUTI · '+fmt(x.sent)+' Sent')+' · '+x.rr.length+' blast</small><div class="bw-progress"><i style="width:'+(x.work?Math.min(100,x.sent/3000*100):0)+'%"></i></div></div>'}
   for(let i=0;i<slots.length;i++){const [name]=slots[i];if(i===3&&!filtered.some(x=>slot(x)===3))continue;html+='<div class="bw-slot">'+name+'</div>';
    for(const x of stats){const active=iso(x.d)===today&&i=== (now.getHours()<12?0:now.getHours()<19?1:2);html+='<div class="bw-cell '+(iso(x.d)===today?'today ':'')+(active?'now':'')+'">';
-    const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));const dayTasks=tasks.filter(t=>t.date===iso(x.d)&&taskSlot(t)===i);
+    const cellEntries=x.rr.filter(y=>slot(y)===i).sort((a,b)=>hour(a)-hour(b));const dayTasks=tasks.filter(t=>t.date===iso(x.d)&&taskSlot(t)===i);const dayProductPlans=productPlans.filter(p=>p.date===iso(x.d)&&(p.time?taskSlot(p)===i:i===1)).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
     if([5,6].includes(x.d.getDay())&&i===0)html+='<article class="bw-weekend-card"><b>🌿 Cuti Weekend</b><small>Tiada blast / kempen dijadualkan</small></article>';
     if([5,6].includes(x.d.getDay())&&i===1)html+='<article class="bw-review"><div class="bw-review-title">🌿 Cuti Weekend</div><p>Tiada kempen dijadualkan · Siapkan to-do tertangguh untuk minggu depan</p></article>';
     if(i===1&&![5,6].includes(x.d.getDay()))html+='<article class="bw-review"><div class="bw-review-title">📋 Review Petang · Team CRM</div><p>Semak prestasi blast, leads, reply &amp; closing harian</p><div class="bw-review-tag">🔁 Setiap petang · Aktiviti rutin</div></article>';
+    for(const p of dayProductPlans){const manual=String(p.id||'').startsWith('plan_');html+='<article class="bw-product-plan '+(manual?'bw-product-manual':'bw-product-suggested')+'"><div class="bw-plan-meta"><span>'+safe(({jus:'Jus Mamariam',ygrow:'YGROW Formula',love:'Love Hormom'})[p.product]||p.product||'Produk')+'</span><span>'+safe(p.time||'Petang')+'</span></div><div class="bw-plan-type">'+(manual?'✦ AKTIVITI STAF':'◇ PLANNING KEMPEN')+'</div><strong>'+safe(p.title)+'</strong>'+(p.note?'<p>'+safe(p.note)+'</p>':'')+'<small>'+safe(p.status||'Planned')+(p.pic?' · '+safe(p.pic):'')+'</small><button type="button" class="bw-plan-edit" data-bw-plan-edit="'+safe(p.id)+'">Edit aktiviti</button></article>'}
     for(const t of dayTasks){html+='<article class="bw-task-card '+(t.status==='Selesai'?'done':'')+'"><div class="bw-task-top"><span>'+safe(t.kind)+'</span><span>'+safe(t.time)+'</span></div><strong>'+safe(t.title)+'</strong>'+(t.note?'<p>'+safe(t.note)+'</p>':'')+'<small>● '+safe(t.status)+'</small><div class="bw-task-buttons"><button type="button" data-bw-edit="'+safe(t.id)+'">Edit</button><button type="button" data-bw-delete="'+safe(t.id)+'">Padam</button></div></article>'}
     html+='<button type="button" class="bw-task-add" data-bw-add="'+iso(x.d)+'" data-bw-slot="'+i+'">＋ Aktiviti / To-do</button>';
     if(!cellEntries.length&&!dayTasks.length&&x.work){const sticker=i===0?['☀️','Morning Planning','Ruang untuk blast pagi']:i===1?['🌤️','Afternoon Focus','Tiada blast tambahan']:i===2?['🌙','Night Wrap-up','Ruang untuk blast malam']:['🗂️','Belum Dijadualkan','Tiada masa direkod'];html+='<div class="bw-sticker" aria-label="Tiada rekod blast"><span class="bw-emoji">'+sticker[0]+'</span><span><b>'+sticker[1]+'</b><small>'+sticker[2]+'</small></span></div>';}
@@ -3339,7 +3362,7 @@ setTimeout(start,1200);
  }
  function clock(){const d=new Date();document.getElementById('bw-clock').textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');document.getElementById('bw-date').textContent=days[d.getDay()]+', '+d.getDate()+' '+months[d.getMonth()]+' '+d.getFullYear()}
  function mode(m){week=m==='week';view.classList.toggle('bw-week-mode',week);root.style.display=week?'':'none';tabs.querySelectorAll('[data-bw-mode]').forEach(b=>b.classList.toggle('active',b.dataset.bwMode===m));if(week)render(true);else if(typeof bcRender==='function')bcRender()}
- view.addEventListener('click',e=>{const add=e.target.closest('[data-bw-add]'),edit=e.target.closest('[data-bw-edit]'),del=e.target.closest('[data-bw-delete]');if(add){openTask(add.dataset.bwAdd);taskDialog.querySelector('[name=time]').value=['09:00','14:00','20:00','14:00'][Number(add.dataset.bwSlot)]||'14:00';return}if(edit){openTask('',edit.dataset.bwEdit);return}if(del){if(confirm('Padam aktiviti / to-do ini?'))deleteTask(del.dataset.bwDelete);return}const m=e.target.closest('[data-bw-mode]'),nav=e.target.closest('[data-bw-nav]'),st=e.target.closest('[data-bw-staff]');if(m)mode(m.dataset.bwMode);else if(nav){const v=Number(nav.dataset.bwNav);if(v===0)start=sunday(new Date());else start.setDate(start.getDate()+7*v);render(true)}else if(st){staff=st.dataset.bwStaff;render(true)}});
+ view.addEventListener('click',e=>{const planEdit=e.target.closest('[data-bw-plan-edit]');if(planEdit){window.dispatchEvent(new CustomEvent('crm:edit-product-plan',{detail:{id:planEdit.dataset.bwPlanEdit}}));return}const add=e.target.closest('[data-bw-add]'),edit=e.target.closest('[data-bw-edit]'),del=e.target.closest('[data-bw-delete]');if(add){openTask(add.dataset.bwAdd);taskDialog.querySelector('[name=time]').value=['09:00','14:00','20:00','14:00'][Number(add.dataset.bwSlot)]||'14:00';return}if(edit){openTask('',edit.dataset.bwEdit);return}if(del){if(confirm('Padam aktiviti / to-do ini?'))deleteTask(del.dataset.bwDelete);return}const m=e.target.closest('[data-bw-mode]'),nav=e.target.closest('[data-bw-nav]'),st=e.target.closest('[data-bw-staff]');if(m)mode(m.dataset.bwMode);else if(nav){const v=Number(nav.dataset.bwNav);if(v===0)start=sunday(new Date());else start.setDate(start.getDate()+7*v);render(true)}else if(st){staff=st.dataset.bwStaff;render(true)}});
  syncTasks();mode('week');clock();setInterval(()=>{clock();render(false)},2500);
 })();
 </script><script id="bw-product-month-script-v163">
@@ -3409,7 +3432,8 @@ const defaults=defaultPlans(),deletedKey=store+'_deleted';
 function deletedIds(){try{return new Set(JSON.parse(localStorage.getItem(deletedKey)||'[]'))}catch(e){return new Set()}}
 function visiblePlans(){const saved=new Map(plans.map(p=>[p.id,p])),deleted=deletedIds();return [...defaults.filter(p=>!deleted.has(p.id)&&!saved.has(p.id)),...plans.filter(p=>!p.deleted)]}
 function readLocal(){try{return JSON.parse(localStorage.getItem(store)||'[]')}catch(e){return []}}
-function sync(){if(!firebaseReady)plans=readLocal();draw()}
+function publishPlans(){window.dispatchEvent(new CustomEvent('crm:product-plans-changed',{detail:{plans:visiblePlans().filter(p=>!String(p.id||'').startsWith('default_'))}}))}
+function sync(){if(!firebaseReady)plans=readLocal();draw();publishPlans()}
 function draw(){
  let tools=panel.querySelector('.bpm-planner-tools');if(!tools){tools=document.createElement('div');tools.className='bpm-planner-tools';tools.innerHTML='<button type="button" data-bpm-add>＋ Tambah Aktiviti</button><button type="button" data-bpm-seed>Masukkan Cadangan YGROW Nov 2026</button><small style="color:#79888b">'+(firebaseReady?'● Disimpan di Firestore':'● Simpanan peranti ini sahaja (Firestore belum tersedia)')+'</small>';
  const scroll=panel.querySelector('.bpm-scroll');if(!scroll)return;scroll.before(tools)}
@@ -3455,6 +3479,7 @@ for(const k of ['product','date','title','time','status','pic','type','note'])x[
 try{await save(x);dialog.close()}catch(err){alert('Gagal simpan: '+err.message)}finally{b.disabled=false}});
 dialog.querySelector('#bpm-cancel').onclick=()=>dialog.close();
 dialog.querySelector('#bpm-delete').onclick=async()=>{if(!selected||!confirm('Padam aktiviti ini?'))return;try{await remove(selected);dialog.close()}catch(err){alert('Gagal padam: '+err.message)}};
+window.addEventListener('crm:edit-product-plan',e=>{const id=e.detail?.id;if(!id)return;const p=visiblePlans().find(x=>x.id===id);if(!p)return;open(id)});
 panel.addEventListener('click',async e=>{
  if(e.target.closest('[data-bpm-add]')){e.preventDefault();open();return;}
  const item=e.target.closest('[data-plan-id]');if(item){e.preventDefault();open(item.dataset.planId);return;}
@@ -3490,7 +3515,7 @@ const observer=new MutationObserver(()=>{clearTimeout(observer._t);observer._t=s
 setInterval(draw,6000);
 try{
  if(typeof db!=='undefined'&&db&&typeof db.collection==='function'){
-  unsub=db.collection('crmBlastProductPlans').onSnapshot(s=>{firebaseReady=true;plans=s.docs.map(d=>({id:d.id,...d.data()}));draw()},err=>{firebaseReady=false;sync();console.warn('[CRM Product Planner]',err)});
+  unsub=db.collection('crmBlastProductPlans').onSnapshot(s=>{firebaseReady=true;plans=s.docs.map(d=>({id:d.id,...d.data()}));draw();publishPlans()},err=>{firebaseReady=false;sync();console.warn('[CRM Product Planner]',err)});
  }
 }catch(e){console.warn('[CRM Product Planner]',e)}
 sync();
