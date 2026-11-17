@@ -8993,3 +8993,40 @@ if(!confirm('Import RM2,663.10, 19 order dan 19 unit bagi Shopee 14–21 Okt?'))
 await ref.set({date:'2026-10-21',periodStart:'2026-10-14',periodEnd:'2026-10-21',platform:'Shopee',campaign:'Shopee YGROW · agregat 14–21 Okt',packageName:'Campuran / Tidak Dinyatakan',orders:19,units:19,sales:2663.10,cost:0,costKnown:false,note:'Agregat tempoh 14–21 Okt, bukan jualan harian 21 Okt. Kos iklan belum diketahui; ROAS tidak tersedia.',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast('Import Shopee berjaya ✓');
 }catch(e){toast('Gagal import: '+e.message,true)}
 });
+
+
+/* V170 Love Hormom blast dashboard: independent Firestore records */
+(function(){
+const el=id=>document.getElementById(id),collection=()=>db.collection('posters');
+const safe=v=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>'RM '+Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});
+let records=[];
+function reset(){el('lh-form').reset();el('lh-id').value='';el('lh-date').value=new Date().toLocaleDateString('en-CA')}
+function month(){let d=new Date();el('lh-from').value=new Date(d.getFullYear(),d.getMonth(),1).toLocaleDateString('en-CA');el('lh-to').value=new Date(d.getFullYear(),d.getMonth()+1,0).toLocaleDateString('en-CA');render()}
+function render(){
+if(!el('lh-rows'))return;
+let from=el('lh-from').value,to=el('lh-to').value,arr=records.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to)).sort((a,b)=>b.date.localeCompare(a.date));
+let sum=k=>arr.reduce((n,x)=>n+(Number(x[k])||0),0),sent=sum('sent'),reply=sum('reply'),buyer=sum('buyer'),sales=sum('sales'),cost=sum('cost');
+let vals={count:arr.length,sent:sent.toLocaleString(),reply:reply.toLocaleString(),buyer:buyer.toLocaleString(),sales:money(sales),cost:money(cost),roas:(cost?sales/cost:0).toFixed(2)+'x',cr:(sent?buyer/sent*100:0).toFixed(1)+'%'};
+Object.entries(vals).forEach(([k,v])=>el('lh-'+k).textContent=v);
+el('lh-rows').innerHTML=arr.length?arr.map(x=>'<tr><td>'+safe(x.date)+'</td><td>'+safe(x.platform)+' · '+safe(x.campaign)+'</td><td>'+Number(x.sent||0)+'</td><td>'+Number(x.reply||0)+'</td><td>'+Number(x.buyer||0)+'</td><td>'+money(x.sales)+'</td><td>'+money(x.cost)+'</td><td>'+(x.cost?(x.sales/x.cost).toFixed(2):'0.00')+'x</td><td><button class="btn" data-lh-edit="'+safe(x.id)+'">Edit</button><button class="btn" data-lh-delete="'+safe(x.id)+'">Padam</button></td></tr>').join(''):'<tr><td colspan="9">Belum ada rekod blast Love Hormom.</td></tr>';
+}
+function init(){
+if(!el('lh-form'))return;reset();month();
+collection().where('docType','==','loveHormomBlast').onSnapshot(s=>{records=s.docs.map(d=>({id:d.id,...d.data()}));render()},err=>toast('Gagal memuatkan report Love Hormom: '+err.message,true));
+el('lh-form').addEventListener('submit',async e=>{
+e.preventDefault();let id=el('lh-id').value;
+let data={docType:'loveHormomBlast',date:el('lh-date').value,platform:el('lh-platform').value,campaign:el('lh-campaign').value.trim(),segment:el('lh-segment').value.trim(),note:el('lh-note').value.trim(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+['sent','reply','buyer','sales','cost'].forEach(k=>data[k]=Number(el('lh-input-'+k).value)||0);
+if(!data.campaign)return toast('Sila isi nama kempen.',true);
+try{if(id)await collection().doc(id).update(data);else await collection().add(data);reset();toast('Report Love Hormom disimpan ✓')}catch(err){toast('Gagal simpan report: '+err.message,true)}
+});
+el('lh-reset').addEventListener('click',reset);el('lh-month').addEventListener('click',month);el('lh-from').addEventListener('change',render);el('lh-to').addEventListener('change',render);
+el('lh-rows').addEventListener('click',async e=>{
+let edit=e.target.closest('[data-lh-edit]'),del=e.target.closest('[data-lh-delete]');
+if(edit){let x=records.find(r=>r.id===edit.dataset.lhEdit);if(!x)return;let fields={id:x.id,date:x.date,platform:x.platform,campaign:x.campaign,segment:x.segment,note:x.note};Object.entries(fields).forEach(([k,v])=>el('lh-'+k).value=v??'');['sent','reply','buyer','sales','cost'].forEach(k=>el('lh-input-'+k).value=x[k]||0);el('lh-form').scrollIntoView({behavior:'smooth'})}
+if(del&&confirm('Padam rekod blast Love Hormom ini?'))try{await collection().doc(del.dataset.lhDelete).delete();toast('Rekod dipadam ✓')}catch(err){toast('Gagal padam: '+err.message,true)}
+});
+}
+setTimeout(init,1600);
+})();
