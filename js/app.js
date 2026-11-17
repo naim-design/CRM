@@ -8757,6 +8757,112 @@ function ygpInit(){
 setTimeout(ygpInit,1200);
 
 
+/* ================= V105 POSTING LOVE HORMOM ================= */
+const LHP_PLATFORMS=['Facebook','Telegram','TikTok'];
+const LHP_DEFAULT_CTA={
+  TikTok:'Nak tahu lebih lanjut? Klik link di bio / TikTok Shop sekarang.',
+  Facebook:'Nak tahu lebih lanjut? Klik Learn More atau WhatsApp kami sekarang.',
+  Telegram:'Nak tahu lebih lanjut? Tekan link yang disediakan di bawah.',
+};
+let lhpRows=[],lhpMedia=[],lhpPending=[];
+// V119: shared CTA is stored in the existing Firestore posters collection.
+let lhpSharedCTA=null,lhpCTALoaded=false,lhpCTADirty=false;
+const LHP_CTA_DOC='love_hormom_seeding_cta_v170';
+const lhp=id=>document.getElementById(id);
+function lhpEsc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function lhpDateRange(){let d=new Date(),a=new Date(d.getFullYear(),d.getMonth(),1),b=new Date(d.getFullYear(),d.getMonth()+1,0);if(lhp('lhp-from'))lhp('lhp-from').value=a.toISOString().slice(0,10);if(lhp('lhp-to'))lhp('lhp-to').value=b.toISOString().slice(0,10)}
+function lhpCTA(){return {...LHP_DEFAULT_CTA,...(lhpSharedCTA||{})}}
+function lhpLoadCTA(){let c=lhpCTA();document.querySelectorAll('[data-lhp-cta]').forEach(x=>x.value=c[x.dataset.lhpCta]||'')}
+function lhpFinalCopy(row,p){let c=lhpCTA()[p]||'';return [row.copy||'',c].filter(Boolean).join('\n\n')}
+function lhpStatus(row,p){return row.statuses?.[p]||'Belum Post'}
+function lhpRenderPending(){let b=lhp('lhp-preview');if(!b)return;b.innerHTML=lhpPending.map((x,i)=>`<div class="lhp-thumb"><img src="${x.dataUrl}"><button type="button" data-lhp-rm="${i}">×</button><small>${lhpEsc(x.name)}</small></div>`).join('')}
+lhp('lhp-images')?.addEventListener('change',async e=>{try{for(const f of [...(e.target.files||[])]){let dataUrl=await compressImageToBase64(f,1200,.72);if(dataUrl.length>850000)throw new Error('Gambar terlalu besar selepas compress');lhpPending.push({name:f.name,dataUrl})}lhpRenderPending()}catch(err){toast('Gagal proses gambar: '+err.message,true)}});
+lhp('lhp-preview')?.addEventListener('click',e=>{let b=e.target.closest('[data-lhp-rm]');if(!b)return;lhpPending.splice(+b.dataset.lhpRm,1);lhpRenderPending()});
+
+// Do not silently overwrite a teammate's changes. Saving is explicit and shared.
+lhp('lhp-save-cta')?.addEventListener('click',async()=>{
+ if(!lhpCTALoaded)return toast('Tetapan CTA sedang dimuatkan dari Firebase. Cuba sebentar lagi.',true);
+ const btn=lhp('lhp-save-cta');let c={};document.querySelectorAll('[data-lhp-cta]').forEach(x=>c[x.dataset.lhpCta]=x.value.trim());
+ btn.disabled=true;
+ try{await db.collection('posters').doc(LHP_CTA_DOC).set({docType:'loveHormomSeedingCTA',platforms:c,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:auth.currentUser?.uid||''},{merge:true});lhpSharedCTA=c;lhpCTADirty=false;toast('CTA dikongsi ke Firebase — semua staf akan nampak ✓');lhpRender()}
+ catch(err){toast('Gagal simpan CTA ke Firebase: '+err.message,true)}finally{btn.disabled=false}
+});
+document.querySelectorAll('[data-lhp-cta]').forEach(x=>x.addEventListener('input',()=>{lhpCTADirty=true}));
+
+function lhpReset(){lhp('lhp-form')?.reset();if(lhp('lhp-id'))lhp('lhp-id').value='';if(lhp('lhp-date'))lhp('lhp-date').value=new Date().toISOString().slice(0,10);lhpPending=[];lhpRenderPending()}
+lhp('lhp-reset')?.addEventListener('click',lhpReset);
+
+lhp('lhp-form')?.addEventListener('submit',async e=>{
+ e.preventDefault();let btn=lhp('lhp-save');if(btn)btn.disabled=true;
+ try{
+  let id=lhp('lhp-id').value, old=lhpRows.find(x=>x.id===id);
+  let payload={docType:'loveHormomSeeding',date:lhp('lhp-date').value,title:lhp('lhp-title').value.trim(),copy:lhp('lhp-copy').value.trim(),note:lhp('lhp-note').value.trim(),statuses:old?.statuses||Object.fromEntries(LHP_PLATFORMS.map(p=>[p,'Belum Post'])),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  let ref;
+  if(id){ref=db.collection('posters').doc(id);await ref.update(payload)}
+  else{payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();ref=await db.collection('posters').add(payload);id=ref.id}
+  for(const m of lhpPending){await db.collection('posters').add({docType:'loveHormomSeedingMedia',postingId:id,name:m.name,dataUrl:m.dataUrl,createdAt:firebase.firestore.FieldValue.serverTimestamp()})}
+  toast('Posting LOVE HORMOM disimpan ✓');lhpReset()
+ }catch(err){toast('Gagal simpan Posting LOVE HORMOM: '+err.message,true)}
+ finally{if(btn)btn.disabled=false}
+});
+
+function lhpFiltered(){let f=lhp('lhp-from')?.value||'',t=lhp('lhp-to')?.value||'';return lhpRows.filter(x=>(!f||x.date>=f)&&(!t||x.date<=t)).sort((a,b)=>(b.date||'').localeCompare(a.date||''))}
+let lhpWeekOffset=0;
+function lhpWeekRender(){
+ const grid=lhp('lhp-week-grid');if(!grid)return;
+ const today=new Date(),base=new Date(today.getFullYear(),today.getMonth(),today.getDate());base.setDate(base.getDate()-((base.getDay()+6)%7)+lhpWeekOffset*7);
+ const end=new Date(base);end.setDate(end.getDate()+6);
+ const fmt=d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+ if(lhp('lhp-week-label'))lhp('lhp-week-label').textContent=`${fmt(base)} – ${fmt(end)} ${end.getFullYear()}`;
+ grid.innerHTML=Array.from({length:7},(_,i)=>{const d=new Date(base);d.setDate(d.getDate()+i);const iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const dayRows=lhpRows.filter(r=>r.date===iso);const dayNames=['Ahad','Isnin','Selasa','Rabu','Khamis','Jumaat','Sabtu'];const doneCount=LHP_PLATFORMS.filter(platform=>dayRows.some(r=>lhpStatus(r,platform)==='Done Post')).length;return `<article class="lhp-week-day ${iso===`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`?'today':''}"><div class="lhp-week-date"><b>${dayNames[d.getDay()]}</b><strong>${d.getDate()}</strong></div><small>${dayRows.length} content · ${doneCount}/5 platform</small><div class="lhp-week-platforms">${LHP_PLATFORMS.map(platform=>{let state=dayRows.length?(dayRows.some(r=>lhpStatus(r,platform)==='Done Post')?'done':'pending'):'empty';return `<div class="lhp-week-status ${state}"><b class="lhp-platform-name ${platform.toLowerCase()}">${platform}</b><span>${state==='done'?'✓':state==='pending'?'✕':'—'}</span></div>`}).join('')}</div></article>`}).join('');
+}
+['prev','next','today'].forEach(k=>lhp('lhp-week-'+k)?.addEventListener('click',()=>{lhpWeekOffset=k==='today'?0:lhpWeekOffset+(k==='prev'?-1:1);lhpWeekRender()}));
+function lhpRender(){
+ if(!lhp('lhp-list'))return;lhpWeekRender();let rows=lhpFiltered(),total=rows.length*LHP_PLATFORMS.length,done=rows.reduce((n,r)=>n+LHP_PLATFORMS.filter(p=>lhpStatus(r,p)==='Done Post').length,0);
+ let from=lhp('lhp-from')?.value,to=lhp('lhp-to')?.value,dayTarget=0;if(from&&to){let a=new Date(from+'T00:00:00'),b=new Date(to+'T00:00:00');dayTarget=Math.max(0,Math.floor((b-a)/86400000)+1)}
+ let sg=lhp('lhp-platform-summary-grid');if(sg)sg.innerHTML=LHP_PLATFORMS.map(p=>{let posted=rows.filter(r=>lhpStatus(r,p)==='Done Post').length,remain=Math.max(0,dayTarget-posted),pct=dayTarget?Math.min(100,posted/dayTarget*100):0;return `<article class="lhp-summary-card ${p.toLowerCase()}"><div class="lhp-summary-platform"><b>${p}</b><span>${pct.toFixed(0)}%</span></div><div class="lhp-summary-numbers"><div><strong>${posted}</strong><small>Dah Posting</small></div><div><strong>${remain}</strong><small>Baki Belum Post</small></div><div><strong>${dayTarget}</strong><small>Target</small></div></div><div class="lhp-progressbar"><i style="width:${pct}%"></i></div><p>${remain?`Perlu lagi <b>${remain}</b> posting untuk cukup 1 post/hari.`:'Target tempoh ini sudah cukup ✓'}</p></article>`}).join('');
+
+ lhp('lhp-kpi-content').textContent=rows.length;lhp('lhp-kpi-done').textContent=done;lhp('lhp-kpi-pending').textContent=Math.max(0,total-done);lhp('lhp-kpi-progress').textContent=(total?done/total*100:0).toFixed(0)+'%';
+ lhp('lhp-list').innerHTML=rows.length?rows.map(row=>{
+  let media=lhpMedia.filter(m=>m.postingId===row.id);
+  let imgs=media.length?`<div class="lhp-images">${media.map(m=>`<div><img src="${m.dataUrl}" alt=""><button type="button" data-lhp-download="${m.id}">Download</button></div>`).join('')}</div>`:'<div class="lhp-noimg">Tiada gambar</div>';
+  let platforms=LHP_PLATFORMS.map(p=>`<article class="lhp-platform-card ${lhpStatus(row,p)==='Done Post'?'lhp-done':'lhp-pending'}">
+   <div class="lhp-platform-title"><b class="lhp-platform-name ${p.toLowerCase()}">${p}</b><span class="${lhpStatus(row,p)==='Done Post'?'done':'pending'}">${lhpStatus(row,p)}</span></div>
+   <div class="lhp-copy-preview">${lhpEsc(lhpFinalCopy(row,p)).replace(/\n/g,'<br>')}</div>
+   <div class="lhp-platform-actions"><button type="button" data-lhp-copy="${row.id}" data-platform="${p}">Copy Ayat + CTA</button>
+   <select data-lhp-status="${row.id}" data-platform="${p}"><option ${lhpStatus(row,p)==='Belum Post'?'selected':''}>Belum Post</option><option ${lhpStatus(row,p)==='Done Post'?'selected':''}>Done Post</option></select></div>
+  </article>`).join('');
+  return `<article class="lhp-post"><header><div><small>${lhpEsc(row.date||'')}</small><h3>${lhpEsc(row.title||'Untitled')}</h3><p>${lhpEsc(row.note||'')}</p></div><div class="lhp-master-actions"><button data-lhp-edit="${row.id}">Edit</button><button class="danger" data-lhp-delete="${row.id}">Padam</button></div></header>
+   <div class="lhp-post-body"><div>${imgs}</div><div class="lhp-platforms">${platforms}</div></div></article>`
+ }).join(''):'<div class="lhp-empty">Belum ada posting LOVE HORMOM untuk tarikh ini.</div>'
+}
+['lhp-from','lhp-to'].forEach(id=>lhp(id)?.addEventListener('change',lhpRender));lhp('lhp-thismonth')?.addEventListener('click',()=>{lhpDateRange();lhpRender()});
+
+document.addEventListener('change',async e=>{let s=e.target.closest('[data-lhp-status]');if(!s)return;let row=lhpRows.find(x=>x.id===s.dataset.lhpStatus);if(!row)return;let statuses={...(row.statuses||{}),[s.dataset.platform]:s.value};try{await db.collection('posters').doc(row.id).update({statuses,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});toast(`${s.dataset.platform}: ${s.value} ✓`)}catch(err){toast('Gagal update status: '+err.message,true)}});
+document.addEventListener('click',async e=>{
+ let c=e.target.closest('[data-lhp-copy]');if(c){let row=lhpRows.find(x=>x.id===c.dataset.lhpCopy);if(!row)return;let txt=lhpFinalCopy(row,c.dataset.platform);try{await navigator.clipboard.writeText(txt);toast(`Copy ${c.dataset.platform} + CTA ✓`)}catch(err){toast('Tak dapat copy clipboard',true)}return}
+ let d=e.target.closest('[data-lhp-download]');if(d){let m=lhpMedia.find(x=>x.id===d.dataset.lhpDownload);if(!m)return;let a=document.createElement('a');a.href=m.dataUrl;a.download=m.name||'LOVE HORMOM-poster.jpg';document.body.appendChild(a);a.click();a.remove();return}
+ let ed=e.target.closest('[data-lhp-edit]');if(ed){let row=lhpRows.find(x=>x.id===ed.dataset.lhpEdit);if(!row)return;lhp('lhp-id').value=row.id;lhp('lhp-date').value=row.date||'';lhp('lhp-title').value=row.title||'';lhp('lhp-copy').value=row.copy||'';lhp('lhp-note').value=row.note||'';lhpPending=[];lhpRenderPending();lhp('view-lovehormomseeding').scrollIntoView({behavior:'smooth'});return}
+ let del=e.target.closest('[data-lhp-delete]');if(del&&confirm('Padam posting LOVE HORMOM ini dan semua gambarnya?')){try{let batch=db.batch();lhpMedia.filter(m=>m.postingId===del.dataset.lhpDelete).forEach(m=>batch.delete(db.collection('posters').doc(m.id)));batch.delete(db.collection('posters').doc(del.dataset.lhpDelete));await batch.commit();toast('Posting dipadam ✓')}catch(err){toast('Gagal padam: '+err.message,true)}}
+});
+
+function lhpInit(){
+ if(!lhp('lhp-date'))return;lhpReset();lhpDateRange();
+ db.collection('posters').onSnapshot(s=>{
+ let all=s.docs.map(d=>({id:d.id,...d.data()}));
+ const shared=all.find(x=>x.id===LHP_CTA_DOC&&x.docType==='loveHormomSeedingCTA');
+ const firstLoad=!lhpCTALoaded;
+ lhpSharedCTA=shared?.platforms||null;lhpCTALoaded=true;
+ // On first visit, show the user's legacy local settings only as an editable draft
+ // when no shared record exists. Never automatically push local data to Firebase.
+ if(firstLoad&&!shared){try{const legacy=JSON.parse(localStorage.getItem('loveHormomSeedingCTA')||'null');if(legacy&&typeof legacy==='object'){document.querySelectorAll('[data-lhp-cta]').forEach(x=>x.value=legacy[x.dataset.lhpCta]??LHP_DEFAULT_CTA[x.dataset.lhpCta]??'');lhpCTADirty=true;toast('CTA lama dijumpai dalam browser ini. Klik Simpan Tetapan CTA untuk kongsi kepada staf.') }else lhpLoadCTA()}catch(e){lhpLoadCTA()}}
+ else if(!lhpCTADirty)lhpLoadCTA();
+ lhpRows=all.filter(x=>x.docType==='loveHormomSeeding');lhpMedia=all.filter(x=>x.docType==='loveHormomSeedingMedia');lhpRender()
+},err=>toast('Ralat Posting LOVE HORMOM / CTA Firebase: '+err.message,true))
+}
+setTimeout(lhpInit,1200);
+
+
 // V108 Feedback analytics - reuse existing feedback collection and permissions.
 function fb108Safe(v){return String(v??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));}
 function fb112Download(a){if(!a?.imageData)return;const m=a.imageData.match(/^data:image\/(png|jpeg|webp)/i);const ext=m?(m[1].toLowerCase()==='jpeg'?'jpg':m[1]):'png';const link=document.createElement('a');link.href=a.imageData;link.download='feedback-mamariam-'+String(a.id||'customer').replace(/[^a-z0-9_-]/gi,'')+'.'+ext;document.body.appendChild(link);link.click();link.remove();}
